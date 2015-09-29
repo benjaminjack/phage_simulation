@@ -1,7 +1,7 @@
 <REQUEST>
 <EXECUTE-SIMULATION runs="1" random_seed="34145" simulation_name="test-1" time_step="5" time_end="600" write_DNA="no" write_InitRNA="yes" write_Energy="yes" compDeg="no">
 <CELL volume="8e-16" polymerase_interaction_model="TRAFFIC_JAM">
-<RIBOSOME initial_number="10000" speed="45" footprint="40" />
+<RIBOSOME initial_number="2500" speed="45" footprint="40" />
 <POLYMERASE n="1800" speed="45" id="2" organism_id="2" footprint="15" name="coli Pol" />
 <POLYMERASE n="0" speed="45" id="3" organism_id="2" footprint="15" name="coli Pol-P" />
 <POLYMERASE n="0" speed="45" id="4" organism_id="2" footprint="15" name="coli Pol-2.0" />
