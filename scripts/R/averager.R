@@ -5,6 +5,8 @@ library(readr)
 library(stringr)
 library(dplyr)
 library(tidyr)
+library(ggplot2)
+library(cowplot)
 
 read_mol_sim <- function(filename) {
   # Read in file lines
@@ -30,8 +32,12 @@ avg_sims <- mutate(all_sims, `>time` = round(`>time`)) %>% # Round time points s
   select(-contains('RNA')) # Select only proteins
 
 # Convert to tidy data frame for easy plotting
-avg_sims_tidy <- gather(avg_sims, gene, count, matches('*gp*'))
-myplot <- ggplot(avg_sims_tidy, aes(`>time`, count)) + 
-  geom_line() +
-  facet_wrap(~ gene) +
-  panel_border()
+avg_sims_tidy <- gather(avg_sims, gene, count, matches('*gp*')) %>%
+  rename(tabasco_id = gene, sim_count = count, time = `>time`)
+
+write_csv(avg_sims_tidy, "../092115_A_avg.csv")
+
+# myplot <- ggplot(avg_sims_tidy, aes(`>time`, sim_count)) + 
+#   geom_line() +
+#   facet_wrap(~ gene) +
+#   panel_border()
