@@ -1,0 +1,116 @@
+#!/usr/bin/perl -w
+
+# C.Vogel, UT Austin, TX; April 2008
+
+# input: 
+# 	.arf file created by np_peptide_properties.pl
+#	lists attributes and rows of
+# 	protein_id *tab* peptide *tab* properties [separated by *comma*]
+# output:
+#	splits file into x smaller files (since WEKA cannot handle large files very well)
+#	.arff file for WEKA input (TESTING)
+#	.names file with Protein IDs and Peptide listed for corresponding .arff file
+
+# ======================================================================================
+use strict;
+$|=1;
+
+die "\nnp_arf_to_arff_TEST.pl  <.arf file with all peptides, properties>  <number of peptides per file (max 10^5)> <out file name>\n" unless ($#ARGV==2);
+my $arf = $ARGV[0]; 
+my $number_peptides = $ARGV[1];
+my $out = $ARGV[2];
+
+# ======================================================================================
+# first read through file
+# collecting attribute information 
+my @HEADER; # header information (@ lines)
+open (IN, $arf) or die "Cant open $arf\n";
+while ( my $line = <IN> ) {
+	next if length(chomp $line) == 0;
+	next if $line =~ /^\#/;
+	next unless $line =~ /^\@/;
+	push(@HEADER, $line);
+} # 
+close IN;
+
+print "\# COLLECTING HEADER\n", join("\n", @HEADER), "\n\n";
+
+# ======================================================================================
+# second read
+# make .arff files
+
+`rm -rf ARFF\_$out/`;
+`mkdir ARFF\_$out`;
+
+print "\# SCREENING BIG FILE\n";
+open (IN, $arf) or die "";
+my $linecount = 0;
+my $kcount = 0;
+my @STORE_NAMES;
+my @STORE_PEPTIDES;
+while ( my $line = <IN> ) {
+	next if length(chomp $line) == 0;
+	next if $line =~ /^\#/;
+	next if $line =~ /^\@/;
+	
+	if ( $linecount <= $number_peptides  ) {
+		# collecting information for x lines:
+		
+		$linecount++;
+		my ($id, $pept, $features) = split("\t", $line);
+		push(@STORE_NAMES, "$id\t$pept");
+		push(@STORE_PEPTIDES, $features);
+	} # if ( $linecount <= $number_peptides  ) {
+	else {
+		# print everything out: 
+		
+		print "\# PRINTING NEW FILE ARFF\_$out/$out\_$kcount.arff with $linecount lines\n";
+		
+		open (OUT, ">>ARFF\_$out/$out\_$kcount.arff");
+		print OUT "\@relation $out\_$kcount.arff\n\n";
+		print OUT join("\n", @HEADER), "\n";
+		print OUT "\@attribute MSdetectability {1,0}";
+		print OUT "\n\n\@data\n\n";
+		foreach my $feat ( @STORE_PEPTIDES )  {
+			print OUT "$feat,?\n";
+		} #  foreach my $feat ( @STORE_PEPTIDE )  {
+		close OUT;
+
+		open (NAMES, ">>ARFF\_$out/$out\_$kcount.names");
+		foreach my $name ( @STORE_NAMES )  {
+			print NAMES "$name\n";
+		} #  foreach my $feat ( @STORE_PEPTIDE )  {
+		close NAMES;
+		
+		# reset counting and storage
+		$linecount = 0;
+		$kcount++;
+		@STORE_NAMES = ();
+		@STORE_PEPTIDES = ();
+	} # if ( $linecount <= $number_peptides  ) {
+} # while ( my $line = <IN> ) {
+close IN;
+
+### print last file:
+
+print "\# MAKING LAST FILE ARFF\_$out/$out\_$kcount.arff with $linecount lines\n";
+		
+open (OUT, ">>ARFF\_$out/$out\_$kcount.arff");
+print OUT "\@relation $out\_$kcount.arff\n\n";
+print OUT join("\n", @HEADER), "\n";
+print OUT "\@attribute MSdetectability {1,0}";
+print OUT "\n\n\@data\n\n";
+foreach my $feat ( @STORE_PEPTIDES )  {
+	print OUT "$feat,?\n";
+} #  foreach my $feat ( @STORE_PEPTIDE )  {
+close OUT;
+
+open (NAMES, ">>ARFF\_$out/$out\_$kcount.names");
+foreach my $name ( @STORE_NAMES )  {
+	print NAMES "$name\n";
+} #  foreach my $feat ( @STORE_PEPTIDE )  {
+close NAMES;
+		
+# ======================================================================================
+# ======================================================================================
+

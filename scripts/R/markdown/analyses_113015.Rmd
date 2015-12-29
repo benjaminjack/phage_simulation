@@ -1,0 +1,72 @@
+---
+title: "Fitness"
+output: html_document
+---
+
+## Ratio of capsid protein in attenuated/wildtype are consistent with doubling times
+
+```{r, echo=FALSE}
+library(readr)
+library(stringr)
+library(dplyr)
+library(ggplot2)
+library(broom)
+library(tidyr)
+library(cowplot)
+
+# Burst size and lysis time estimates
+
+prots <- read_csv("rep1234_combined.csv", col_types = list(strain = col_character()))
+
+prots <- prots %>% filter(org=="phage", tabasco_id == "gp10A", b_rep != 1) %>%
+  mutate(strain = str_replace_all(strain, c("11-44" = "atten", "11-42" = "evol", "11-46" = "wt")))
+
+wildtype <- function(x)2^(43.2*(x/3600))
+attenuated <- function(x)2^(35.7*(x/3600))
+evolved <- function(x)2^(38.7*(x/3600))
+wt_atten_ratio <- function(x)(2^(35.7*(x/3600))/2^(43.2*(x/3600)))
+wt_evol_ratio <- function(x)(2^(38.7*(x/3600))/2^(43.2*(x/3600)))
+
+ggplot(data.frame(x=c(0,540)), aes(x)) + 
+  stat_function(fun=wildtype, geom="line", color="red") + 
+  stat_function(fun=attenuated, geom="line", color="green") + 
+  stat_function(fun=evolved, geom="line", color="blue") + 
+  geom_hline(y=wildtype(540)) + geom_hline(y=attenuated(540)) + 
+  geom_vline(x=540) +
+  geom_text(aes(x=250, y=60, label=attenuated(540)/wildtype(540))) +
+  ylab("phage particles") +
+  xlab("time (seconds)")
+
+```
+
+Growth curves for wildtype (red) and attenuated (green) and evolved (blue). At 9 minutes, the estimated ratio of wildtype phage particles to attenuated is about 0.46.
+
+```{r, echo=FALSE}
+prots <- prots %>% filter(org=="phage", tabasco_id == "gp10A", b_rep != 1)
+
+prots2 <- group_by(prots, strain, time) %>% summarize(area_mean = mean(area_norm))
+
+ggplot(prots2, aes(x=time, y=area_mean, group=strain, color=strain)) + geom_point() + geom_line()
+
+prots3 <- group_by(prots2, time) %>% 
+  summarize(wt_atten = area_mean[strain=="atten"]/area_mean[strain=="wt"], wt_evol = area_mean[strain=="evol"]/area_mean[strain=="wt"]) %>%
+  gather(strain, ratio, -time)
+
+prots3
+
+```
+
+The above plot shows the mean relative abundances of major capsid protein. **At 9 minutes, the ratio of mean capsid protein in attenuated relative to wildtype is 0.44, quite close (within 0.02) to what we would expect from doubling times.**
+
+## Something else is happening with the evolved strain
+
+```{r, echo=FALSE}
+
+ggplot(prots3, aes(x=time, y=ratio, group=strain, color=strain)) + 
+  stat_function(fun=wt_atten_ratio, geom="line", color="red") +
+  stat_function(fun=wt_evol_ratio, geom="line", color="blue") +
+  geom_point() + xlim(0,600) + ylim(0,1)
+
+```
+
+Ratio of attenuated to wildtype and evolved to wildtype. Curves are growth curves and points are relative protein abundances. At 9 minutes in the evolved, the phage have higher counts than we would expect based on major protein capsid levels. The evolved phage must be compensating in some way outside of the major capsid protein.

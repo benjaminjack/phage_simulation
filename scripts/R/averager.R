@@ -35,7 +35,7 @@ avg_sims <- mutate(all_sims, `>time` = round(`>time`)) %>% # Round time points s
 avg_sims_tidy <- gather(avg_sims, gene, count, matches('*gp*')) %>%
   rename(tabasco_id = gene, sim_count = count, time = `>time`)
 
-write_csv(avg_sims_tidy, "../092115_A_avg.csv")
+write_csv(avg_sims_tidy, "../100715_A_avg.csv")
 
 # myplot <- ggplot(avg_sims_tidy, aes(`>time`, sim_count)) + 
 #   geom_line() +

@@ -1,0 +1,219 @@
+---
+title: "Phage Analyses"
+output: html_document
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.width=12, fig.height=8,
+                      echo=FALSE, warning=FALSE, message=FALSE)
+
+library(dplyr)
+library(ggplot2)
+library(cowplot)
+library(readr)
+```
+
+
+## Part 1: Proteomics Data
+
+We have proteomics data from three different strains of T7 after 1, 5, and 9 minutes of infection in E. coli. Each time point has 2 replicates for a total of 18 samples.
+
+**11-42**: evolved phage with codon-modified gene 10
+
+**11-44**: initial codon-modified gene 10 phage
+
+**11-46**: wild-type phage
+
+**Normalization:** Data are areas normalized by total protein area (T7 and E. coli) for each sample.
+
+
+### Major capsid protein levels are suppressed in attenuated and evolved strains
+
+```{r}
+
+all_data <- read_csv('../092115AB_sim_exp_renorm.csv', col_types = list(strain = col_character()))
+
+ggplot(filter(all_data, tabasco_id == 'gp10A', strain != '11-42'), aes(x = strain, y = n_area, group = strain, color=factor(strain))) + 
+  geom_point(size = 3) +
+  stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y..), size=1) +
+  facet_wrap(~ time) +
+  panel_border() +
+  ylab("relative protein abundance") +
+  scale_x_discrete(labels = c('attenuated', 'wildtype')) +
+  theme(legend.position = "none")
+
+ggplot(filter(all_data, tabasco_id == 'gp10A'), aes(x = strain, y = n_area, group = strain, color=factor(strain))) + 
+  geom_point(size = 3) +
+  stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y..), size=1) +
+  facet_wrap(~ time) +
+  panel_border() +
+  ylab("relative protein abundance") +
+  scale_x_discrete(labels = c('evolved', 'attenuated', 'wildtype')) +
+  theme(legend.position = "none")
+
+
+```
+
+
+### All proteins except major capsid may also be suppressed in the evolved phage
+
+```{r}
+
+make_abundance_plot <- function(protein_data, data_labels) {
+
+  sums <- group_by(protein_data, strain, time, rep) %>% 
+    summarize(area_sum = sum(n_area)) %>% 
+    group_by(strain, time) %>%
+    summarize(area_mean = mean(area_sum), area_sd = sd(area_sum)) %>%
+    mutate(upper_error = area_mean + area_sd, lower_error = area_mean - area_sd)
+
+  myplot <- ggplot(sums, aes(x = strain, y = area_mean, group = strain, fill=factor(strain))) + 
+    geom_bar(stat="identity") +
+    geom_errorbar(aes(ymin = lower_error, ymax = upper_error), width = 0.5) +
+    facet_wrap(~ time) +
+    panel_border() +
+    ylab('total relative protein abundance') +
+    scale_x_discrete(labels = data_labels) +
+    theme(legend.position = "none")
+  
+  return(myplot)
+
+}
+
+plot_all_data <- make_abundance_plot(all_data, c("attenuated", "evolved", "wildtype"))
+plot_no10 <- make_abundance_plot(filter(all_data, 
+                                        tabasco_id != 'gp10A', 
+                                        tabasco_id != 'gp10B'), 
+                                 c("attenuated", "evolved", "wild-type"))
+plot_class3_no10 <- make_abundance_plot(filter(all_data, 
+                                               tabasco_id != 'gp10A', 
+                                               tabasco_id != 'gp10B', 
+                                               class == 3), 
+                                 c("attenuated", "evolved", "wildtype"))
+plot_class12 <- make_abundance_plot(filter(all_data, class != 3), c("attenuated", "evolved", "wildtype"))
+
+all_data2 <- filter(all_data, strain != '11-44')
+
+plot_all_datab <- make_abundance_plot(all_data2, c("attenuated", "wildtype"))
+plot_no10b <- make_abundance_plot(filter(all_data2, 
+                                        tabasco_id != 'gp10A', 
+                                        tabasco_id != 'gp10B'), 
+                                 c("attenuated", "evolved", "wildtype"))
+plot_class3_no10b <- make_abundance_plot(filter(all_data2, 
+                                               tabasco_id != 'gp10A', 
+                                               tabasco_id != 'gp10B', 
+                                               class ==3), 
+                                 c("attenuated", "wildtype"))
+plot_class12b <- make_abundance_plot(filter(all_data2, class != 3), c("attenuated", "wild-type"))
+
+
+save_plot('../plot_all_data.pdf', plot_all_data, base_width = 10)
+save_plot('../plot_no10.pdf', plot_no10, base_width = 10)
+save_plot('../plot_class3_no10.pdf', plot_class3_no10, base_width = 10)
+save_plot('../plot_12.pdf', plot_class12, base_width = 10)
+
+save_plot('../plot_all_datab.pdf', plot_all_datab, base_width = 8)
+save_plot('../plot_no10b.pdf', plot_no10b, base_width = 8)
+save_plot('../plot_class3_no10b.pdf', plot_class3_no10b, base_width = 8)
+save_plot('../plot_12b.pdf', plot_class12b, base_width = 8)
+
+```
+
+
+### Class 3 protein levels (not including capsid) may be suppressed in attenuated and evolved strains
+
+```{r}
+
+ggplot(filter(all_data, tabasco_id != 'gp10A', class == 3), aes(x = strain, y = n_area, group = strain, color=factor(strain))) + 
+  geom_point(size = 3) +
+  stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y..), size=1) + 
+  facet_wrap(~ time) +
+  panel_border()
+
+```
+
+Averaged across all genes and all replicates for a given time point and given strain, class 3 protein levels look similar to gp10A (just barely). I have not actually tested to see if any strain is significantly different from another across all genes.
+
+
+### Some class 3 genes behave like gp10A, some do not
+
+```{r, fig.height = 26}
+
+ggplot(filter(all_data, tabasco_id != 'gp10A', class == 3), aes(x = strain, y = n_area, group = strain, color=factor(strain))) + 
+  geom_point(size = 3) +
+  stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y..), size=1) +
+  facet_grid(tabasco_id ~ time, scales='free_y') +
+  panel_border()
+
+```
+
+Above is a detailed breakdown of every class 3 gene. Several genes follow the same pattern as gp10A, but others do not.
+
+
+## Part 2: Predicting protein levels with TABASCO
+
+Next, I wanted to compare predictions from TABASCO to our observed protein levels. To do this, simulated T7 infection _without_ mRNA degradation. I used parameters from the best performing model in Kosuri's thesis.
+
+```{r}
+
+# all_data <- group_by(all_data, strain, time, class, tabasco_id) %>% 
+#   summarize(n_area = mean(n_area), sim_count = unique(sim_count), sim_count2 = unique(sim_count2))
+
+cor1 <- cor.test(filter(all_data, strain == '11-42', time == '540', class==3)$n_area, filter(all_data, strain == '11-42', time == '540', class==3)$sim_count)
+cor2 <- cor.test(filter(all_data, strain == '11-44', time == '540', class==3)$n_area, filter(all_data, strain == '11-44', time == '540', class==3)$sim_count)
+cor3 <- cor.test(filter(all_data, strain == '11-46', time == '540', class==3)$n_area, filter(all_data, strain == '11-46', time == '540', class==3)$sim_count)
+
+cor1a <- cor.test(filter(all_data, strain == '11-42', time == '540', class==3)$n_area, filter(all_data, strain == '11-42', time == '540', class==3)$sim_count2)
+cor2a <- cor.test(filter(all_data, strain == '11-44', time == '540', class==3)$n_area, filter(all_data, strain == '11-44', time == '540', class==3)$sim_count2)
+cor3a <- cor.test(filter(all_data, strain == '11-46', time == '540', class==3)$n_area, filter(all_data, strain == '11-46', time == '540', class==3)$sim_count2)
+
+```
+
+### TABASCO's wild-type protein predictions correlate most strongly with the evolved phage protein data
+
+| Strain | Pearson correlation | Variance explained | P-value |
+|---|---|---|---|
+| 11-42 (evolved) | `r cor1$estimate` | `r cor1$estimate^2` | `r cor1$p.value` |
+| 11-44 (attenuated) | `r cor2$estimate` | `r cor2$estimate^2` | `r cor2$p.value` |
+| 11-46 (wild-type) | `r cor3$estimate` | `r cor3$estimate^2` | `r cor3$p.value` |
+
+Surprisingly, TABASCO could not predict protein levels in the wild-type strain above statistical significance. TABASCO did, however, predict 8% of the variance in the attenuated strain. 
+
+### Reducing ribosome pool in simulation by 75% had minimal impact on correlations
+
+| Strain | Pearson correlation | Variance explained | P-value |
+|---|---|---|---|
+| 11-42 (evolved) | `r cor1a$estimate` | `r cor1a$estimate^2` | `r cor1a$p.value` |
+| 11-44 (attenuated) | `r cor2a$estimate` | `r cor2a$estimate^2` | `r cor2a$p.value` |
+| 11-46 (wild-type) | `r cor3a$estimate` | `r cor3a$estimate^2` | `r cor3a$p.value` |
+
+
+## Part 3: Promoter deletion in TABASCO
+
+Next I ran a T7 simulation with the phi10 promoter deleted.
+
+### Deleting phi10 has minor effect on major capsid expression
+```{r}
+
+sim1 <- read_csv('../092115_A_avg.csv') %>% mutate(group = 'wildtype') %>% select(time, tabasco_id, sim_count, group)
+sim2 <- read_csv('../100715_A_avg.csv') %>% mutate(group = 'knockout') %>% select(time, tabasco_id, sim_count, group)
+
+all_sims <- bind_rows(sim1, sim2)
+
+ggplot(filter(all_sims, tabasco_id == "gp10A"), aes(x = time, y = sim_count, color = factor(group))) +   
+  geom_point()
+
+```
+
+### Deleting phi10 has (almost) no effect on overall gene expression
+
+```{r}
+
+ggplot(all_sims, aes(x = time, y = sim_count, color = factor(group))) + 
+  geom_point() + 
+  facet_wrap(~tabasco_id) +
+  panel_border()
+
+```
+
+In its current state, TABASCO does not simulate assembly of phage proteins into phage particles. Therefore, it does not estimate phage fitness. Previous T7 simulators (T72.5) used ODEs to simulate phage particle doubling times. TABASCO is a stochastic simulator that could, in theory, be extended to simulate packaging of phage proteins into phage particles.
