@@ -14,7 +14,7 @@ cleave_fasta <- function(fastafile) {
   sequence <- paste(seqs)
   df <- data.frame(name = seq_name, sequence = sequence)  %>%
     # Extract protein ID
-    mutate(protein_id = str_match(name, "[(\\[protein_id=)|(ref|)]([A-Z]{2}_[0-9\\.]+)[(\\])|\\|]")[,2]) %>%
+    mutate(protein_id = str_match(name, "^([A-Za-z0-9_\\.\\-:]+)\\s")[,2]) %>%
     select(-name) %>%
     # Cleave peptides using cleaver package
     mutate(sequence = as.character(sequence)) %>%
@@ -25,9 +25,7 @@ cleave_fasta <- function(fastafile) {
   return(df)
 }
 
-phage <- cleave_fasta("t7_proteome.txt")
-ecoli <- cleave_fasta("ec_k12.fasta")
-ecoli_phage <- bind_rows(phage, ecoli)
+ecoli_phage <- cleave_fasta("E_coli_REL606_with_T7_bacteriophage_and_MQ_contam.fasta")
 
 # Write out as TSV for perl script
 write.table(ecoli_phage, "peptides_test.tsv", quote=F, sep = "\t", row.names = F)
