@@ -37,4 +37,4 @@ cleave_fasta <- function(fastafile) {
 ecoli_phage <- cleave_fasta("E_coli_REL606_with_T7_bacteriophage_and_MQ_contam.fasta")
 
 # Write out as TSV for APEX perl script
-write.table(ecoli_phage, "peptides_test.tsv", quote=F, sep = "\t", row.names = F)
+write.table(ecoli_phage, "peptides.tsv", quote=F, sep = "\t", row.names = F)
