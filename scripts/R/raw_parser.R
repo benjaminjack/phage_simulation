@@ -2,11 +2,12 @@
 ## This script processes tab delimited files that have been exported from
 ## from the Thermo software, after a database search has been conducted.
 ## The input files contain all peptides detected and the corresponding
-## protein groups that they have been assigned.
+## protein groups that they have been assigned. Spectral counts are
+## normalized using APEX.
 ##
 ## Author: Benjamin R. Jack
 ## Email: benjamin.r.jack@gmail.com
-## November 2015
+## January 2016
 ###########################################################################
 
 # Remove any variables in memory
@@ -68,13 +69,23 @@ parse_psms <- function(peps, apex) {
     ungroup() %>%
     mutate(org = ifelse(grepl('NP', protein), 'phage', 'ecoli')) %>% # Assign organism group
     mutate(time = as.numeric(str_extract(time, '[0-9]+')) * 60) %>% # Convert time to seconds
+    group_by(strain, time) %>%
+    # APEX CALCULATIONS
+    filter(Oi != 0) %>% # Remove proteins with Oi values of 0
+    mutate(apex_pre = PSM/Oi) %>%
+    mutate(apex_sum = sum(apex_pre, na.rm = T)) %>% # Remove NAs for the few Oi values that don't map
+    mutate(apex = (PSM/(Oi*apex_sum))) %>%
+    ungroup() %>%
     group_by(strain, time, org) %>%
-    mutate(org_area = sum(area), org_psm = sum(PSM)) %>%
+    # Compute sums for each organism type
+    mutate(org_area = sum(area), org_psm = sum(PSM), org_apex = sum(apex, na.rm = T)) %>%
+    ungroup() %>%
     group_by(strain, time) %>%
     mutate(ecoli_area = ifelse((org == "phage"), (sum(area) - org_area), org_area),
-           ecoli_psm = ifelse((org == "phage"), (sum(PSM) - org_psm), org_psm)) %>%
-    mutate(area_norm = area/ecoli_area) %>% #Normalize to e. coli area
-    mutate(apex = PSM/Oi, apex_norm = apex/ecoli_psm, psm_norm = PSM/ecoli_psm)
+           ecoli_psm = ifelse((org == "phage"), (sum(PSM) - org_psm), org_psm),
+           ecoli_apex = ifelse((org == "phage"), (sum(apex, na.rm = T) - org_apex), org_apex)) %>%
+    #Normalize to e. coli area
+    mutate(area_norm = area/ecoli_area, psm_norm = PSM/ecoli_psm, apex_norm = apex/ecoli_apex)
   
   
 #   areas <- peps %>% ungroup() %>% filter(org == e.coli)
@@ -89,7 +100,7 @@ parse_psms <- function(peps, apex) {
 }
 
 # Read in Oi values
-apex <- read_tsv("./apex/weka_results/ecoli_t7_oi.txt") %>% 
+apex <- read_tsv("../apex/weka_results/apex_values.oi") %>% 
   select(-3) %>%
   rename(protein = `# PROTEIN_ID`)
 
@@ -115,10 +126,10 @@ rep4 <- read_tsv('./T7_Phage_Rep4_psms.txt') %>%
 all_reps <- bind_rows(rep1, rep2, rep3, rep4)
 
 # Join ID Map for simpler tabasco IDs
-tabasco <- read_excel('./id_map.xlsx') %>% mutate(Accession = trimws(Accession))
+tabasco <- read_excel('../id_map.xlsx') %>% mutate(Accession = trimws(Accession))
 all_reps <- left_join(all_reps, tabasco, by=c('protein' = 'Accession'))
 
-write_csv(all_reps, "./rep1234_combined_apex.csv")
+write_csv(all_reps, "../post_processed/rep1234_combined_apex.csv")
 
 sims <- read_csv('../tabasco_runs/092115_A_avg.csv')
 sims2 <- read_csv('../tabasco_runs/092115_B_avg.csv') %>% 
