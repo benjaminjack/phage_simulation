@@ -49,7 +49,7 @@ process_replicates <- function(files) {
               )
 
   out_df <- data.frame(file_names = files) %>%
-    separate(file_names, into = c("strain", "time", "rep"), sep = "_", remove = F) %>%
+    separate(file_names, into = c("strain", "time", "rep"), sep = "_", remove = F, extra = "drop") %>%
     mutate(strain = basename(strain)) %>%
     group_by(strain, time) %>%
     do(combine_tech_reps(as.character(.$file_names), normalize = F, relabel = relabel)) %>%

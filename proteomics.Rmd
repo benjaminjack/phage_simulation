@@ -1,5 +1,5 @@
 ---
-title: "APEX Phage Proteome Analyses"
+title: "Phage Proteome Analysis"
 output: html_document
 ---
 
@@ -12,11 +12,10 @@ library(ggplot2)
 library(cowplot)
 library(readr)
 library(stringr)
-library(readxl)
 ```
 
 
-We have proteomics data from three different strains of T7 after 1, 5, and 9 minutes of infection in E. coli. Each time point has 5 replicates.
+We have proteomics data from three different strains of T7 after 1, 5, and 9 minutes of infection in E. coli. Each time point has 4 replicates.
 
 **evol**: evolved phage with codon-modified gene 10
 
@@ -26,12 +25,11 @@ We have proteomics data from three different strains of T7 after 1, 5, and 9 min
 
 **Normalization:** Data are normalized by total protein area (T7 and E. coli) for each sample _after_ computing areas.
 
-## Areas for major capsid protein show least variation
 
 ```{r}
 
 # Load in replicates
-# rep1 <- read_csv("data/post_processed/rep1.csv")
+# rep1 <- read_csv("data/post_processed/rep1.csv") %>% mutate(time = paste0(time, "min"))
 rep2 <- read_csv("data/post_processed/rep2.csv")
 rep3 <- read_csv("data/post_processed/rep3.csv")
 rep4 <- read_csv("data/post_processed/rep4.csv")
@@ -51,40 +49,10 @@ labels <- read_csv("data/id_map.csv") %>% mutate(Accession = trimws(Accession))
 all_data <- left_join(all_data, labels, by = c("Proteins" = "Accession"))
 ```
 
-### Major capsid protein: areas
+### Major capsid protein levels are depressed in attenuated and evolved strains
+
 ```{r}
-ggplot(filter(all_data, tabasco_id == 'gp10A', strain == "wt"), aes(x = factor(time), y = area_norm, group=b_rep, color=factor(b_rep))) + 
-  geom_point(size = 3) +
-  geom_line() + 
-  panel_border() +
-  ylab("relative protein abundance")
-```
-Do we expect APEX to perform well with very highly expressed genes? 
-
-## Major capsid protein levels are suppressed in attenuated and evolved strains
-
-### APEX-normalized spectral counts
-```{r}
-
-all_data <- filter(all_data, org == "phage")
-
-ggplot(filter(all_data, tabasco_id == 'gp10A'), aes(x = strain, y = apex_norm, group = strain, color=factor(strain), order = desc(strain))) + 
-  geom_point(size = 3) +
-  stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y..), size=1) +
-  facet_wrap(~ time) +
-  panel_border() +
-  ylab("relative protein abundance") +
-  theme(legend.position = "none") +
-  geom_text(aes(x = strain, y = apex_norm, label = b_rep), hjust = -0.5)
-
-```
-
-## Peak areas
-```{r}
-
-all_data <- filter(all_data, org == "phage")
-
-ggplot(filter(all_data, tabasco_id == 'gp17'), aes(x = strain, y = area_norm, group = strain, color=factor(strain), order = desc(strain))) + 
+ggplot(filter(all_data, tabasco_id == 'gp10A'), aes(x = strain, y = area_norm, group = strain, color=factor(strain), order = desc(strain))) + 
   geom_point(size = 3) +
   stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y..), size=1) +
   facet_wrap(~ time) +
@@ -96,20 +64,6 @@ ggplot(filter(all_data, tabasco_id == 'gp17'), aes(x = strain, y = area_norm, gr
 ```
 
 ## Some phage proteins immediately downstream of gp10A are also suppressed
-
-### Apex-normalized spectral counts
-```{r, fig.height=20}
-
-ggplot(filter(all_data, tabasco_id %in% c('gp10A','gp11','gp12','gp13','gp14','gp15')), aes(x = strain, y = apex_norm, group = strain, color=factor(strain), order = desc(strain))) + 
-  geom_point(size = 3) +
-  stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y..), size=1) +
-  facet_grid(tabasco_id ~ time, scales = "free_y") +
-  panel_border() +
-  ylab("relative protein abundance") +
-  theme(legend.position = "none") +
-  geom_text(aes(x = strain, y = apex_norm, label = b_rep), hjust = -0.5)
-
-```
 
 ### Peak areas
 ```{r, fig.height=20}
@@ -135,7 +89,7 @@ make_abundance_plot <- function(protein_data) {
     summarize(area_sum2 = sum(area_norm)) %>% 
     filter(!is.na(area_sum2)) %>%
     group_by(strain, time) %>%
-    summarize(area_mean = mean(area_sum2), area_sd = sd(area_sum2)) %>%
+    summarize(area_mean = mean(area_sum2), area_sd = sd(area_sum2)/sqrt(n())) %>%
     mutate(upper_error = area_mean + area_sd, lower_error = area_mean - area_sd)
 
   myplot <- ggplot(sums, aes(x = strain, y = area_mean, group = strain, fill=factor(strain))) + 
@@ -150,26 +104,15 @@ make_abundance_plot <- function(protein_data) {
 
 }
 
-# plot_all_data <- make_abundance_plot(all_data)
+# Plot all data
+plot_all_data <- make_abundance_plot(all_data)
 
+# Plot without gp10A
 plot_no10 <- make_abundance_plot(filter(all_data, 
                                         tabasco_id != 'gp10A', 
                                         tabasco_id != 'gp10B'))
 
 plot_no10
-
-
-
-
-# save_plot('../plot_all_data.pdf', plot_all_data, base_width = 10)
-# save_plot('../plot_no10.pdf', plot_no10, base_width = 10)
-# save_plot('../plot_class3_no10.pdf', plot_class3_no10, base_width = 10)
-# save_plot('../plot_12.pdf', plot_class12, base_width = 10)
-# 
-# save_plot('../plot_all_datab.pdf', plot_all_datab, base_width = 8)
-# save_plot('../plot_no10b.pdf', plot_no10b, base_width = 8)
-# save_plot('../plot_class3_no10b.pdf', plot_class3_no10b, base_width = 8)
-# save_plot('../plot_12b.pdf', plot_class12b, base_width = 8)
 
 ```
 
@@ -186,8 +129,7 @@ plot_class3_no10
 
 ```
 
-Averaged across all genes and all replicates for a given time point and given strain, class 3 protein levels look similar to gp10A (just barely). I have not actually tested to see if any strain is significantly different from another across all genes.
-
+Averaged across all genes and all replicates for a given time point and given strain, class 3 protein levels look similar to gp10A (just barely). I have not actually tested to see if any strain is significantly different from another across all genes (see mixed effects ANOVA below).
 
 ### Classes 1 and 2 also look roughly the same across all three strains
 
@@ -199,17 +141,22 @@ plot_class12
 
 ```
 
-### Some class 3 genes behave like gp10A, some do not
+## Mixed models: Can we control for batch effects?
 
-```{r, fig.height = 40}
+Looking at the class 3 genes, there seem to be systematic batch effects between biological replicates. For example, replicate 4 might have lower abundances for a given protein in all three strains. I've attempted to model this with a mixed effects model:
 
-ggplot(filter(all_data, tabasco_id != 'gp10A', class == 3), aes(x = strain, y = area_norm, group = strain, color=factor(strain))) + 
-  geom_point(size = 3) +
-  stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y..), size=1) +
-  facet_grid(tabasco_id ~ time, scales='free_y') +
-  panel_border() + 
-  geom_text(aes(x = strain, y = area_norm, label = b_rep), hjust = -0.5)
+```{r, echo = T}
+library(lmerTest)
+
+# Let's just look at the 9min mark without the evolved strain or gp10A
+all_data2 <- filter(all_data, tabasco_id != "gp10A", time == "9min", strain != "evol", class == 3)
+
+# Build a model with protein abundance as the response, strain and protein as fixed, and biological replicate as random
+mod <- lmer(area_norm ~ strain + tabasco_id + (1 | b_rep), data = all_data2)
+
+anova(mod)
 
 ```
 
-Above is a detailed breakdown of every class 3 gene. Several genes follow the same pattern as gp10A, but others do not.
+According to the ANOVA test above, the protein abundances for class 3 genes (excluding gp10A) across strains are significantly different. I still have to make sure that some assumptions made by ANOVA are not being violated here.
+
