@@ -12,6 +12,7 @@ library(ggplot2)
 library(cowplot)
 library(readr)
 library(stringr)
+library(tidyr)
 ```
 
 
@@ -46,7 +47,7 @@ all_data <- mutate(all_data, time = ifelse(b_rep == 1 & time == "1min" & strain 
 
 # Join in standard gene labels
 labels <- read_csv("data/id_map.csv") %>% mutate(Accession = trimws(Accession))
-all_data <- left_join(all_data, labels, by = c("Proteins" = "Accession"))
+all_data <- left_join(all_data, labels, by = c("Proteins" = "Accession")) %>% filter(org == "phage")
 ```
 
 ### Major capsid protein levels are depressed in attenuated and evolved strains
@@ -63,12 +64,12 @@ ggplot(filter(all_data, tabasco_id == 'gp10A'), aes(x = strain, y = area_norm, g
 
 ```
 
-## Some phage proteins immediately downstream of gp10A are also suppressed
+## Phage proteins immediately downstream of gp10A are also depressed
 
 ### Peak areas
 ```{r, fig.height=20}
 
-ggplot(filter(all_data, tabasco_id %in% c('gp10A','gp11','gp12','gp13','gp14','gp15')), aes(x = strain, y = area_norm, group = strain, color=factor(strain), order = desc(strain))) + 
+ggplot(filter(all_data, tabasco_id %in% c('gp10A','gp11','gp12','gp13','gp14','gp15', 'gp18')), aes(x = strain, y = area_norm, group = strain, color=factor(strain), order = desc(strain))) + 
   geom_point(size = 3) +
   stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y..), size=1) +
   facet_grid(tabasco_id ~ time, scales = "free_y") +
@@ -78,6 +79,8 @@ ggplot(filter(all_data, tabasco_id %in% c('gp10A','gp11','gp12','gp13','gp14','g
   geom_text(aes(x = strain, y = area_norm, label = b_rep), hjust = -0.5)
 
 ```
+
+The difference in abundance between the wildtype and attenuated strains for the above proteins are all significant (see the table of p-values at the bottom of the document).
 
 ## In aggregate, phage protein levels (not including major capsid) look about the same across strains
 
@@ -159,4 +162,23 @@ anova(mod)
 ```
 
 According to the ANOVA test above, the protein abundances for class 3 genes (excluding gp10A) across strains are significantly different. I still have to make sure that some assumptions made by ANOVA are not being violated here.
+
+```{r}
+
+all_data3 <- filter(all_data, time == "9min", strain != "evol") %>%
+  select(strain, b_rep, class, tabasco_id, Proteins, area_norm) %>%
+  spread(strain, area_norm) %>%
+  na.omit() %>%
+  nest(-Proteins, -tabasco_id, -class) %>%
+  mutate(t_test = purrr::map(data, ~ broom::tidy(t.test(.$wt, .$atten, data = ., paired = T)))) %>%
+  select(-data) %>%
+  unnest() %>%
+  select(Proteins, tabasco_id, class, p.value, estimate) %>%
+  filter(p.value < 0.05) %>%
+  arrange(p.value)
+  
+
+knitr::kable(all_data3)
+
+```
 
