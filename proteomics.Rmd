@@ -169,7 +169,8 @@ all_data3 <- filter(all_data, time == "9min", strain != "evol") %>%
   select(strain, b_rep, class, tabasco_id, Proteins, area_norm) %>%
   spread(strain, area_norm) %>%
   na.omit() %>%
-  nest(-Proteins, -tabasco_id, -class) %>%
+  group_by(Proteins, tabasco_id, class) %>%
+  nest() %>%
   mutate(t_test = purrr::map(data, ~ broom::tidy(t.test(.$wt, .$atten, data = ., paired = T)))) %>%
   select(-data) %>%
   unnest() %>%
