@@ -182,3 +182,4 @@ knitr::kable(all_data3)
 
 ```
 
+In the attenuated strain, `r length(unique((all_data3 %>% filter(class == 3))$tabasco_id))`/`r length(unique((all_data %>% filter(class == 3))$tabasco_id))` of class 3 proteins have significantly lower abundances. All but one gene (gp6.5) occur immediately downstream of 10A.
