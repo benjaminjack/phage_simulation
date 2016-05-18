@@ -53,7 +53,8 @@ all_data <- left_join(all_data, labels, by = c("Proteins" = "Accession")) %>% fi
 ### Major capsid protein levels are depressed in attenuated and evolved strains
 
 ```{r}
-ggplot(filter(all_data, tabasco_id == 'gp10A'), aes(x = strain, y = area_norm, group = strain, color=factor(strain), order = desc(strain))) + 
+maj_cap_plot <- ggplot(filter(all_data, tabasco_id == 'gp10A'), 
+                       aes(x = strain, y = area_norm, group = strain, color=factor(strain), order = desc(strain))) + 
   geom_point(size = 3) +
   stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y..), size=1) +
   facet_wrap(~ time) +
@@ -61,6 +62,8 @@ ggplot(filter(all_data, tabasco_id == 'gp10A'), aes(x = strain, y = area_norm, g
   ylab("relative protein abundance") +
   theme(legend.position = "none") +
   geom_text(aes(x = strain, y = area_norm, label = b_rep), hjust = -0.5)
+
+save_plot("figures/maj_cap.pdf", maj_cap_plot)
 
 ```
 
