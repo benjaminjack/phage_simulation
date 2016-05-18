@@ -23,13 +23,17 @@ for record in records:
             elif "product" in feature.qualifiers:
                 gene_name = feature.qualifiers["product"][0]
 
-            if "protein_id" in feature.qualifiers:
-                id = feature.qualifiers["protein_id"][0]
-            elif "locus_tag" in feature.qualifiers:
+            # Everything should have a locus tag
+            if "locus_tag" in feature.qualifiers:
                 id = feature.qualifiers["locus_tag"][0]
 
+            # Grab protein ID if applicable
+            prot_id = "NA"
+            if "protein_id" in feature.qualifiers:
+                prot_id = feature.qualifiers["protein_id"][0]
+
             # Construct a string in FASTA format
-            out = ">"+str(record.id)+"|"+str(id)+"|"+str(feature.type)+"|"+str(gene_name)+"\n"
+            out = ">"+str(record.id)+"|"+str(id)+"|"+str(prot_id)+"|"+str(feature.type)+"|"+str(gene_name)+"\n"
             out += seq[feature.location.start.position:feature.location.end.position]
 
             out += "\n"
