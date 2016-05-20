@@ -29,6 +29,9 @@ We have proteomics data from three different strains of T7 after 1, 5, and 9 min
 
 ```{r}
 
+# Any missing values for protein data need to be assigned 0!
+# Perhaps use full join of some sort?
+
 # Load in replicates
 # rep1 <- read_csv("data/proteomics/rep1.csv") %>% mutate(time = paste0(time, "min"))
 rep2 <- read_csv("data/proteomics/rep2.csv")
