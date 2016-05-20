@@ -30,11 +30,11 @@ We have proteomics data from three different strains of T7 after 1, 5, and 9 min
 ```{r}
 
 # Load in replicates
-# rep1 <- read_csv("data/post_processed/rep1.csv") %>% mutate(time = paste0(time, "min"))
-rep2 <- read_csv("data/post_processed/rep2.csv")
-rep3 <- read_csv("data/post_processed/rep3.csv")
-rep4 <- read_csv("data/post_processed/rep4.csv")
-rep5 <- read_csv("data/post_processed/rep5.csv")
+# rep1 <- read_csv("data/proteomics/rep1.csv") %>% mutate(time = paste0(time, "min"))
+rep2 <- read_csv("data/proteomics/rep2.csv")
+rep3 <- read_csv("data/proteomics/rep3.csv")
+rep4 <- read_csv("data/proteomics/rep4.csv")
+rep5 <- read_csv("data/proteomics/rep5.csv")
 
 all_data <- bind_rows(rep2, rep3, rep4, rep5) %>%
   mutate(strain = str_replace_all(strain, c("11-44" = "atten", "11-42" = "evol", "11-46" = "wt"))) %>%
@@ -63,7 +63,7 @@ maj_cap_plot <- ggplot(filter(all_data, tabasco_id == 'gp10A'),
   theme(legend.position = "none") +
   geom_text(aes(x = strain, y = area_norm, label = b_rep), hjust = -0.5)
 
-save_plot("figures/maj_cap.pdf", maj_cap_plot)
+save_plot("figures/maj_cap.pdf", maj_cap_plot, base_aspect_ratio = 1.5)
 
 ```
 
@@ -72,7 +72,8 @@ save_plot("figures/maj_cap.pdf", maj_cap_plot)
 ### Peak areas
 ```{r, fig.height=20}
 
-ggplot(filter(all_data, tabasco_id %in% c('gp10A','gp11','gp12','gp13','gp14','gp15', 'gp18')), aes(x = strain, y = area_norm, group = strain, color=factor(strain), order = desc(strain))) + 
+class3_plot <- ggplot(filter(all_data, tabasco_id %in% c('gp3','gp10A','gp11','gp12','gp13','gp14','gp15', 'gp18')), 
+                      aes(x = strain, y = area_norm, group = strain, color=factor(strain), order = desc(strain))) + 
   geom_point(size = 3) +
   stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y..), size=1) +
   facet_grid(tabasco_id ~ time, scales = "free_y") +
@@ -80,6 +81,10 @@ ggplot(filter(all_data, tabasco_id %in% c('gp10A','gp11','gp12','gp13','gp14','g
   ylab("relative protein abundance") +
   theme(legend.position = "none") +
   geom_text(aes(x = strain, y = area_norm, label = b_rep), hjust = -0.5)
+
+class3_plot
+
+save_plot("figures/class3.pdf", class3_plot, base_height = 15, base_width = 8)
 
 ```
 
@@ -147,7 +152,7 @@ plot_class12
 
 ```
 
-## Mixed models: Can we control for batch effects?
+## Which proteins are significantly different across strains?
 
 Looking at the class 3 genes, there seem to be systematic batch effects between biological replicates. For example, replicate 4 might have lower abundances for a given protein in all three strains. I've attempted to model this with a mixed effects model:
 
@@ -164,7 +169,8 @@ anova(mod)
 
 ```
 
-According to the ANOVA test above, the protein abundances for class 3 genes (excluding gp10A) across strains are significantly different. I still have to make sure that some assumptions made by ANOVA are not being violated here.
+According to the ANOVA test above, the protein abundances for class 3 genes (excluding gp10A) across strains are significantly different. I still have to make sure that some assumptions made by ANOVA are not being violated here. Below is a table of FDR-corrected p-values. Proteins immediately downstream of 10A are suppressed in the wild-type.
+
 
 ```{r}
 
@@ -178,12 +184,62 @@ all_data3 <- filter(all_data, time == "9min", strain != "evol") %>%
   select(-data) %>%
   unnest() %>%
   select(Proteins, tabasco_id, class, p.value, estimate) %>%
-  filter(p.value < 0.05) %>%
-  arrange(p.value)
+  mutate(p.value_adj = p.adjust(p.value, method = "fdr")) %>%
+  filter(p.value_adj < 0.3) %>%
+  arrange(p.value_adj)
   
 
 knitr::kable(all_data3)
 
 ```
 
-In the attenuated strain, `r length(unique((all_data3 %>% filter(class == 3))$tabasco_id))`/`r length(unique((all_data %>% filter(class == 3))$tabasco_id))` of class 3 proteins have significantly lower abundances. All but one gene (gp6.5) occur immediately downstream of 10A.
+In the attenuated strain, `r length(unique((all_data3 %>% filter(class == 3, p.value_adj < 0.1))$tabasco_id))`/`r length(unique((all_data %>% filter(class == 3))$tabasco_id))` of class 3 proteins have significantly lower abundances. All but one gene (gp6.5) occur immediately downstream of 10A.
+
+# Which proteins are significantly different between 5 and 9 minutes? Is this different for different strains?
+
+### Wildtype
+
+```{r}
+# Compare 5 and 9 min
+# Compare 1 and 5 min
+# When do genes turn on?
+all_data4 <- filter(all_data, time != "1min", strain == "wt") %>%
+  select(time, b_rep, class, tabasco_id, Proteins, area_norm) %>%
+  spread(time, area_norm) %>%
+  na.omit() %>%
+  group_by(Proteins, tabasco_id, class) %>%
+  filter(n() > 2) %>%
+  nest() %>%
+  mutate(t_test = purrr::map(data, ~ broom::tidy(t.test(.$`5min`, .$`9min`, data = ., paired = T)))) %>%
+  select(-data) %>%
+  unnest() %>%
+  select(Proteins, tabasco_id, class, p.value, estimate) %>%
+  mutate(p.value_adj = p.adjust(p.value, method = "fdr")) %>%
+  filter(p.value_adj < 0.3) %>%
+  arrange(p.value_adj)
+
+knitr::kable(all_data4)
+
+```
+
+### Attenuated
+
+```{r}
+all_data5 <- filter(all_data, time != "1min", strain == "atten") %>%
+  select(time, b_rep, class, tabasco_id, Proteins, area_norm) %>%
+  spread(time, area_norm) %>%
+  na.omit() %>%
+  group_by(Proteins, tabasco_id, class) %>%
+  filter(n() > 2) %>%
+  nest() %>%
+  mutate(t_test = purrr::map(data, ~ broom::tidy(t.test(.$`5min`, .$`9min`, data = ., paired = T)))) %>%
+  select(-data) %>%
+  unnest() %>%
+  select(Proteins, tabasco_id, class, p.value, estimate) %>%
+  mutate(p.value_adj = p.adjust(p.value, method = "fdr")) %>%
+  filter(p.value_adj < 0.3) %>%
+  arrange(p.value_adj)
+
+knitr::kable(all_data5)
+
+```
