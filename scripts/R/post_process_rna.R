@@ -36,7 +36,9 @@ reps <- data.frame(dir_names = basename(rna_dirs[-(1:1)]), path = rna_dirs[-(1:1
   unnest() %>%
   # Extract organism and gene info
   separate(target_id, c("org", "gene_name", "prot_id", "gene_type"), sep="\\|", extra="drop") %>%
-  select(-path)
+  select(-path) %>%
+  # Replace org column wiht something more useful
+  mutate(org = ifelse(org == "NC_001604.1", "phage", "ecoli"))
 
 # Write out RNA data
 write_csv(reps, "./data/all_rna.csv")
