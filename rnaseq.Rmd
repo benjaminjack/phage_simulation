@@ -77,4 +77,19 @@ ggplot(phagerna, aes(x = strain, y = est_counts_renorm, fill = factor(b_rep))) +
 
 ```
 
+...And T7 polymerase:
+
+```{r}
+
+phagerna <- filter(rna, gene_type == "CDS") %>%
+  group_by(b_rep, strain, time) %>%
+  mutate(total_count = sum(est_counts), est_counts_renorm = est_counts/total_count) %>%
+  filter(gene_name == "T7p07")
+
+ggplot(phagerna, aes(x = strain, y = est_counts_renorm, fill = factor(b_rep))) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  facet_grid(org ~ time)
+
+```
+
 Any individual genes still look somewhat noisy. This could have to do with the timing, or maybe a more sophisticated normalization method is required. Next, I plan to re-run kallisto with a reference transcriptome that doesn't contain any rRNA genes to see if kallisto's normalization is better than simply summing the estimated counts as I did above.
