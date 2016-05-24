@@ -93,3 +93,47 @@ ggplot(phagerna, aes(x = strain, y = est_counts_renorm, fill = factor(b_rep))) +
 ```
 
 Any individual genes still look somewhat noisy. This could have to do with the timing, or maybe a more sophisticated normalization method is required. Next, I plan to re-run kallisto with a reference transcriptome that doesn't contain any rRNA genes to see if kallisto's normalization is better than simply summing the estimated counts as I did above.
+
+## Mapping to a transcriptome without ribosomal RNA
+
+I re-ran kallisto with a reference transcriptome that doesn't contain any rRNA genes. I also ran it with the experimentally derived mean fragment length of 450 and sd of 250. This causes short transcripts to drop out, but these are transcripts that can't be reliably quantitated given the fragment length.
+
+Let's look at the overall proportion of transcripts between T7 and E. coli.
+
+```{r}
+
+rna2 <- read_csv("./data/all_rna_no_ribo.csv") %>%
+  # Replace strain names with something more useful
+  mutate(strain = str_replace_all(strain, c("11-42" = "evol", "11-44" = "atten", "11-46" = "wt")))
+
+phagerna2 <- rna2 %>% 
+  group_by(b_rep, time, strain, org) %>%
+  summarize(tpm = sum(tpm))
+  
+ggplot(phagerna2, aes(x = strain, y = tpm, fill = factor(b_rep))) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  facet_grid(org ~ time)
+```
+
+Gene 10A transcripts:
+
+```{r}
+phagerna2 <- filter(rna2, gene_name == "T7p45")
+
+ggplot(phagerna2, aes(x = strain, y = tpm, fill = factor(b_rep))) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  facet_grid(~ time)
+
+```
+
+The overall distributions between the two biological replicates look decent:
+
+```{r fig.width=10, fig.height=8}
+
+# Plot distribution with psuedo counts
+ggplot(rna2 %>% mutate(tpm = tpm + 1), aes(x = tpm, fill = factor(b_rep))) + 
+  geom_density(alpha = 0.5) + 
+  scale_x_log10() + 
+  facet_grid(strain ~ time)
+
+```

@@ -32,6 +32,7 @@ normalize_areas <- function(prots) {
     mutate(org_area = sum(area_mean)) %>%
     ungroup() %>%
     group_by(strain, time) %>%
+    # Hack-y way of making a column that shows the sum of all ecoli protein areas
     mutate(ecoli_area = ifelse((org == "phage"), (sum(area_mean) - org_area), org_area)) %>%
     #Normalize to e. coli area
     mutate(area_norm = area_mean/ecoli_area) -> prots2
