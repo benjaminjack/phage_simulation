@@ -28,9 +28,14 @@ phagerna <- rna %>%
   group_by(b_rep, time, strain) %>%
   summarize(tpm = sum(tpm))
   
-ggplot(phagerna, aes(x = strain, y = tpm, fill = factor(b_rep))) + 
+rna_raw_plot <- ggplot(phagerna, aes(x = strain, y = tpm, fill = factor(b_rep))) + 
   geom_bar(stat = "identity", position = "dodge") + 
   facet_grid( ~ time)
+
+rna_raw_plot
+
+save_plot("figures/rna_raw.pdf", rna_raw_plot, base_aspect_ratio = 2)
+
 ```
 
 These differences in TPM (transcripts per million), are driven by differences in rRNA levels:
@@ -41,9 +46,11 @@ phagerna <- rna %>%
   group_by(b_rep, strain, time, gene_type) %>%
   summarize(counts = sum(tpm))
 
-ggplot(phagerna, aes(x = strain, y = counts, fill = factor(gene_type))) + 
+ribo_rna <- ggplot(phagerna, aes(x = strain, y = counts, fill = factor(gene_type))) + 
   geom_bar(stat = "identity", position = "dodge") + 
   facet_grid(b_rep ~ time)
+
+save_plot("figures/ribo_rna.pdf", ribo_rna, base_aspect_ratio = 2)
 
 ```
 
@@ -110,19 +117,31 @@ phagerna2 <- rna2 %>%
   group_by(b_rep, time, strain, org) %>%
   summarize(tpm = sum(tpm))
   
-ggplot(phagerna2, aes(x = strain, y = tpm, fill = factor(b_rep))) + 
+rna_no_ribo <- ggplot(phagerna2, aes(x = strain, y = tpm, fill = factor(b_rep))) + 
   geom_bar(stat = "identity", position = "dodge") + 
   facet_grid(org ~ time)
+
+save_plot("figures/rna_no_ribo.pdf", rna_no_ribo, base_aspect_ratio = 2)
 ```
 
-Gene 10A transcripts:
+Gene 10A transcripts and gene 1 transcripts::
 
 ```{r}
 phagerna2 <- filter(rna2, gene_name == "T7p45")
 
-ggplot(phagerna2, aes(x = strain, y = tpm, fill = factor(b_rep))) + 
+gp10_plot <- ggplot(phagerna2, aes(x = strain, y = tpm, fill = factor(b_rep))) + 
   geom_bar(stat = "identity", position = "dodge") + 
   facet_grid(~ time)
+
+save_plot("figures/gp10_rna.pdf", gp10_plot, base_aspect_ratio = 2)
+
+phagerna2 <- filter(rna2, gene_name == "T7p07")
+
+gp1_plot <- ggplot(phagerna2, aes(x = strain, y = tpm, fill = factor(b_rep))) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  facet_grid(~ time)
+
+save_plot("figures/gp1_rna.pdf", gp1_plot, base_aspect_ratio = 2)
 
 ```
 

@@ -86,7 +86,7 @@ save_plot("figures/maj_cap.pdf", maj_cap_plot, base_aspect_ratio = 1.5)
 ```{r, fig.height=20}
 
 class3_plot_data <- filter(all_data, 
-                           tabasco_id %in% c('gp3','gp10A','gp11','gp12','gp13','gp14','gp15', 'gp18'))
+                           tabasco_id %in% c('gp10A','gp11','gp12','gp13','gp14','gp15'))
 
 class3_plot <- ggplot(class3_plot_data, 
                       aes(x = strain, y = area_norm, group = strain, color=factor(strain), order = desc(strain))) + 
@@ -100,9 +100,9 @@ class3_plot <- ggplot(class3_plot_data,
 
 # For manuscript, just show 9 minute
 class3_plot_ms <- class3_plot %+% filter(class3_plot_data, time == "9min") + 
-  facet_wrap(~tabasco_id, scales = "free_y", ncol = 2, dir = "v")
+  facet_wrap(~tabasco_id, scales = "free_y", ncol = 3, dir = "h")
 
-save_plot("figures/class3.pdf", class3_plot_ms, base_height = 8, base_width = 6)
+save_plot("figures/class3.pdf", class3_plot_ms, base_height = 5, base_width = 9)
 
 ```
 
@@ -285,5 +285,26 @@ changes_early <- inner_join(atten_early, wt_early) %>%
   arrange(p.value_adj)
 
 knitr::kable(changes_early)
+
+```
+
+The following compares gp9, which is just upstream of gp10A, and gp11, which is just downstream:
+
+```{r}
+
+time_diff_data <- filter(all_data, 
+                           tabasco_id %in% c('gp9', 'gp11'))
+
+time_diff_plot <- ggplot(time_diff_data, 
+                      aes(x = strain, y = area_norm, group = strain, color=factor(strain), order = desc(strain))) + 
+  geom_point(size = 3) +
+  stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y..), size=1) +
+  facet_grid(tabasco_id ~ time, scales = "free_y") +
+  panel_border() +
+  ylab("relative protein abundance") +
+  theme(legend.position = "none") +
+  geom_text(aes(x = strain, y = area_norm, label = b_rep), hjust = -0.5)
+
+save_plot("figures/time_diff.pdf", time_diff_plot, base_height = 5, base_width = 9)
 
 ```
