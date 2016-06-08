@@ -15,7 +15,7 @@ library(readxl)
 
 # Each RNA seq rep is stored in a directory with all the sample ID information
 # Actual abundunces are inside the directory saved as "abundances.tsv"
-rna_dirs <- list.dirs("./data/rna_seq/no_rrna/")
+rna_dirs <- list.dirs("./data/rna_seq/no_rrna_trna_merge/")
 
 # Read in sample info
 sample_info <- read_excel("./data/SampleList.xlsx") %>%
@@ -41,5 +41,5 @@ reps <- data.frame(dir_names = basename(rna_dirs[-(1:1)]), path = rna_dirs[-(1:1
   mutate(org = ifelse(org == "NC_001604.1", "phage", "ecoli"))
 
 # Write out RNA data
-write_csv(reps, "./data/all_rna_no_ribo.csv")
+write_csv(reps, "./data/all_rna_no_ribo_trna_merge.csv")
   

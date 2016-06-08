@@ -121,10 +121,12 @@ rna_no_ribo <- ggplot(phagerna2, aes(x = strain, y = tpm, fill = factor(b_rep)))
   geom_bar(stat = "identity", position = "dodge") + 
   facet_grid(org ~ time)
 
+rna_no_ribo
+
 save_plot("figures/rna_no_ribo.pdf", rna_no_ribo, base_aspect_ratio = 2)
 ```
 
-Gene 10A transcripts and gene 1 transcripts::
+Gene 10A transcripts and gene 1 transcripts:
 
 ```{r}
 phagerna2 <- filter(rna2, gene_name == "T7p45")
@@ -133,6 +135,8 @@ gp10_plot <- ggplot(phagerna2, aes(x = strain, y = tpm, fill = factor(b_rep))) +
   geom_bar(stat = "identity", position = "dodge") + 
   facet_grid(~ time)
 
+gp10_plot
+
 save_plot("figures/gp10_rna.pdf", gp10_plot, base_aspect_ratio = 2)
 
 phagerna2 <- filter(rna2, gene_name == "T7p07")
@@ -140,6 +144,8 @@ phagerna2 <- filter(rna2, gene_name == "T7p07")
 gp1_plot <- ggplot(phagerna2, aes(x = strain, y = tpm, fill = factor(b_rep))) + 
   geom_bar(stat = "identity", position = "dodge") + 
   facet_grid(~ time)
+
+gp1_plot
 
 save_plot("figures/gp1_rna.pdf", gp1_plot, base_aspect_ratio = 2)
 
@@ -156,3 +162,44 @@ ggplot(rna2 %>% mutate(tpm = tpm + 1), aes(x = tpm, fill = factor(b_rep))) +
   facet_grid(strain ~ time)
 
 ```
+
+### Using tRNA levels for normalization
+
+tRNA content in each sample at each time:
+
+```{r}
+rna <- read_csv("./data/all_rna_no_ribo_trna_merge.csv") %>%
+  # Replace strain names with something more useful
+  mutate(strain = str_replace_all(strain, c("11-42" = "evol", "11-44" = "atten", "11-46" = "wt")))
+
+phagerna <- rna %>%
+  group_by(b_rep, strain, time, gene_type) %>%
+  summarize(counts = sum(est_counts))
+
+ribo_rna <- ggplot(phagerna %>% filter(gene_type == "tRNA"), aes(x = strain, y = counts)) + 
+  geom_bar(stat = "identity") + 
+  facet_grid(b_rep ~ time)
+
+ribo_rna
+```
+
+Normalizing to total tRNA content does not seem like an effective normalization strategy:
+
+```{r}
+# Normalize to total tRNAs
+
+trnas <- rna %>%
+  filter(gene_type == "tRNA") %>%
+  group_by(b_rep, strain, time) %>%
+  summarize(trna_count = sum(est_counts))
+
+rna2 <- rna %>%
+  left_join(trnas) %>%
+  mutate(count = (est_counts/trna_count)*1e6)
+
+ggplot(rna2 %>% filter(gene_name == "T7p45"), aes(x = strain, y = count, fill = factor(b_rep))) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  facet_grid(~ time)
+
+```
+

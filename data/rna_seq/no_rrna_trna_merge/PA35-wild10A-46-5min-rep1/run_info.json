@@ -1,0 +1,9 @@
+{
+	"n_targets": 4379,
+	"n_bootstraps": 0,
+	"n_processed": 40466718,
+	"kallisto_version": "0.42.5",
+	"index_version": 10,
+	"start_time": "Wed Jun  8 15:23:31 2016",
+	"call": "kallisto quant -i /Volumes/Seagate/T7wild_ecoli_ref_no_ribo_trna_merge.idx -o ./PA35-wild10A-46-5min-rep1 --single -l 450 -s 250 /Volumes/Seagate/RNAseq/PA35-wild10A-46-5min-rep1.fastq.gz"
+}
