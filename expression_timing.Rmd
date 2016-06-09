@@ -25,18 +25,20 @@ sim <- read_csv("data/tabasco_runs/091815_B_avg.csv")
 genes <- c("RNA: gp10A", 
             "RNA: gp9", 
             "RNA: gp8", 
-            "RNA: gp7", 
+            "RNA: gp7",
+            "RNA: gp7.3",
+            "RNA: gp7.7",
             "RNA: gp11", 
             "RNA: gp12", 
             "RNA: gp13", 
             "RNA: gp14", 
             "RNA: gp15")
 
-ggplot(sim %>% filter(tabasco_id %in% genes, time <= 300), aes(x = time, y = sim_count, color = tabasco_id)) + 
+ggplot(sim %>% filter(tabasco_id %in% genes, time <= 600), aes(x = time, y = sim_count, color = tabasco_id)) + 
   geom_line() + 
-  coord_cartesian(xlim = c(200, 320), ylim = c(0, 600)) + 
+  coord_cartesian(xlim = c(200, 700), ylim = c(0, 3000)) + 
   geom_text_repel(
-    data = filter(sim, tabasco_id %in% genes, time == 300),
+    data = filter(sim, tabasco_id %in% genes, time == 600),
     aes(label = tabasco_id),
     size = 4,
     nudge_x = 10,
@@ -54,18 +56,20 @@ ggplot(sim %>% filter(tabasco_id %in% genes, time <= 300), aes(x = time, y = sim
 prots <- c("gp10A", 
             "gp9", 
             "gp8", 
-            "gp7", 
+            "gp7",
+            "gp7.3",
+            "gp7.7",
             "gp11", 
             "gp12", 
             "gp13", 
             "gp14", 
             "gp15")
 
-ggplot(sim %>% filter(tabasco_id %in% prots, time <= 300), aes(x = time, y = sim_count, color = tabasco_id, group = tabasco_id)) + 
+ggplot(sim %>% filter(tabasco_id %in% prots, time <= 600), aes(x = time, y = sim_count, color = tabasco_id, group = tabasco_id)) + 
   geom_line() + 
-  coord_cartesian(xlim = c(200, 320), ylim = c(0, 900)) + 
+  coord_cartesian(xlim = c(200, 700), ylim = c(0, 7500)) + 
   geom_text_repel(
-    data = filter(sim, tabasco_id %in% prots, time == 300),
+    data = filter(sim, tabasco_id %in% prots, time == 600),
     aes(label = tabasco_id),
     size = 4,
     nudge_x = 6,
@@ -86,11 +90,11 @@ Initially, Kosuri, et al did not include mRNA degradation in their model. I used
 
 sim <- read_csv("data/tabasco_runs/092115_A_avg.csv")
 
-ggplot(sim %>% filter(tabasco_id %in% genes, time <= 300), aes(x = time, y = sim_count, color = tabasco_id, group = tabasco_id)) + 
+ggplot(sim %>% filter(tabasco_id %in% genes, time <= 600), aes(x = time, y = sim_count, color = tabasco_id, group = tabasco_id)) + 
   geom_line() + 
-  coord_cartesian(xlim = c(200, 320), ylim = c(0, 450)) + 
+  coord_cartesian(xlim = c(200, 700), ylim = c(0, 3000)) + 
   geom_text_repel(
-    data = filter(sim, tabasco_id %in% genes, time == 300),
+    data = filter(sim, tabasco_id %in% genes, time == 600),
     aes(label = tabasco_id),
     size = 4,
     nudge_x = 10,
@@ -107,11 +111,11 @@ The model without mRNA degradation has lower class 3 transcript abundances than 
 
 ```{r tabasco_no_mrnadeg_prot}
 
-ggplot(sim %>% filter(tabasco_id %in% prots, time <= 300), aes(x = time, y = sim_count, color = tabasco_id, group = tabasco_id)) + 
+ggplot(sim %>% filter(tabasco_id %in% prots, time <= 600), aes(x = time, y = sim_count, color = tabasco_id, group = tabasco_id)) + 
   geom_line() + 
-  coord_cartesian(xlim = c(200, 320), ylim = c(0, 800)) + 
+  coord_cartesian(xlim = c(200, 700), ylim = c(0, 7000)) + 
   geom_text_repel(
-    data = filter(sim, tabasco_id %in% prots, time == 300),
+    data = filter(sim, tabasco_id %in% prots, time == 600),
     aes(label = tabasco_id),
     size = 4,
     nudge_x = 6,
