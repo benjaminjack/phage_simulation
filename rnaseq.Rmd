@@ -149,6 +149,10 @@ gp1_plot
 
 save_plot("figures/gp1_rna.pdf", gp1_plot, base_aspect_ratio = 2)
 
+gp1_10_plot <- plot_grid(gp10_plot, gp1_plot, ncol = 1, labels = c("A", "B"))
+
+save_plot("figures/gp1_10A_rna.pdf", gp1_10_plot, base_width = 8, base_height = 6)
+
 ```
 
 The overall distributions between the two biological replicates look decent:

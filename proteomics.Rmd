@@ -313,18 +313,18 @@ time_diff_plot
 
 ```
 
-## Gene 7 and Gene 10
+## Exploring protein ratios
 
 ```{r}
-gp7_data <- filter(all_data, 
-                   tabasco_id %in% c('gp7', 'gp10A'), 
-                   time %in% c('1min', '5min'))
+ratio_data <- filter(all_data, 
+                   tabasco_id %in% c('gp9', 'gp10A', 'gp17', 'gp8'), 
+                   time %in% c('1min', '5min', '9min'))
 
-gp7_plot <- ggplot(gp7_data, 
+ratio_plot <- ggplot(ratio_data, 
                       aes(x = strain, y = area_norm, group = strain, color=factor(strain), order = desc(strain))) + 
   geom_point(size = 3) +
   stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y..), size=1) +
-  facet_grid(tabasco_id ~ time) +
+  facet_grid(tabasco_id ~ time, scales = "free_y") +
   panel_border() +
   ylab("relative protein abundance") +
   theme(legend.position = "none") +
@@ -332,7 +332,19 @@ gp7_plot <- ggplot(gp7_data,
 
 # save_plot("figures/time_diff.pdf", time_diff_plot, base_height = 5, base_width = 9)
 
-gp7_plot
+ratio_plot
 
+ratio_data2 <- filter(ratio_data, time == "9min") %>%
+  select(-time) %>%
+  group_by(strain, tabasco_id) %>%
+  summarize(area = mean(area_norm)) %>%
+  spread(tabasco_id, area) %>%
+  bind_rows(data.frame(strain = "true_ratio", gp10A = 415, gp17=18, gp9=125, gp8=12)) %>%
+  mutate(`gp10A:gp9` = gp10A/gp9,
+         `gp10A:gp17` = gp10A/gp17,
+         `gp10A:gp8` = gp10A/gp8) %>%
+  select(-gp10A, -gp9, -gp8, -gp17)
+
+knitr::kable(ratio_data2)
 
 ```
