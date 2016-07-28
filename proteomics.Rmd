@@ -342,7 +342,9 @@ ratio_data2 <- filter(ratio_data, time == "9min") %>%
   bind_rows(data.frame(strain = "true_ratio", gp10A = 415, gp17=18, gp9=125, gp8=12)) %>%
   mutate(`gp10A:gp9` = gp10A/gp9,
          `gp10A:gp17` = gp10A/gp17,
-         `gp10A:gp8` = gp10A/gp8) %>%
+         `gp10A:gp8` = gp10A/gp8,
+         `gp9:gp17` = gp9/gp17,
+         `gp9:gp8` = gp9/gp8) %>%
   select(-gp10A, -gp9, -gp8, -gp17)
 
 knitr::kable(ratio_data2)
