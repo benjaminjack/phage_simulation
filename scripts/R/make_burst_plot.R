@@ -3,14 +3,14 @@ library(ggplot2)
 
 burst <- read_csv("data/burst.csv")
 
-strain_order <- c("11_46  ( /ul)", "11_44  ( /ul)", "11_42 ( /ul)")
-strain_labels <- c("wildtype", "attenuated", "evolved")
+strain_order <- c("11_44  ( /ul)", "11_42 ( /ul)", "11_46  ( /ul)")
+strain_labels <- c("recoded", "evolved", "wildtype")
 
 burst_plot <- ggplot(burst, aes(x = strain, y = burst_size)) + 
-  geom_point() + 
-  geom_line(aes(group=rep)) + 
-  stat_summary(fun.y = "mean", geom = "crossbar", fun.ymin="mean", fun.ymax="mean") +
-  scale_x_discrete(name = "Strain", limits = strain_order, labels = strain_labels) +
-  ylab("Burst Size")
+  geom_point(color="grey85") + 
+  geom_line(aes(group=rep), color="grey85") + 
+  stat_summary(fun.y = "mean", geom = "errorbar", fun.ymin="mean", fun.ymax="mean", size=1, width=0.75) +
+  scale_x_discrete(name = "strain", limits = strain_order, labels = strain_labels) +
+  ylab("burst size")
 
 save_plot("./figures/burst_size.pdf", burst_plot)

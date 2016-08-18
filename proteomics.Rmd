@@ -40,7 +40,7 @@ rep4 <- read_csv("data/proteomics/rep4.csv")
 rep5 <- read_csv("data/proteomics/rep5.csv")
 
 all_data <- bind_rows(rep2, rep3, rep4, rep5) %>%
-  mutate(strain = str_replace_all(strain, c("11-44" = "atten", "11-42" = "evol", "11-46" = "wt"))) %>%
+  mutate(strain = str_replace_all(strain, c("11-44" = "recoded", "11-42" = "evolved", "11-46" = "wildtype"))) %>%
   mutate(Proteins = trimws(Proteins))
 
 # Correct wonky labeling
@@ -59,24 +59,28 @@ all_data <- filter(all_data, org == "phage") %>%
   group_by(strain, time, b_rep) %>%
   # Join by each group seperately so that missing phage proteins are filled in with NAs
   do(full_join(., labels, by = c("Proteins" = "Accession")) %>% fill(strain, time, b_rep)) %>%
-  mutate(area_norm = ifelse(is.na(area_norm), 0, area_norm)) # Fill in missing proteins (NAs) with 0
+  mutate(area_norm = ifelse(is.na(area_norm), 0, area_norm)) %>% # Fill in missing proteins (NAs) with 0
+  mutate(tabasco_id = str_replace_all(tabasco_id, c("gp10A" = "gp10")))
   # left_join(all_data, labels, by = c("Proteins" = "Accession")) %>% filter(org == "phage")
 ```
 
 ### Major capsid protein levels are depressed in attenuated and evolved strains
 
 ```{r}
-maj_cap_plot <- ggplot(filter(all_data, tabasco_id == 'gp10A'), 
-                       aes(x = strain, y = area_norm, group = strain, color=factor(strain), order = desc(strain))) + 
-  geom_point(size = 3) +
-  stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y..), size=1) +
-  facet_wrap(~ time) +
+all_data$time <- factor(all_data$time, labels = c("1min" = "1 minute", "5min" = "5 minutes", "9min" = "9 minutes"))
+all_data$strain <- factor(all_data$strain,  levels = c("recoded", "evolved", "wildtype"))
+maj_cap_plot <- ggplot(filter(all_data, tabasco_id == 'gp10'), 
+                       aes(x = strain, y = area_norm)) + 
+  geom_point(size = 2, color="grey85") +
+  geom_line(aes(group=b_rep), color="grey85") +
+  stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y.., group = strain), size=1) +
+  facet_wrap(~ time, label = ) +
   panel_border() +
   ylab("relative protein abundance") +
-  theme(legend.position = "none") +
-  geom_text(aes(x = strain, y = area_norm, label = b_rep), hjust = -0.5)
+  theme(legend.position = "none")
+#  geom_text(aes(x = strain, y = area_norm, label = b_rep), hjust = -0.5)
 
-save_plot("figures/maj_cap.pdf", maj_cap_plot, base_aspect_ratio = 1.5)
+save_plot("figures/maj_cap.pdf", maj_cap_plot, base_aspect_ratio = 2)
 
 ```
 
@@ -85,26 +89,45 @@ save_plot("figures/maj_cap.pdf", maj_cap_plot, base_aspect_ratio = 1.5)
 ### Peak areas
 ```{r, fig.height=20}
 
+# prot_list <- c('gp10','gp11','gp12','gp13','gp14','gp15', 'gp18', 'gp3')
+
+# prot_list <- c('gp10','gp11','gp12','gp13','gp14','gp15')
+
+prot_list <- c('gp7','gp9')
+
 class3_plot_data <- filter(all_data, 
-                           tabasco_id %in% c('gp7', 'gp7.3', 'gp7.7', 'gp10A','gp11','gp12','gp13','gp14','gp15'))
+                           tabasco_id %in% prot_list)
+
+class3_plot_data$tabasco_id <- factor(class3_plot_data$tabasco_id, levels = prot_list)
 
 class3_plot <- ggplot(class3_plot_data, 
-                      aes(x = strain, y = area_norm, group = strain, color=factor(strain), order = desc(strain))) + 
-  geom_point(size = 3) +
-  stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y..), size=1) +
+                      aes(x = strain, y = area_norm, group=b_rep)) + 
+  geom_point(size = 3, color="grey85") +
+  geom_line(color="grey85") + 
+  stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y.., group=strain), size=1) +
   facet_grid(tabasco_id ~ time, scales = "free_y") +
   panel_border() +
   ylab("relative protein abundance") +
-  theme(legend.position = "none") +
-  geom_text(aes(x = strain, y = area_norm, label = b_rep), hjust = -0.5)
+  theme(legend.position = "none")
+#  geom_text(aes(x = strain, y = area_norm, label = b_rep), hjust = -0.5)
 
 # For manuscript, just show 9 minute
-class3_plot_ms <- class3_plot %+% filter(class3_plot_data, time == "9min") + 
-  facet_wrap(~tabasco_id, scales = "free_y", ncol = 3, dir = "h")
+class3_plot_ms <- class3_plot %+% filter(class3_plot_data, time == "9 minutes") + 
+  facet_wrap(~tabasco_id, scales = "free_y", ncol = 2, dir = "h")
+
+class3_plot_beacon <- class3_plot %+% filter(class3_plot_data, time == "9 minutes") + 
+  facet_wrap(~tabasco_id, scales = "free_y", nrow = 2, dir = "h")
+
+class3_9_plot_beacon <- class3_plot %+% filter(class3_plot_data, time == "9 minutes") + 
+  facet_wrap(~tabasco_id, scales = "free_y", ncol = 2, dir = "h")
 
 class3_plot
 
-save_plot("figures/class3.pdf", class3_plot_ms, base_height = 5, base_width = 9)
+save_plot("figures/class3.pdf", class3_plot_ms, base_height = 9, base_width = 7)
+
+save_plot("figures/class3_beacon.pdf", class3_plot_beacon, base_height = 5, base_width = 10)
+
+save_plot("figures/class3_9_beacon.pdf", class3_9_plot_beacon, base_height = 4, base_width = 8)
 
 ```
 
@@ -116,17 +139,17 @@ The difference in abundance between the wildtype and attenuated strains for the 
 
 make_abundance_plot <- function(protein_data) {
 
-  sums <- group_by(protein_data, strain, time, b_rep) %>% 
+  sums <- group_by(protein_data, strain, time, class, b_rep) %>% 
     summarize(area_sum2 = sum(area_norm)) %>% 
     filter(!is.na(area_sum2)) %>%
-    group_by(strain, time) %>%
+    group_by(strain, time, class) %>%
     summarize(area_mean = mean(area_sum2), area_sd = sd(area_sum2)/sqrt(n())) %>%
     mutate(upper_error = area_mean + area_sd, lower_error = area_mean - area_sd)
 
-  myplot <- ggplot(sums, aes(x = strain, y = area_mean, group = strain, fill=factor(strain))) + 
+  myplot <- ggplot(sums %>% filter(time == "9 minutes", !is.na(class)), aes(x = strain, y = area_mean, group = strain)) + 
     geom_bar(stat="identity") +
     geom_errorbar(aes(ymin = lower_error, ymax = upper_error), width = 0.5) +
-    facet_wrap(~ time) +
+    facet_wrap(~ class, nrow = 1, scales = "free_y", labeller = "label_both") +
     panel_border() +
     ylab('total relative protein abundance') +
     theme(legend.position = "none")
@@ -137,6 +160,9 @@ make_abundance_plot <- function(protein_data) {
 
 # Plot all data
 plot_all_data <- make_abundance_plot(all_data)
+
+save_plot("figures/class123_prot.pdf", plot_all_data, base_width = 8.5, base_height = 3)
+
 
 # Plot without gp10A
 plot_no10 <- make_abundance_plot(filter(all_data, 

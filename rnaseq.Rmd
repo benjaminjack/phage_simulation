@@ -13,7 +13,7 @@ library(cowplot)
 
 rna <- read_csv("./data/all_rna.csv") %>%
   # Replace strain names with something more useful
-  mutate(strain = str_replace_all(strain, c("11-42" = "evol", "11-44" = "atten", "11-46" = "wt")))
+  mutate(strain = str_replace_all(strain, c("11-42" = "evolved", "11-44" = "recoded", "11-46" = "wildtype")))
 
 ```
 
@@ -111,19 +111,28 @@ Let's look at the overall proportion of transcripts between T7 and E. coli.
 
 rna2 <- read_csv("./data/all_rna_no_ribo.csv") %>%
   # Replace strain names with something more useful
-  mutate(strain = str_replace_all(strain, c("11-42" = "evol", "11-44" = "atten", "11-46" = "wt")))
+  mutate(strain = str_replace_all(strain, c("11-42" = "evolved", "11-44" = "recoded", "11-46" = "wildtype")))
+
+rna2$strain <- factor(rna2$strain, levels = c("recoded", "evolved", "wildtype"))
+rna2$time <- factor(rna2$time, labels = c("1min" = "1 minute", "5min" = "5 minutes", "9min" = "9 minutes"))
 
 phagerna2 <- rna2 %>% 
   group_by(b_rep, time, strain, org) %>%
   summarize(tpm = sum(tpm))
+
+phagerna2$org <- factor(phagerna2$org, labels = c("ecoli" = "E. coli", "phage" = "T7"))
   
-rna_no_ribo <- ggplot(phagerna2, aes(x = strain, y = tpm, fill = factor(b_rep))) + 
-  geom_bar(stat = "identity", position = "dodge") + 
-  facet_grid(org ~ time)
+rna_no_ribo <- ggplot(phagerna2, aes(x = strain, y = tpm, group=b_rep)) + 
+  geom_point(color="grey85") +
+  geom_line(color="grey85") +
+  stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y.., group = strain), size=1) +
+  facet_grid(org ~ time) +
+  panel_border() +
+  ylab("transcripts per million")
 
 rna_no_ribo
 
-save_plot("figures/rna_no_ribo.pdf", rna_no_ribo, base_aspect_ratio = 2)
+save_plot("figures/rna_no_ribo.pdf", rna_no_ribo, base_height = 5, base_width = 8)
 ```
 
 Gene 10A transcripts and gene 1 transcripts:
@@ -131,9 +140,13 @@ Gene 10A transcripts and gene 1 transcripts:
 ```{r}
 phagerna2 <- filter(rna2, gene_name == "T7p45")
 
-gp10_plot <- ggplot(phagerna2, aes(x = strain, y = tpm, fill = factor(b_rep))) + 
-  geom_bar(stat = "identity", position = "dodge") + 
-  facet_grid(~ time)
+gp10_plot <- ggplot(phagerna2, aes(x = strain, y = tpm, group = b_rep)) + 
+  geom_point(color="grey85") +
+  geom_line(color="grey85") + 
+  stat_summary(geom="errorbar", fun.y = "mean", aes(ymin = ..y.., ymax = ..y.., group = strain), size = 1) +
+  facet_grid(~ time) +
+  ylab("transcripts per million") +
+  panel_border()
 
 gp10_plot
 
@@ -141,9 +154,13 @@ save_plot("figures/gp10_rna.pdf", gp10_plot, base_aspect_ratio = 2)
 
 phagerna2 <- filter(rna2, gene_name == "T7p07")
 
-gp1_plot <- ggplot(phagerna2, aes(x = strain, y = tpm, fill = factor(b_rep))) + 
-  geom_bar(stat = "identity", position = "dodge") + 
-  facet_grid(~ time)
+gp1_plot <- ggplot(phagerna2, aes(x = strain, y = tpm, group = b_rep)) + 
+  geom_point(color="grey85") +
+  geom_line(color="grey85") + 
+  stat_summary(geom="errorbar", fun.y = "mean", aes(ymin = ..y.., ymax = ..y.., group = strain), size = 1) +
+  facet_grid(~ time) +
+  ylab("transcripts per million") +
+  panel_border()
 
 gp1_plot
 
