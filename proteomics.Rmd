@@ -16,13 +16,13 @@ library(tidyr)
 ```
 
 
-We have proteomics data from three different strains of T7 after 1, 5, and 9 minutes of infection in E. coli. Each time point has 4 replicates.
+We have proteomics data from three different strains of T7 after 1, 5, and 9 minutes of infection in E. coli. Each time point has 4 replicates. There is an additional replicate done year earlier than the other 4 which is not included in the analyses.
 
-**evol**: evolved phage with codon-modified gene 10
+**evolved**: evolved phage with codon-modified gene 10
 
-**atten**: initial codon-modified gene 10 phage
+**recoded**: initial codon-modified gene 10 phage
 
-**wt**: wild-type phage
+**wildtype**: wild-type phage
 
 **Normalization:** Data are normalized by total protein area (T7 and E. coli) for each sample _after_ computing areas.
 
@@ -40,67 +40,67 @@ rep4 <- read_csv("data/proteomics/rep4.csv")
 rep5 <- read_csv("data/proteomics/rep5.csv")
 
 all_data <- bind_rows(rep2, rep3, rep4, rep5) %>%
-  mutate(strain = str_replace_all(strain, c("11-44" = "recoded", "11-42" = "evolved", "11-46" = "wildtype"))) %>%
+  mutate(strain = str_replace_all(strain, c("11-44" = "atten", "11-42" = "evol", "11-46" = "wt"))) %>%
   mutate(Proteins = trimws(Proteins))
 
-# Correct wonky labeling
-all_data <- mutate(all_data, time = ifelse(b_rep == 1 & time == "1min" & strain == "wt", "temp", time)) %>% 
-  mutate(time = ifelse(b_rep == 1 & time == "9min" & strain == "wt", "1min", time)) %>% 
-  mutate(time = ifelse(b_rep == 1 & time == "temp" & strain == "wt", "9min", time)) # %>%
-  # Correct replicate 4 wildtype labeling?
-  # mutate(time = ifelse(b_rep == 4 & strain == "wt" & time == "5min", "temp", time)) %>%
-  # mutate(time = ifelse(b_rep == 4 & strain == "wt" & time == "1min", "5min", time)) %>%
-  # mutate(time = ifelse(b_rep == 4 & strain == "wt" & time == "temp", "1min", time))
+# Correct wonky labeling for replicate 1
+# all_data <- mutate(all_data, time = ifelse(b_rep == 1 & time == "1min" & strain == "wt", "temp", time)) %>% 
+#  mutate(time = ifelse(b_rep == 1 & time == "9min" & strain == "wt", "1min", time)) %>% 
+#  mutate(time = ifelse(b_rep == 1 & time == "temp" & strain == "wt", "9min", time)) # %>%
 
-# Join in standard gene labels
-# This should probably take place in post_process.R from some master list of proteins that we're interested in
+# Join in standard gene labels. This should probably take place in post_process.R from some master 
+# list of proteins that we're. Currently I am using a hand-curated list.
 labels <- read_csv("data/id_map.csv") %>% mutate(Accession = trimws(Accession))
 all_data <- filter(all_data, org == "phage") %>% 
   group_by(strain, time, b_rep) %>%
   # Join by each group seperately so that missing phage proteins are filled in with NAs
   do(full_join(., labels, by = c("Proteins" = "Accession")) %>% fill(strain, time, b_rep)) %>%
   mutate(area_norm = ifelse(is.na(area_norm), 0, area_norm)) %>% # Fill in missing proteins (NAs) with 0
-  mutate(tabasco_id = str_replace_all(tabasco_id, c("gp10A" = "gp10")))
-  # left_join(all_data, labels, by = c("Proteins" = "Accession")) %>% filter(org == "phage")
+  mutate(tabasco_id = str_replace_all(tabasco_id, c("gp10A" = "gp10"))) # Technically we can't distinguish 10A from 10B so we just compile them together as gp10
 ```
 
-### Major capsid protein levels are depressed in attenuated and evolved strains
+### Major capsid protein levels are depressed in recoded and evolved strains
 
 ```{r}
-all_data$time <- factor(all_data$time, labels = c("1min" = "1 minute", "5min" = "5 minutes", "9min" = "9 minutes"))
-all_data$strain <- factor(all_data$strain,  levels = c("recoded", "evolved", "wildtype"))
+time_labels <- c(
+  "1min" = "1 minute",
+  "5min" = "5 minutes",
+  "9min" = "9 minutes"
+)
+strain_labels <- c(
+  "atten" = "recoded",
+  "evol" = "evolved",
+  "wt" = "wildtype"
+)
+
 maj_cap_plot <- ggplot(filter(all_data, tabasco_id == 'gp10'), 
                        aes(x = strain, y = area_norm)) + 
   geom_point(size = 2, color="grey85") +
   geom_line(aes(group=b_rep), color="grey85") +
   stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y.., group = strain), size=1) +
-  facet_wrap(~ time, label = ) +
+  facet_wrap(~ time, labeller = as_labeller(time_labels)) +
+  scale_x_discrete(label = strain_labels) +
   panel_border() +
   ylab("relative protein abundance") +
   theme(legend.position = "none")
-#  geom_text(aes(x = strain, y = area_norm, label = b_rep), hjust = -0.5)
 
 save_plot("figures/maj_cap.pdf", maj_cap_plot, base_aspect_ratio = 2)
 
 ```
 
-## Phage proteins immediately downstream of gp10A are also depressed
+## Phage proteins immediately downstream of gp10 are also depressed
 
 ### Peak areas
 ```{r, fig.height=20}
 
-# prot_list <- c('gp10','gp11','gp12','gp13','gp14','gp15', 'gp18', 'gp3')
+prot_list_all <- c('gp10','gp11','gp12','gp13','gp14','gp15', 'gp18', 'gp3')
 
-# prot_list <- c('gp10','gp11','gp12','gp13','gp14','gp15')
+class3_plot_all_data <- filter(all_data, 
+                           tabasco_id %in% prot_list_all)
 
-prot_list <- c('gp7','gp9')
+class3_plot_all_data$tabasco_id <- factor(class3_plot_all_data$tabasco_id, levels = prot_list_all)
 
-class3_plot_data <- filter(all_data, 
-                           tabasco_id %in% prot_list)
-
-class3_plot_data$tabasco_id <- factor(class3_plot_data$tabasco_id, levels = prot_list)
-
-class3_plot <- ggplot(class3_plot_data, 
+class3_plot <- ggplot(class3_plot_all_data, 
                       aes(x = strain, y = area_norm, group=b_rep)) + 
   geom_point(size = 3, color="grey85") +
   geom_line(color="grey85") + 
@@ -109,25 +109,14 @@ class3_plot <- ggplot(class3_plot_data,
   panel_border() +
   ylab("relative protein abundance") +
   theme(legend.position = "none")
-#  geom_text(aes(x = strain, y = area_norm, label = b_rep), hjust = -0.5)
 
 # For manuscript, just show 9 minute
-class3_plot_ms <- class3_plot %+% filter(class3_plot_data, time == "9 minutes") + 
-  facet_wrap(~tabasco_id, scales = "free_y", ncol = 2, dir = "h")
-
-class3_plot_beacon <- class3_plot %+% filter(class3_plot_data, time == "9 minutes") + 
-  facet_wrap(~tabasco_id, scales = "free_y", nrow = 2, dir = "h")
-
-class3_9_plot_beacon <- class3_plot %+% filter(class3_plot_data, time == "9 minutes") + 
+class3_plot_ms <- class3_plot %+% filter(class3_plot_all_data, time == "9min") + 
   facet_wrap(~tabasco_id, scales = "free_y", ncol = 2, dir = "h")
 
 class3_plot
 
 save_plot("figures/class3.pdf", class3_plot_ms, base_height = 9, base_width = 7)
-
-save_plot("figures/class3_beacon.pdf", class3_plot_beacon, base_height = 5, base_width = 10)
-
-save_plot("figures/class3_9_beacon.pdf", class3_9_plot_beacon, base_height = 4, base_width = 8)
 
 ```
 
@@ -146,10 +135,11 @@ make_abundance_plot <- function(protein_data) {
     summarize(area_mean = mean(area_sum2), area_sd = sd(area_sum2)/sqrt(n())) %>%
     mutate(upper_error = area_mean + area_sd, lower_error = area_mean - area_sd)
 
-  myplot <- ggplot(sums %>% filter(time == "9 minutes", !is.na(class)), aes(x = strain, y = area_mean, group = strain)) + 
+  myplot <- ggplot(sums %>% filter(time == "9min", !is.na(class)), aes(x = strain, y = area_mean, group = strain)) + 
     geom_bar(stat="identity") +
     geom_errorbar(aes(ymin = lower_error, ymax = upper_error), width = 0.5) +
     facet_wrap(~ class, nrow = 1, scales = "free_y", labeller = "label_both") +
+    scale_x_discrete(label = strain_labels) +
     panel_border() +
     ylab('total relative protein abundance') +
     theme(legend.position = "none")
@@ -166,8 +156,7 @@ save_plot("figures/class123_prot.pdf", plot_all_data, base_width = 8.5, base_hei
 
 # Plot without gp10A
 plot_no10 <- make_abundance_plot(filter(all_data, 
-                                        tabasco_id != 'gp10A', 
-                                        tabasco_id != 'gp10B'))
+                                        tabasco_id != 'gp10'))
 
 plot_no10
 
@@ -178,8 +167,7 @@ plot_no10
 ```{r}
 
 plot_class3_no10 <- make_abundance_plot(filter(all_data, 
-                                               tabasco_id != 'gp10A', 
-                                               tabasco_id != 'gp10B', 
+                                               tabasco_id != 'gp10', 
                                                class == 3))
 
 plot_class3_no10
@@ -206,7 +194,7 @@ Looking at the class 3 genes, there seem to be systematic batch effects between 
 library(lmerTest)
 
 # Let's just look at the 9min mark without the evolved strain or gp10A
-all_data2 <- filter(all_data, tabasco_id != "gp10A", time == "9min", strain != "evol", class == 3)
+all_data2 <- filter(all_data, tabasco_id != "gp10", time == "9min", strain != "evol", class == 3)
 
 # Build a model with protein abundance as the response, strain and protein as fixed, and biological replicate as random
 mod <- lmer(area_norm ~ strain + tabasco_id + (1 | b_rep), data = all_data2)
@@ -321,17 +309,18 @@ The following compares gp9, which is just upstream of gp10A, and gp11, which is 
 ```{r}
 
 time_diff_data <- filter(all_data, 
-                           tabasco_id %in% c('gp9', 'gp11'))
+                           tabasco_id %in% c('gp9', 'gp11'), time == "9min")
 
 time_diff_plot <- ggplot(time_diff_data, 
-                      aes(x = strain, y = area_norm, group = strain, color=factor(strain), order = desc(strain))) + 
-  geom_point(size = 3) +
-  stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y..), size=1) +
-  facet_grid(tabasco_id ~ time, scales = "free_y") +
+                      aes(x = strain, y = area_norm, group = b_rep)) + 
+  geom_point(size = 3, color="grey85") +
+  geom_line(color="grey85") +
+  stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y.., group = strain), size=1) +
+  facet_wrap(~tabasco_id, scales = "free_y") +
+  scale_x_discrete(label = strain_labels) +
   panel_border() +
   ylab("relative protein abundance") +
-  theme(legend.position = "none") +
-  geom_text(aes(x = strain, y = area_norm, label = b_rep), hjust = -0.5)
+  theme(legend.position = "none")
 
 save_plot("figures/time_diff.pdf", time_diff_plot, base_height = 5, base_width = 9)
 
@@ -343,7 +332,7 @@ time_diff_plot
 
 ```{r}
 ratio_data <- filter(all_data, 
-                   tabasco_id %in% c('gp9', 'gp10A', 'gp17', 'gp8'), 
+                   tabasco_id %in% c('gp9', 'gp10', 'gp17', 'gp8'), 
                    time %in% c('1min', '5min', '9min'))
 
 ratio_plot <- ggplot(ratio_data, 
@@ -356,8 +345,6 @@ ratio_plot <- ggplot(ratio_data,
   theme(legend.position = "none") +
   geom_text(aes(x = strain, y = area_norm, label = b_rep), hjust = -0.5)
 
-# save_plot("figures/time_diff.pdf", time_diff_plot, base_height = 5, base_width = 9)
-
 ratio_plot
 
 ratio_data2 <- filter(ratio_data, time == "9min") %>%
@@ -365,13 +352,13 @@ ratio_data2 <- filter(ratio_data, time == "9min") %>%
   group_by(strain, tabasco_id) %>%
   summarize(area = mean(area_norm)) %>%
   spread(tabasco_id, area) %>%
-  bind_rows(data.frame(strain = "true_ratio", gp10A = 415, gp17=18, gp9=125, gp8=12)) %>%
-  mutate(`gp10A:gp9` = gp10A/gp9,
-         `gp10A:gp17` = gp10A/gp17,
-         `gp10A:gp8` = gp10A/gp8,
+  bind_rows(data.frame(strain = "true_ratio", gp10 = 415, gp17=18, gp9=125, gp8=12)) %>%
+  mutate(`gp10A:gp9` = gp10/gp9,
+         `gp10A:gp17` = gp10/gp17,
+         `gp10A:gp8` = gp10/gp8,
          `gp9:gp17` = gp9/gp17,
          `gp9:gp8` = gp9/gp8) %>%
-  select(-gp10A, -gp9, -gp8, -gp17)
+  select(-gp10, -gp9, -gp8, -gp17)
 
 knitr::kable(ratio_data2)
 
