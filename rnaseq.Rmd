@@ -109,9 +109,10 @@ Let's look at the overall proportion of transcripts between T7 and E. coli.
 
 ```{r}
 
-rna2 <- read_csv("./data/all_rna_no_ribo.csv") %>%
+rna2 <- read_csv("./data/all_rna_no_ribo_trna_merge.csv") %>%
   # Replace strain names with something more useful
-  mutate(strain = str_replace_all(strain, c("11-42" = "evolved", "11-44" = "recoded", "11-46" = "wildtype")))
+  mutate(strain = str_replace_all(strain, c("11-42" = "evolved", "11-44" = "recoded", "11-46" = "wildtype"))) %>%
+  filter(gene_type != "tRNA")
 
 rna2$strain <- factor(rna2$strain, levels = c("recoded", "evolved", "wildtype"))
 rna2$time <- factor(rna2$time, labels = c("1min" = "1 minute", "5min" = "5 minutes", "9min" = "9 minutes"))
@@ -122,10 +123,10 @@ phagerna2 <- rna2 %>%
 
 phagerna2$org <- factor(phagerna2$org, labels = c("ecoli" = "E. coli", "phage" = "T7"))
   
-rna_no_ribo <- ggplot(phagerna2, aes(x = strain, y = tpm, group=b_rep)) + 
-  geom_point(color="grey85") +
-  geom_line(color="grey85") +
-  stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y.., group = strain), size=1) +
+rna_no_ribo <- ggplot(phagerna2, aes(x = strain, y = tpm, group=strain)) + 
+  stat_summary(geom="bar", fun.y="mean") +
+  geom_point(color="grey85", aes(group=b_rep)) +
+  geom_line(color="grey85", aes(group=b_rep)) +
   facet_grid(org ~ time) +
   panel_border() +
   ylab("transcripts per million")
@@ -197,7 +198,7 @@ phagerna <- rna %>%
   group_by(b_rep, strain, time, gene_type) %>%
   summarize(counts = sum(est_counts))
 
-ribo_rna <- ggplot(phagerna %>% filter(gene_type == "tRNA"), aes(x = strain, y = counts)) + 
+ribo_rna <- ggplot(phagerna %>% filter(org == "phage"), aes(x = strain, y = counts)) + 
   geom_bar(stat = "identity") + 
   facet_grid(b_rep ~ time)
 

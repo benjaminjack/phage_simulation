@@ -311,6 +311,9 @@ The following compares gp9, which is just upstream of gp10A, and gp11, which is 
 time_diff_data <- filter(all_data, 
                            tabasco_id %in% c('gp9', 'gp11'), time == "9min")
 
+# Put genes in numerical order
+time_diff_data$tabasco_id <- factor(time_diff_data$tabasco_id, levels = c('gp9', 'gp11'))
+
 time_diff_plot <- ggplot(time_diff_data, 
                       aes(x = strain, y = area_norm, group = b_rep)) + 
   geom_point(size = 3, color="grey85") +
