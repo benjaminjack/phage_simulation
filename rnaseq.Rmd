@@ -124,9 +124,9 @@ phagerna2 <- rna2 %>%
 phagerna2$org <- factor(phagerna2$org, labels = c("ecoli" = "E. coli", "phage" = "T7"))
   
 rna_no_ribo <- ggplot(phagerna2, aes(x = strain, y = tpm, group=strain)) + 
-  stat_summary(geom="bar", fun.y="mean") +
-  geom_point(color="grey85", aes(group=b_rep)) +
-  geom_line(color="grey85", aes(group=b_rep)) +
+  stat_summary(geom="bar", fun.y="mean", fill="grey50") +
+  geom_point(aes(group=b_rep)) +
+  geom_line(aes(group=b_rep)) +
   facet_grid(org ~ time) +
   panel_border() +
   ylab("transcripts per million")
@@ -142,9 +142,9 @@ Gene 10A transcripts and gene 1 transcripts:
 phagerna2 <- filter(rna2, gene_name == "T7p45")
 
 gp10_plot <- ggplot(phagerna2, aes(x = strain, y = tpm, group = b_rep)) + 
-  geom_point(color="grey85") +
-  geom_line(color="grey85") + 
-  stat_summary(geom="errorbar", fun.y = "mean", aes(ymin = ..y.., ymax = ..y.., group = strain), size = 1) +
+  stat_summary(geom="bar", fun.y = "mean", aes(group = strain), fill="grey50") +
+  geom_point() +
+  geom_line(aes(group = b_rep)) + 
   facet_grid(~ time) +
   ylab("transcripts per million") +
   panel_border()
@@ -155,10 +155,10 @@ save_plot("figures/gp10_rna.pdf", gp10_plot, base_aspect_ratio = 2)
 
 phagerna2 <- filter(rna2, gene_name == "T7p07")
 
-gp1_plot <- ggplot(phagerna2, aes(x = strain, y = tpm, group = b_rep)) + 
-  geom_point(color="grey85") +
-  geom_line(color="grey85") + 
-  stat_summary(geom="errorbar", fun.y = "mean", aes(ymin = ..y.., ymax = ..y.., group = strain), size = 1) +
+gp1_plot <- ggplot(phagerna2, aes(x = strain, y = tpm)) + 
+  stat_summary(geom="bar", fun.y = "mean", aes(group = strain), fill="grey50") +
+  geom_point() +
+  geom_line(aes(group = b_rep)) + 
   facet_grid(~ time) +
   ylab("transcripts per million") +
   panel_border()

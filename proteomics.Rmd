@@ -34,10 +34,10 @@ We have proteomics data from three different strains of T7 after 1, 5, and 9 min
 
 # Load in replicates
 # rep1 <- read_csv("data/proteomics/rep1.csv") %>% mutate(time = paste0(time, "min"))
-rep2 <- read_csv("data/proteomics/rep2.csv")
-rep3 <- read_csv("data/proteomics/rep3.csv")
-rep4 <- read_csv("data/proteomics/rep4.csv")
-rep5 <- read_csv("data/proteomics/rep5.csv")
+rep2 <- read_csv("data/proteomics/abundances/rep2.csv")
+rep3 <- read_csv("data/proteomics/abundances/rep3.csv")
+rep4 <- read_csv("data/proteomics/abundances/rep4.csv")
+rep5 <- read_csv("data/proteomics/abundances/rep5.csv")
 
 all_data <- bind_rows(rep2, rep3, rep4, rep5) %>%
   mutate(strain = str_replace_all(strain, c("11-44" = "atten", "11-42" = "evol", "11-46" = "wt"))) %>%
@@ -75,9 +75,9 @@ strain_labels <- c(
 
 maj_cap_plot <- ggplot(filter(all_data, tabasco_id == 'gp10'), 
                        aes(x = strain, y = area_norm)) + 
-  geom_point(size = 2, color="grey85") +
-  geom_line(aes(group=b_rep), color="grey85") +
-  stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y.., group = strain), size=1) +
+  stat_summary(geom="bar", fun.y="mean", aes(group = strain), size=1, fill="grey50") +
+  geom_point(size = 2) +
+  geom_line(aes(group=b_rep)) +
   facet_wrap(~ time, labeller = as_labeller(time_labels)) +
   scale_x_discrete(label = strain_labels) +
   panel_border() +
@@ -101,10 +101,10 @@ class3_plot_all_data <- filter(all_data,
 class3_plot_all_data$tabasco_id <- factor(class3_plot_all_data$tabasco_id, levels = prot_list_all)
 
 class3_plot <- ggplot(class3_plot_all_data, 
-                      aes(x = strain, y = area_norm, group=b_rep)) + 
-  geom_point(size = 3, color="grey85") +
-  geom_line(color="grey85") + 
-  stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y.., group=strain), size=1) +
+                      aes(x = strain, y = area_norm)) + 
+  stat_summary(geom="bar", fun.y="mean", aes(group=strain), fill="grey50") +
+  geom_point(size = 2) +
+  geom_line(aes(group=b_rep)) +
   facet_grid(tabasco_id ~ time, scales = "free_y") +
   panel_border() +
   ylab("relative protein abundance") +
