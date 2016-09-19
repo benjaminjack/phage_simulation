@@ -30,7 +30,9 @@ ggplot(all_reps %>% filter(Proteins == "NP_041998.1", time == "9min"),
 capsid <- bind_rows(rep2, rep3, rep4, rep5) %>%
   filter(Proteins == "NP_041998.1", time == "9min")
 
+# Create a model without and without the peptide as a random effect
 mod1 <- lmer(spectral_count ~ strain + start + strain:start + (1 | Pep_seq), data = capsid, REML = F)
 mod2 <- lmer(spectral_count ~ strain + start + (1 | Pep_seq), data = capsid, REML = F)
 
+# Check to see which model is a better fit
 anova(mod1,mod2)
