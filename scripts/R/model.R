@@ -15,26 +15,41 @@ tau_3 <- 15
 
 a_in <- function() min(k, s_1 / tau_1)
 # These functions produce a non-linear curve because we vary tau_2, which is in the denominator
-b_in <- function(tau_2) min(a_in(), s_2 / tau_2)
-c_in <- function(tau_2) min(b_in(tau_2), s_3 / tau_3)
+b_in <- function(tau_2, c) min(a_in(), s_2 / tau_2) * c + (1 - c) * k
+c_in <- function(tau_2, c) min(b_in(tau_2, c), s_3 / tau_3) * c + (1 - c) * k
 
-taus <- seq(10, 30, 0.01)
+taus <- seq(15, 30, 0.01)
 
-df <- data.frame(delay_B = taus,
+c <- 0.1
+df1 <- data.frame(delay_B = taus,
                  A = a_in(),
-                 B = sapply(taus, b_in),
-                 C = sapply(taus, c_in))
+                 B = sapply(taus, b_in, c),
+                 C = sapply(taus, c_in, c),
+                 coupling = c)
+
+c <- 0.5
+df2 <- data.frame(delay_B = taus,
+                  A = a_in(),
+                  B = sapply(taus, b_in, c),
+                  C = sapply(taus, c_in, c),
+                  coupling = c)
+c <- 0.9
+df3 <- data.frame(delay_B = taus,
+                  A = a_in(),
+                  B = sapply(taus, b_in, c),
+                  C = sapply(taus, c_in, c),
+                  coupling = c)
+df <- bind_rows(df1, df2, df3)
 df <- gather(df, protein, rate, A:C)
 
-plot <- ggplot(df, aes(x = delay_B, y = rate)) + 
-  geom_line() + 
-  facet_wrap(~protein, labeller = as_labeller(function(protein) paste0("protein ", protein))) +
+plot <- ggplot(df, aes(x = delay_B, y = rate, color = protein)) +
+  geom_line() +
+  facet_wrap(~coupling) +
   panel_border() +
   xlab("time to translate protein B (s)") +
-  ylab("rate of protein production") +
-  theme(legend.position="none")
+  ylab("rate of protein production")
 
-save_plot("figures/model.pdf", plot, base_aspect_ratio = 2.5)
+save_plot("figures/model.pdf", plot, base_aspect_ratio = 2.5, base_height = 3)
 
 
 

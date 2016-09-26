@@ -16,11 +16,14 @@ all_reps <- bind_rows(rep2, rep3, rep4, rep5) %>%
   na.omit() %>%
   mutate(norm_count = `11-44`/`11-46`)
 
-ggplot(all_reps %>% filter(Proteins == "NP_041998.1", time == "9min"),
+pep_plot <- ggplot(all_reps %>% filter(Proteins == "NP_041998.1", time == "9min"),
        aes(x = start, xend = end, y = norm_count, yend = norm_count)) +
   geom_segment(size = 1) +
   geom_hline(aes(yintercept = 1)) +
-  ylim(0, 2)
+  ylim(0, 2) + xlab("peptide position") +
+  ylab("count relative to wildtype")
+
+save_plot("./figures/peptides.pdf", pep_plot)
 
 ggplot(all_reps %>% filter(Proteins == "NP_041998.1", time == "9min"),
        aes(x = start, width = end-start, y = norm_count)) +

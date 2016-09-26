@@ -112,7 +112,8 @@ Let's look at the overall proportion of transcripts between T7 and E. coli.
 rna2 <- read_csv("./data/all_rna_no_ribo_trna_merge.csv") %>%
   # Replace strain names with something more useful
   mutate(strain = str_replace_all(strain, c("11-42" = "evolved", "11-44" = "recoded", "11-46" = "wildtype"))) %>%
-  filter(gene_type != "tRNA")
+  filter(gene_type != "tRNA") %>%
+  mutate(tpm = tpm/1e6)
 
 rna2$strain <- factor(rna2$strain, levels = c("recoded", "evolved", "wildtype"))
 rna2$time <- factor(rna2$time, labels = c("1min" = "1 minute", "5min" = "5 minutes", "9min" = "9 minutes"))
@@ -129,7 +130,7 @@ rna_no_ribo <- ggplot(phagerna2, aes(x = strain, y = tpm, group=strain)) +
   geom_line(aes(group=b_rep)) +
   facet_grid(org ~ time) +
   panel_border() +
-  ylab("transcripts per million")
+  ylab("relative mRNA abundance")
 
 rna_no_ribo
 
@@ -146,7 +147,7 @@ gp10_plot <- ggplot(phagerna2, aes(x = strain, y = tpm, group = b_rep)) +
   geom_point() +
   geom_line(aes(group = b_rep)) + 
   facet_grid(~ time) +
-  ylab("transcripts per million") +
+  ylab("relative mRNA abundance") +
   panel_border()
 
 gp10_plot
@@ -160,14 +161,14 @@ gp1_plot <- ggplot(phagerna2, aes(x = strain, y = tpm)) +
   geom_point() +
   geom_line(aes(group = b_rep)) + 
   facet_grid(~ time) +
-  ylab("transcripts per million") +
+  ylab("relative mRNA abundance") +
   panel_border()
 
 gp1_plot
 
 save_plot("figures/gp1_rna.pdf", gp1_plot, base_aspect_ratio = 2)
 
-gp1_10_plot <- plot_grid(gp10_plot, gp1_plot, ncol = 1, labels = c("A", "B"))
+gp1_10_plot <- plot_grid(gp10_plot, gp1_plot, ncol = 1, labels = c("A", "B"), align = "v")
 
 save_plot("figures/gp1_10A_rna.pdf", gp1_10_plot, base_width = 8, base_height = 6)
 

@@ -1,3 +1,4 @@
+library(drc)
 library(readr)
 library(dplyr)
 library(tidyr)
@@ -11,7 +12,7 @@ strain_order <- c("11_44  ( /ul)", "11_42 ( /ul)", "11_46  ( /ul)")
 strain_labels <- c("recoded", "evolved", "wildtype")
 
 burst_plot <- ggplot(burst, aes(x = strain, y = burst_size)) +
-  stat_summary(fun.y = "mean", geom = "bar", fill="grey70") +
+  stat_summary(fun.y = "mean", geom = "bar", fill="grey50") +
   geom_line(aes(group=rep)) +
   geom_point() +
   scale_x_discrete(name = "strain", limits = strain_order, labels = strain_labels) +
@@ -63,7 +64,7 @@ strain_order <- c("11-44", "11-42", "11-46")
 strain_labels <- c("recoded", "evolved", "wildtype")
 
 lysis_plot_mid <- ggplot(lysis_mid, aes(x = strain, y = inflection, group = strain)) +
-  stat_summary(geom="bar", fun.y = "mean", fill = "grey70") +
+  stat_summary(geom="bar", fun.y = "mean", fill = "grey50") +
   geom_point() +
   scale_x_discrete(name = "strain", limits = strain_order, labels = strain_labels) +
   ylab("lysis time (minutes)")
