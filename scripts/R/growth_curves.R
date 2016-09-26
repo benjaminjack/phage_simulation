@@ -82,4 +82,4 @@ ratio_plot <- ggplot(ratio_data, aes(x=factor(wildtype_to_phage), y=ratio)) +
 
 growth_plot <- plot_grid(growth_curve, ratio_plot, labels = c("A","B"), rel_widths = c(1.4, 1))
 
-save_plot("./figures/growth_curve.pdf", growth_plot, base_aspect_ratio = 2.4)
+save_plot("./figures/growth_curve.pdf", growth_plot, base_aspect_ratio = 2.3)
