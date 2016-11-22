@@ -3,6 +3,7 @@ library(readr)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+library(cowplot)
 
 # Burst size plot and analysis
 
@@ -10,13 +11,15 @@ burst <- read_csv("data/burst.csv")
 
 strain_order <- c("11_44  ( /ul)", "11_42 ( /ul)", "11_46  ( /ul)")
 strain_labels <- c("recoded", "evolved", "wildtype")
+strain_colors <- c("11_44  ( /ul)" = "orange", "11_42 ( /ul)" = "lightblue", "11_46  ( /ul)" = "lightgreen")
 
 burst_plot <- ggplot(burst, aes(x = strain, y = burst_size)) +
-  stat_summary(fun.y = "mean", geom = "bar", fill="grey50") +
+  stat_summary(fun.y = "mean", geom = "bar", aes(fill=strain)) +
   geom_line(aes(group=rep)) +
   geom_point() +
   scale_x_discrete(name = "strain", limits = strain_order, labels = strain_labels) +
-  ylab("burst size")
+  ylab("burst size") +
+  scale_fill_manual(values = strain_colors) + theme(legend.position = "none")
 
 # Do some t-tests
 burst_wide <- dplyr::select(burst, rep, strain, burst_size) %>%
@@ -60,14 +63,16 @@ lysis_mid <- filter(lysis, !is.na(concentration)) %>%
 mod <- lm(data = lysis_mid, formula = inflection ~ strain)
 anova(mod)
 
-strain_order <- c("11-44", "11-42", "11-46")
-strain_labels <- c("recoded", "evolved", "wildtype")
+strain_order2 <- c("11-44", "11-42", "11-46")
+strain_labels2 <- c("recoded", "evolved", "wildtype")
+strain_colors2 <- c("11-44" = "orange", "11-42" = "lightblue", "11-46" = "lightgreen")
 
 lysis_plot_mid <- ggplot(lysis_mid, aes(x = strain, y = inflection, group = strain)) +
-  stat_summary(geom="bar", fun.y = "mean", fill = "grey50") +
+  stat_summary(geom="bar", fun.y = "mean", aes(fill = strain)) +
   geom_point() +
-  scale_x_discrete(name = "strain", limits = strain_order, labels = strain_labels) +
-  ylab("lysis time (minutes)")
+  scale_x_discrete(name = "strain", limits = strain_order2, labels = strain_labels2) +
+  ylab("lysis time (minutes)") +
+  scale_fill_manual(values = strain_colors2) + theme(legend.position = "none")
 
 burst_lysis <- plot_grid(burst_plot, lysis_plot_mid, labels = c("A", "B"))
 

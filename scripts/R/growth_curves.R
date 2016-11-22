@@ -1,6 +1,7 @@
 library(readr)
 library(dplyr)
 library(tidyr)
+library(stringr)
 library(ggplot2)
 library(broom)
 
@@ -65,21 +66,28 @@ prots3 <- group_by(prots2, time) %>%
   gather(strain, ratio, -time) %>%
   filter(strain == "wt_atten", time == "9min")
 
-ratio_data <- data.frame(wildtype_to_phage = c("capsid", "estimated particles"),
-                         ratio = c(wildtype(540)/attenuated(540), prots3$ratio[1]))
+burst <- read_csv("data/burst.csv")
 
-# ggplot(prots3, aes(x=time, y=ratio, group=strain, color=strain)) +
-#   stat_function(fun=wt_atten_ratio, geom="bar", color="red") +
-#   stat_function(fun=wt_evol_ratio, geom="bar", color="blue") +
-#   geom_point() # + xlim(0,600)
+burst %>%
+  select(-X1) %>%
+  spread(strain, burst_size) %>%
+  mutate(wt_atten_ratio = `11_46  ( /ul)`/`11_44  ( /ul)`) %>%
+  summarize(mean_wt_atten_ratio = mean(wt_atten_ratio)) -> burst_ratio
 
-ratio_plot <- ggplot(ratio_data, aes(x=factor(wildtype_to_phage), y=ratio)) +
-  geom_bar(stat="identity", position="dodge", fill="grey50") +
-  geom_text(aes(x = factor(wildtype_to_phage), y = ratio + 0.1, label = round(ratio, 1))) +
+ratio_data <- data_frame(wildtype_to_phage = c("capsid (gene 10)", "burst size", "estimated particles (9 min)", "estimated particles (12 min)"),
+                         ratio = c(prots3$ratio[1], burst_ratio$mean_wt_atten_ratio[1], wildtype(540)/attenuated(540), wildtype(720)/attenuated(720)))
+
+xlab_order <- rev(c("capsid (gene 10)", "burst size", "estimated particles (9 min)", "estimated particles (12 min)"))
+
+ratio_plot <- ggplot(ratio_data, aes(x=factor(wildtype_to_phage, levels = xlab_order), y=ratio, fill = factor(wildtype_to_phage))) +
+  geom_bar(stat="identity", position="dodge") +
+  geom_text(aes(x = factor(wildtype_to_phage), y = ratio + 0.15, label = round(ratio, 1))) +
   ylab("wildtype-to-recoded ratio") +
   xlab("") +
-  ylim(0, 3)
+  ylim(0, 3) +
+  coord_flip() +
+  scale_fill_manual(values = c("capsid (gene 10)" = "orange", "burst size" = "lightgreen", "estimated particles (9 min)" = "lightblue", "estimated particles (12 min)" = "lightblue")) + theme(legend.position="none")
 
-growth_plot <- plot_grid(growth_curve, ratio_plot, labels = c("A","B"), rel_widths = c(1.4, 1))
+# growth_plot <- plot_grid(growth_curve, ratio_plot, labels = c("A","B"), rel_widths = c(1.4, 1))
 
-save_plot("./figures/growth_curve.pdf", growth_plot, base_aspect_ratio = 2.3)
+save_plot("./figures/ratios.pdf", ratio_plot, base_aspect_ratio = 1.7)

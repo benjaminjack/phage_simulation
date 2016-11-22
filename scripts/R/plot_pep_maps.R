@@ -1,11 +1,13 @@
 library(readr)
 library(lmerTest)
+library(tidyr)
 library(dplyr)
+library(cowplot)
 
-rep2 <- read_csv("~/Desktop/rep2_pep_map.csv")
-rep3 <- read_csv("~/Desktop/rep3_pep_map.csv")
-rep4 <- read_csv("~/Desktop/rep4_pep_map.csv")
-rep5 <- read_csv("~/Desktop/rep5_pep_map.csv")
+rep2 <- read_csv("./rep2_pep_map.csv")
+rep3 <- read_csv("./rep3_pep_map.csv")
+rep4 <- read_csv("./rep4_pep_map.csv")
+rep5 <- read_csv("./rep5_pep_map.csv")
 
 all_reps <- bind_rows(rep2, rep3, rep4, rep5) %>%
   group_by(strain, time, Proteins, start, end) %>%
@@ -23,7 +25,7 @@ pep_plot <- ggplot(all_reps %>% filter(Proteins == "NP_041998.1", time == "9min"
   ylim(0, 2) + xlab("peptide position") +
   ylab("count relative to wildtype")
 
-save_plot("./figures/peptides.pdf", pep_plot)
+# save_plot("./figures/peptides.pdf", pep_plot)
 
 ggplot(all_reps %>% filter(Proteins == "NP_041998.1", time == "9min"),
        aes(x = start, width = end-start, y = norm_count)) +

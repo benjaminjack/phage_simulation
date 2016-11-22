@@ -355,13 +355,17 @@ ratio_data2 <- filter(ratio_data, time == "9min") %>%
   group_by(strain, tabasco_id) %>%
   summarize(area = mean(area_norm)) %>%
   spread(tabasco_id, area) %>%
-  bind_rows(data.frame(strain = "true_ratio", gp10 = 415, gp17=18, gp9=125, gp8=12)) %>%
+  bind_rows(data_frame(strain = "true_ratio", gp10 = 415, gp17=18, gp9=125, gp8=12)) %>%
   mutate(`gp10A:gp9` = gp10/gp9,
          `gp10A:gp17` = gp10/gp17,
          `gp10A:gp8` = gp10/gp8,
          `gp9:gp17` = gp9/gp17,
          `gp9:gp8` = gp9/gp8) %>%
-  select(-gp10, -gp9, -gp8, -gp17)
+  select(-gp10, -gp9, -gp8, -gp17) %>%
+  mutate_all(round, digits = 1)
+
+row.names(ratio_data2) <- ratio_data2$strain
+ratio_data2 %>% ungroup() %>% select(-strain) %>% t() -> ratio_data2
 
 knitr::kable(ratio_data2)
 
