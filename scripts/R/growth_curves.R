@@ -86,7 +86,7 @@ ratio_plot <- ggplot(ratio_data, aes(x=factor(wildtype_to_phage, levels = xlab_o
   xlab("") +
   ylim(0, 3) +
   coord_flip() +
-  scale_fill_manual(values = c("capsid (gene 10)" = "orange", "burst size" = "lightgreen", "estimated particles (9 min)" = "lightblue", "estimated particles (12 min)" = "lightblue")) + theme(legend.position="none")
+  scale_fill_manual(values = c("capsid (gene 10)" = "grey70", "burst size" = "tan", "estimated particles (9 min)" = "gold", "estimated particles (12 min)" = "gold")) + theme(legend.position="none")
 
 # growth_plot <- plot_grid(growth_curve, ratio_plot, labels = c("A","B"), rel_widths = c(1.4, 1))
 
