@@ -109,6 +109,12 @@ Let's look at the overall proportion of transcripts between T7 and E. coli.
 
 ```{r}
 
+strain_colors <- c(
+  "recoded" = "orange",
+  "evolved" = "lightblue",
+  "wildtype" = "lightgreen"
+)
+
 rna2 <- read_csv("./data/all_rna_no_ribo_trna_merge.csv") %>%
   # Replace strain names with something more useful
   mutate(strain = str_replace_all(strain, c("11-42" = "evolved", "11-44" = "recoded", "11-46" = "wildtype"))) %>%
@@ -125,12 +131,14 @@ phagerna2 <- rna2 %>%
 phagerna2$org <- factor(phagerna2$org, labels = c("ecoli" = "E. coli", "phage" = "T7"))
   
 rna_no_ribo <- ggplot(phagerna2, aes(x = strain, y = tpm, group=strain)) + 
-  stat_summary(geom="bar", fun.y="mean", fill="grey50") +
+  stat_summary(geom="bar", fun.y="mean", aes(fill = strain)) +
+  scale_fill_manual(values = strain_colors) +
   geom_point(aes(group=b_rep)) +
   geom_line(aes(group=b_rep)) +
   facet_grid(org ~ time) +
   panel_border() +
-  ylab("relative mRNA abundance")
+  ylab("relative mRNA abundance") +
+  theme(legend.position = "none")
 
 rna_no_ribo
 
@@ -143,12 +151,14 @@ Gene 10A transcripts and gene 1 transcripts:
 phagerna2 <- filter(rna2, gene_name == "T7p45")
 
 gp10_plot <- ggplot(phagerna2, aes(x = strain, y = tpm, group = b_rep)) + 
-  stat_summary(geom="bar", fun.y = "mean", aes(group = strain), fill="grey50") +
+  stat_summary(geom="bar", fun.y = "mean", aes(group = strain, fill = strain)) +
   geom_point() +
   geom_line(aes(group = b_rep)) + 
+  scale_fill_manual(values = strain_colors) +
   facet_grid(~ time) +
   ylab("relative mRNA abundance") +
-  panel_border()
+  panel_border() +
+  theme(legend.position = "none")
 
 gp10_plot
 
@@ -157,12 +167,14 @@ save_plot("figures/gp10_rna.pdf", gp10_plot, base_aspect_ratio = 2)
 phagerna2 <- filter(rna2, gene_name == "T7p07")
 
 gp1_plot <- ggplot(phagerna2, aes(x = strain, y = tpm)) + 
-  stat_summary(geom="bar", fun.y = "mean", aes(group = strain), fill="grey50") +
+  stat_summary(geom="bar", fun.y = "mean", aes(group = strain, fill = strain)) +
   geom_point() +
   geom_line(aes(group = b_rep)) + 
+  scale_fill_manual(values = strain_colors) +
   facet_grid(~ time) +
   ylab("relative mRNA abundance") +
-  panel_border()
+  panel_border() +
+  theme(legend.position = "none")
 
 gp1_plot
 

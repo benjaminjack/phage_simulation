@@ -73,13 +73,20 @@ strain_labels <- c(
   "wt" = "wildtype"
 )
 
+strain_colors <- c(
+  "atten" = "orange",
+  "evol" = "lightblue",
+  "wt" = "lightgreen"
+)
+
 maj_cap_plot <- ggplot(filter(all_data, tabasco_id == 'gp10'), 
                        aes(x = strain, y = area_norm)) + 
-  stat_summary(geom="bar", fun.y="mean", aes(group = strain), size=1, fill="grey50") +
+  stat_summary(geom="bar", fun.y="mean", aes(group = strain, fill = strain), size=1) +
   geom_point(size = 2) +
   geom_line(aes(group=b_rep)) +
   facet_wrap(~ time, labeller = as_labeller(time_labels)) +
   scale_x_discrete(label = strain_labels) +
+  scale_fill_manual(values = strain_colors) +
   panel_border() +
   ylab("relative protein abundance") +
   theme(legend.position = "none")
@@ -102,9 +109,11 @@ class3_plot_all_data$tabasco_id <- factor(class3_plot_all_data$tabasco_id, level
 
 class3_plot <- ggplot(class3_plot_all_data, 
                       aes(x = strain, y = area_norm)) + 
-  stat_summary(geom="bar", fun.y="mean", aes(group=strain), fill="grey50") +
+  stat_summary(geom="bar", fun.y="mean", aes(group=strain, fill = strain)) +
   geom_point(size = 2) +
   geom_line(aes(group=b_rep)) +
+  scale_fill_manual(values = strain_colors) +
+  scale_x_discrete(label = strain_labels) +
   facet_grid(tabasco_id ~ time, scales = "free_y") +
   panel_border() +
   ylab("relative protein abundance") +
