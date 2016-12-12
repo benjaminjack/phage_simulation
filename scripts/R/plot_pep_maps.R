@@ -4,10 +4,10 @@ library(tidyr)
 library(dplyr)
 library(cowplot)
 
-rep2 <- read_csv("./rep2_pep_map.csv")
-rep3 <- read_csv("./rep3_pep_map.csv")
-rep4 <- read_csv("./rep4_pep_map.csv")
-rep5 <- read_csv("./rep5_pep_map.csv")
+rep2 <- read_csv("data/proteomics/peptide_mappings/rep2_pep_map.csv")
+rep3 <- read_csv("data/proteomics/peptide_mappings/rep3_pep_map.csv")
+rep4 <- read_csv("data/proteomics/peptide_mappings/rep4_pep_map.csv")
+rep5 <- read_csv("data/proteomics/peptide_mappings/rep5_pep_map.csv")
 
 all_reps <- bind_rows(rep2, rep3, rep4, rep5) %>%
   group_by(strain, time, Proteins, start, end) %>%

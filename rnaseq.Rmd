@@ -119,7 +119,9 @@ rna2 <- read_csv("./data/all_rna_no_ribo_trna_merge.csv") %>%
   # Replace strain names with something more useful
   mutate(strain = str_replace_all(strain, c("11-42" = "evolved", "11-44" = "recoded", "11-46" = "wildtype"))) %>%
   filter(gene_type != "tRNA") %>%
-  mutate(tpm = tpm/1e6)
+  mutate(tpm = tpm/1e6) %>%
+  group_by(b_rep, time, strain) %>%
+  mutate(tpm = tpm/sum(tpm)) # re-normalize because of the small quantity of tRNAs
 
 rna2$strain <- factor(rna2$strain, levels = c("recoded", "evolved", "wildtype"))
 rna2$time <- factor(rna2$time, labels = c("1min" = "1 minute", "5min" = "5 minutes", "9min" = "9 minutes"))

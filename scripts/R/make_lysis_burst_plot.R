@@ -74,6 +74,16 @@ lysis_plot_mid <- ggplot(lysis_mid, aes(x = strain, y = inflection, group = stra
   ylab("lysis time (minutes)") +
   scale_fill_manual(values = strain_colors2) + theme(legend.position = "none")
 
-burst_lysis <- plot_grid(burst_plot, lysis_plot_mid, labels = c("A", "B"))
+lysis_data <- read_csv("data/lysis_clean_manual.csv") %>% filter(!is.na(time))
+
+lysis_plot <- ggplot(lysis_data, aes(x = strain, y = time, group = strain)) +
+  stat_summary(geom="bar", fun.y = "mean", aes(fill = strain)) +
+  geom_jitter(width = 0.25) +
+  scale_x_discrete(name = "strain", limits = strain_order2, labels = strain_labels2) +
+  ylab("lysis time (minutes)") +
+  scale_fill_manual(values = strain_colors2) + theme(legend.position = "none")
+
+
+burst_lysis <- plot_grid(burst_plot, lysis_plot, labels = c("A", "B"))
 
 save_plot("./figures/burst_lysis.pdf", burst_lysis, base_aspect_ratio = 2)

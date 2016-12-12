@@ -228,7 +228,7 @@ wt_atten_9min <- filter(all_data, time == "9min", strain != "evol") %>%
   unnest() %>%
   select(Proteins, tabasco_id, class, p.value, estimate) %>%
   mutate(p.value_adj = p.adjust(p.value, method = "fdr")) %>%
-  filter(p.value_adj < 0.3) %>%
+  filter(p.value_adj < 0.1) %>%
   arrange(p.value_adj)
   
 
@@ -271,10 +271,13 @@ changes_late <- inner_join(atten_late, wt_late) %>%
   unnest() %>%
   select(Proteins, tabasco_id, class, p.value, estimate) %>%
   mutate(p.value_adj = p.adjust(p.value, method = "fdr")) %>%
-  arrange(p.value_adj) %>%
-  filter(p.value_adj < 0.2)
+  arrange(desc(estimate))
+
+knitr::kable(wt_late %>% arrange(desc(fold_change_wt)))
 
 knitr::kable(changes_late)
+
+knitr::kable(changes_late %>% arrange(p.value_adj))
 ```
 
 Next, I looked at similar changes in protein abundance between 1 minute and 5 minutes. No significant changes were detected, even class 1 and class 2 proteins. The quantity of proteins at these times are probably just too low and too noisy to detect any trends.
@@ -317,26 +320,27 @@ The following compares gp9, which is just upstream of gp10A, and gp11, which is 
 
 ```{r}
 
-time_diff_data <- filter(all_data, 
-                           tabasco_id %in% c('gp9', 'gp11'), time == "9min")
+prot_9_10 <- filter(all_data, 
+                           tabasco_id %in% c('gp9', 'gp10'), time == "9min")
 
 # Put genes in numerical order
-time_diff_data$tabasco_id <- factor(time_diff_data$tabasco_id, levels = c('gp9', 'gp11'))
+prot_9_10$tabasco_id <- factor(prot_9_10$tabasco_id, levels = c('gp9', 'gp10'))
 
-time_diff_plot <- ggplot(time_diff_data, 
+plot_9_10 <- ggplot(prot_9_10, 
                       aes(x = strain, y = area_norm, group = b_rep)) + 
-  geom_point(size = 3, color="grey85") +
-  geom_line(color="grey85") +
-  stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y.., group = strain), size=1) +
-  facet_wrap(~tabasco_id, scales = "free_y") +
+  stat_summary(geom="bar", fun.y="mean", aes(group = strain, fill = strain), size=1) +
+  geom_point(size = 2) +
+  geom_line(aes(group=b_rep)) +
   scale_x_discrete(label = strain_labels) +
+  scale_fill_manual(values = strain_colors) +
+  facet_wrap(~tabasco_id) +
   panel_border() +
   ylab("relative protein abundance") +
   theme(legend.position = "none")
 
-save_plot("figures/time_diff.pdf", time_diff_plot, base_height = 5, base_width = 9)
+save_plot("figures/plot_9_10.pdf", plot_9_10, base_height = 5, base_width = 9)
 
-time_diff_plot
+plot_9_10
 
 ```
 
