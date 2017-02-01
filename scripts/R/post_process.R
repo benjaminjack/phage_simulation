@@ -24,9 +24,9 @@ normalize_areas <- function(prots) {
 
   # Normalize areas to total E. coli content
   prots <- prots %>%
-    filter(!grepl('CONTAMINANT', Proteins)) %>% # Filter out contaminants
+    filter(!grepl('CONTAMINANT', protein_desc)) %>% # Filter out contaminants
     ungroup() %>%
-    mutate(org = ifelse(grepl('NP', Proteins), 'phage', 'ecoli')) %>% # Assign organism group
+    mutate(org = ifelse(grepl('NP', protein_desc), 'phage', 'ecoli')) %>% # Assign organism group
     group_by(strain, time, org) %>%
     # Compute sums for each organism type
     mutate(org_area = sum(area_mean)) %>%
@@ -53,7 +53,7 @@ process_replicates <- function(files) {
     separate(file_names, into = c("strain", "time", "rep"), sep = "_", remove = F, extra = "drop") %>%
     mutate(strain = basename(strain)) %>%
     group_by(strain, time) %>%
-    do(combine_tech_reps(as.character(.$file_names), normalize = F, relabel = relabel)) %>%
+    do(quantitate(as.character(.$file_names), normalize = F, relabel = relabel)) %>%
     group_by(strain, time) %>%
     do(normalize_areas(.))
 

@@ -22,10 +22,10 @@ pep_plot <- ggplot(all_reps %>% filter(Proteins == "NP_041998.1", time == "9min"
        aes(x = start, xend = end, y = norm_count, yend = norm_count)) +
   geom_segment(size = 1) +
   geom_hline(aes(yintercept = 1)) +
-  ylim(0, 2) + xlab("peptide position") +
-  ylab("count relative to wildtype")
+  ylim(0, 2) + xlab("peptide position within major capsid protein") +
+  ylab("recoded count relative to wildtype")
 
-# save_plot("./figures/peptides.pdf", pep_plot)
+save_plot("./figures/peptides.pdf", pep_plot)
 
 ggplot(all_reps %>% filter(Proteins == "NP_041998.1", time == "9min"),
        aes(x = start, width = end-start, y = norm_count)) +

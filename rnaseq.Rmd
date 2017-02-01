@@ -158,7 +158,7 @@ gp10_plot <- ggplot(phagerna2, aes(x = strain, y = tpm, group = b_rep)) +
   geom_line(aes(group = b_rep)) + 
   scale_fill_manual(values = strain_colors) +
   facet_grid(~ time) +
-  ylab("relative mRNA abundance") +
+  ylab(expression(atop("relative mRNA abundance", paste("(gene ", italic("10A"), ")")))) +
   panel_border() +
   theme(legend.position = "none")
 
@@ -174,7 +174,7 @@ gp1_plot <- ggplot(phagerna2, aes(x = strain, y = tpm)) +
   geom_line(aes(group = b_rep)) + 
   scale_fill_manual(values = strain_colors) +
   facet_grid(~ time) +
-  ylab("relative mRNA abundance") +
+  ylab(expression(atop("relative mRNA abundance", paste("(gene ", italic("1"), ")")))) +
   panel_border() +
   theme(legend.position = "none")
 
