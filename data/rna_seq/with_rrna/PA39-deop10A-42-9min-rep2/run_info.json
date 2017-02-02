@@ -1,9 +1,0 @@
-{
-	"n_targets": 4489,
-	"n_bootstraps": 0,
-	"n_processed": 48150292,
-	"kallisto_version": "0.42.5",
-	"index_version": 10,
-	"start_time": "Thu May 19 13:51:00 2016",
-	"call": "kallisto quant -i /Volumes/Seagate/T7atten_ecoli_ref.idx -o ./PA39-deop10A-42-9min-rep2 --single -l 180 -s 20 /Volumes/Seagate/RNAseq/PA39-deop10A-42-9min-rep2.fastq.gz"
-}
