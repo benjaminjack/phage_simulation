@@ -29,11 +29,7 @@ We have proteomics data from three different strains of T7 after 1, 5, and 9 min
 
 ```{r}
 
-# Any missing values for protein data need to be assigned 0!
-# Perhaps use full join of some sort?
-
 # Load in replicates
-# rep1 <- read_csv("data/proteomics/rep1.csv") %>% mutate(time = paste0(time, "min"))
 rep2 <- read_csv("data/proteomics/abundances/rep2.csv")
 rep3 <- read_csv("data/proteomics/abundances/rep3.csv")
 rep4 <- read_csv("data/proteomics/abundances/rep4.csv")
@@ -41,27 +37,24 @@ rep5 <- read_csv("data/proteomics/abundances/rep5.csv")
 
 all_data <- bind_rows(rep2, rep3, rep4, rep5) %>%
   mutate(strain = str_replace_all(strain, c("11-44" = "atten", "11-42" = "evol", "11-46" = "wt"))) %>%
-  mutate(Proteins = trimws(Proteins))
+  mutate(protein_desc = trimws(protein_desc))
 
-# Correct wonky labeling for replicate 1
-# all_data <- mutate(all_data, time = ifelse(b_rep == 1 & time == "1min" & strain == "wt", "temp", time)) %>% 
-#  mutate(time = ifelse(b_rep == 1 & time == "9min" & strain == "wt", "1min", time)) %>% 
-#  mutate(time = ifelse(b_rep == 1 & time == "temp" & strain == "wt", "9min", time)) # %>%
-
-# Join in standard gene labels. This should probably take place in post_process.R from some master 
-# list of proteins that we're. Currently I am using a hand-curated list.
-labels <- read_csv("data/id_map.csv") %>% mutate(Accession = trimws(Accession))
+# Join in standard T7 gene labels.
+labels <- read_csv("data/id_map.csv") %>% mutate(accession = trimws(accession))
 all_data <- filter(all_data, org == "phage") %>% 
   group_by(strain, time, b_rep) %>%
   # Join by each group seperately so that missing phage proteins are filled in with NAs
-  do(full_join(., labels, by = c("Proteins" = "Accession")) %>% fill(strain, time, b_rep)) %>%
+  do(full_join(., labels, by = c("protein_desc" = "accession")) %>% fill(strain, time, b_rep)) %>%
   mutate(area_norm = ifelse(is.na(area_norm), 0, area_norm)) %>% # Fill in missing proteins (NAs) with 0
-  mutate(tabasco_id = str_replace_all(tabasco_id, c("gp10A" = "gp10"))) # Technically we can't distinguish 10A from 10B so we just compile them together as gp10
+  mutate(gene_number = str_replace_all(gene_number, c("10A" = "10"))) # Technically we can't distinguish 10A from 10B so we just compile them together as 10
 ```
 
 ### Major capsid protein levels are depressed in recoded and evolved strains
 
 ```{r}
+
+prepender <- function(string, prefix = "protein ") paste0(prefix, string)
+
 time_labels <- c(
   "1min" = "1 minute",
   "5min" = "5 minutes",
@@ -79,7 +72,7 @@ strain_colors <- c(
   "wt" = "lightgreen"
 )
 
-maj_cap_plot <- ggplot(filter(all_data, tabasco_id == 'gp10'), 
+maj_cap_plot <- ggplot(filter(all_data, gene_number == '10'), 
                        aes(x = strain, y = area_norm)) + 
   stat_summary(geom="bar", fun.y="mean", aes(group = strain, fill = strain), size=1) +
   geom_point(size = 2) +
@@ -95,17 +88,17 @@ save_plot("figures/maj_cap.pdf", maj_cap_plot, base_aspect_ratio = 2)
 
 ```
 
-## Phage proteins immediately downstream of gp10 are also depressed
+## Phage proteins immediately downstream of 10 are also depressed
 
 ### Peak areas
 ```{r, fig.height=20}
 
-prot_list_all <- c('gp10','gp11','gp12','gp13','gp14','gp15', 'gp18', 'gp3')
+prot_list_all <- c('10','11','12','13','14','15', '18', '3')
 
 class3_plot_all_data <- filter(all_data, 
-                           tabasco_id %in% prot_list_all)
+                           gene_number %in% prot_list_all)
 
-class3_plot_all_data$tabasco_id <- factor(class3_plot_all_data$tabasco_id, levels = prot_list_all)
+class3_plot_all_data$gene_number <- factor(class3_plot_all_data$gene_number, levels = prot_list_all)
 
 class3_plot <- ggplot(class3_plot_all_data, 
                       aes(x = strain, y = area_norm)) + 
@@ -114,14 +107,14 @@ class3_plot <- ggplot(class3_plot_all_data,
   geom_line(aes(group=b_rep)) +
   scale_fill_manual(values = strain_colors) +
   scale_x_discrete(label = strain_labels) +
-  facet_grid(tabasco_id ~ time, scales = "free_y") +
+  facet_grid(gene_number ~ time, scales = "free_y", labeller = labeller(gene_number = prepender, time = time_labels)) +
   panel_border() +
   ylab("relative protein abundance") +
   theme(legend.position = "none")
 
 # For manuscript, just show 9 minute
 class3_plot_ms <- class3_plot %+% filter(class3_plot_all_data, time == "9min") + 
-  facet_wrap(~tabasco_id, scales = "free_y", ncol = 2, dir = "h")
+  facet_wrap(~gene_number, scales = "free_y", ncol = 2, dir = "h")
 
 class3_plot
 
@@ -163,9 +156,9 @@ plot_all_data <- make_abundance_plot(all_data)
 save_plot("figures/class123_prot.pdf", plot_all_data, base_width = 8.5, base_height = 3)
 
 
-# Plot without gp10A
+# Plot without 10A
 plot_no10 <- make_abundance_plot(filter(all_data, 
-                                        tabasco_id != 'gp10'))
+                                        gene_number != '10'))
 
 plot_no10
 
@@ -176,14 +169,14 @@ plot_no10
 ```{r}
 
 plot_class3_no10 <- make_abundance_plot(filter(all_data, 
-                                               tabasco_id != 'gp10', 
+                                               gene_number != '10', 
                                                class == 3))
 
 plot_class3_no10
 
 ```
 
-Averaged across all genes and all replicates for a given time point and given strain, class 3 protein levels look similar to gp10A (just barely). I have not actually tested to see if any strain is significantly different from another across all genes (see mixed effects ANOVA below).
+Averaged across all genes and all replicates for a given time point and given strain, class 3 protein levels look similar to 10A (just barely). I have not actually tested to see if any strain is significantly different from another across all genes (see mixed effects ANOVA below).
 
 ### Classes 1 and 2 also look roughly the same across all three strains
 
@@ -202,41 +195,43 @@ Looking at the class 3 genes, there seem to be systematic batch effects between 
 ```{r, echo = T}
 library(lmerTest)
 
-# Let's just look at the 9min mark without the evolved strain or gp10A
-all_data2 <- filter(all_data, tabasco_id != "gp10", time == "9min", strain != "evol", class == 3)
+# Let's just look at the 9min mark without the evolved strain or 10A
+all_data2 <- filter(all_data, gene_number != "10", time == "9min", strain != "evol", class == 3)
 
 # Build a model with protein abundance as the response, strain and protein as fixed, and biological replicate as random
-mod <- lmer(area_norm ~ strain + tabasco_id + (1 | b_rep), data = all_data2)
+mod <- lmer(area_norm ~ strain + gene_number + (1 | b_rep), data = all_data2)
 
 anova(mod)
 
 ```
 
-According to the ANOVA test above, the protein abundances for class 3 genes (excluding gp10A) across strains are significantly different. I still have to make sure that some assumptions made by ANOVA are not being violated here. Below is a table of FDR-corrected p-values. Proteins immediately downstream of 10A are suppressed in the wild-type.
+According to the ANOVA test above, the protein abundances for class 3 genes (excluding 10A) across strains are significantly different. Proteins immediately downstream of 10A are suppressed in the wild-type.
 
 
 ```{r}
 
 wt_atten_9min <- filter(all_data, time == "9min", strain != "evol") %>%
-  select(strain, b_rep, class, tabasco_id, Proteins, area_norm) %>%
+  select(strain, b_rep, class, gene_number, protein_desc, area_norm) %>%
   spread(strain, area_norm) %>%
   na.omit() %>%
-  group_by(Proteins, tabasco_id, class) %>%
+  group_by(protein_desc, gene_number, class) %>%
   nest() %>%
   mutate(t_test = purrr::map(data, ~ broom::tidy(t.test(.$wt, .$atten, data = ., paired = T)))) %>%
   select(-data) %>%
   unnest() %>%
-  select(Proteins, tabasco_id, class, p.value, estimate) %>%
+  select(protein_desc, gene_number, class, p.value, estimate) %>%
   mutate(p.value_adj = p.adjust(p.value, method = "fdr")) %>%
   filter(p.value_adj < 0.1) %>%
-  arrange(p.value_adj)
+  arrange(p.value_adj) %>%
+  mutate_at(vars(p.value, estimate, p.value_adj), signif, digits = 2) %>%
+  select(gene_number, estimate, p.value, p.value_adj)
   
 
 knitr::kable(wt_atten_9min)
 
 ```
 
-In the attenuated strain, `r length(unique((wt_atten_9min %>% filter(class == 3, p.value_adj < 0.1))$tabasco_id))`/`r length(unique((all_data %>% filter(class == 3))$tabasco_id))` of class 3 proteins have significantly lower abundances. All but one gene (gp6.5) occur immediately downstream of 10A.
+In the attenuated strain, `r length(unique((wt_atten_9min %>% filter(class == 3, p.value_adj < 0.1))$gene_number))`/`r length(unique((all_data %>% filter(class == 3))$gene_number))` of class 3 proteins have significantly lower abundances. All but one gene (6.5) occur immediately downstream of 10A.
 
 # When do genes get turned on in different strains?
 
@@ -245,23 +240,23 @@ If there are differences between class 3 protein abundances in the wildtype and 
 
 ```{r}
 atten_late <- filter(all_data, time != "1min", strain == "atten") %>%
-  select(time, b_rep, class, tabasco_id, Proteins, area_norm) %>%
+  select(time, b_rep, class, gene_number, Proteins, area_norm) %>%
   spread(time, area_norm) %>%
   na.omit() %>%
-  group_by(Proteins, tabasco_id, class) %>%
+  group_by(Proteins, gene_number, class) %>%
   mutate(fold_change_atten = `9min`-`5min`) %>%
   select(-`9min`, -`5min`, -strain)
 
 wt_late <- filter(all_data, time != "1min", strain == "wt") %>%
-  select(time, b_rep, class, tabasco_id, Proteins, area_norm) %>%
+  select(time, b_rep, class, gene_number, Proteins, area_norm) %>%
   spread(time, area_norm) %>%
   na.omit() %>%
-  group_by(Proteins, tabasco_id, class) %>%
+  group_by(Proteins, gene_number, class) %>%
   mutate(fold_change_wt = `9min`-`5min`) %>%
   select(-`9min`, -`5min`, -strain)
 
 changes_late <- inner_join(atten_late, wt_late) %>%
-  group_by(Proteins, tabasco_id, class) %>%
+  group_by(Proteins, gene_number, class) %>%
   filter(!is.infinite(fold_change_wt), !is.infinite(fold_change_atten)) %>%
   na.omit() %>%
   filter(n() > 2) %>%
@@ -269,7 +264,7 @@ changes_late <- inner_join(atten_late, wt_late) %>%
   mutate(t_test = purrr::map(data, ~ broom::tidy(t.test(.$fold_change_wt, .$fold_change_atten, data = ., paired = T)))) %>%
   select(-data) %>%
   unnest() %>%
-  select(Proteins, tabasco_id, class, p.value, estimate) %>%
+  select(Proteins, gene_number, class, p.value, estimate) %>%
   mutate(p.value_adj = p.adjust(p.value, method = "fdr")) %>%
   arrange(desc(estimate))
 
@@ -284,23 +279,23 @@ Next, I looked at similar changes in protein abundance between 1 minute and 5 mi
 
 ```{r}
 atten_early <- filter(all_data, time != "9min", strain == "atten") %>%
-  select(time, b_rep, class, tabasco_id, Proteins, area_norm) %>%
+  select(time, b_rep, class, gene_number, Proteins, area_norm) %>%
   spread(time, area_norm) %>%
   na.omit() %>%
-  group_by(Proteins, tabasco_id, class) %>%
+  group_by(Proteins, gene_number, class) %>%
   mutate(fold_change_atten = `5min`-`1min`) %>%
   select(-`5min`, -`1min`, -strain)
 
 wt_early <- filter(all_data, time != "9min", strain == "wt") %>%
-  select(time, b_rep, class, tabasco_id, Proteins, area_norm) %>%
+  select(time, b_rep, class, gene_number, Proteins, area_norm) %>%
   spread(time, area_norm) %>%
   na.omit() %>%
-  group_by(Proteins, tabasco_id, class) %>%
+  group_by(Proteins, gene_number, class) %>%
   mutate(fold_change_wt = `5min`-`1min`) %>%
   select(-`5min`, -`1min`, -strain)
 
 changes_early <- inner_join(atten_early, wt_early) %>%
-  group_by(Proteins, tabasco_id, class) %>%
+  group_by(Proteins, gene_number, class) %>%
   filter(!is.infinite(fold_change_wt), !is.infinite(fold_change_atten)) %>%
   na.omit() %>%
   filter(n() > 2) %>%
@@ -308,7 +303,7 @@ changes_early <- inner_join(atten_early, wt_early) %>%
   mutate(t_test = purrr::map(data, ~ broom::tidy(t.test(.$fold_change_wt, .$fold_change_atten, data = ., paired = T)))) %>%
   select(-data) %>%
   unnest() %>%
-  select(Proteins, tabasco_id, class, p.value, estimate) %>%
+  select(Proteins, gene_number, class, p.value, estimate) %>%
   mutate(p.value_adj = p.adjust(p.value, method = "fdr")) %>%
   arrange(p.value_adj)
 
@@ -316,15 +311,15 @@ knitr::kable(changes_early)
 
 ```
 
-The following compares gp9, which is just upstream of gp10A, and gp11, which is just downstream:
+The following compares 9, which is just upstream of 10A, and 11, which is just downstream:
 
 ```{r}
 
 prot_9_10 <- filter(all_data, 
-                           tabasco_id %in% c('gp9', 'gp10'), time == "9min")
+                           gene_number %in% c('9', '10'), time == "9min")
 
 # Put genes in numerical order
-prot_9_10$tabasco_id <- factor(prot_9_10$tabasco_id, levels = c('gp9', 'gp10'))
+prot_9_10$gene_number <- factor(prot_9_10$gene_number, levels = c('9', '10'))
 
 plot_9_10 <- ggplot(prot_9_10, 
                       aes(x = strain, y = area_norm, group = b_rep)) + 
@@ -333,7 +328,7 @@ plot_9_10 <- ggplot(prot_9_10,
   geom_line(aes(group=b_rep)) +
   scale_x_discrete(label = strain_labels) +
   scale_fill_manual(values = strain_colors) +
-  facet_wrap(~tabasco_id) +
+  facet_wrap(~gene_number, labeller = as_labeller(prepender)) +
   panel_border() +
   ylab("relative protein abundance") +
   theme(legend.position = "none")
@@ -348,14 +343,14 @@ plot_9_10
 
 ```{r}
 ratio_data <- filter(all_data, 
-                   tabasco_id %in% c('gp9', 'gp10', 'gp17', 'gp8'), 
+                   gene_number %in% c('9', '10', '17', '8'), 
                    time %in% c('1min', '5min', '9min'))
 
 ratio_plot <- ggplot(ratio_data, 
                       aes(x = strain, y = area_norm, group = strain, color=factor(strain), order = desc(strain))) + 
   geom_point(size = 3) +
   stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y..), size=1) +
-  facet_grid(tabasco_id ~ time, scales = "free_y") +
+  facet_grid(gene_number ~ time, scales = "free_y") +
   panel_border() +
   ylab("relative protein abundance") +
   theme(legend.position = "none") +
@@ -365,16 +360,16 @@ ratio_plot
 
 ratio_data2 <- filter(ratio_data, time == "9min") %>%
   select(-time) %>%
-  group_by(strain, tabasco_id) %>%
+  group_by(strain, gene_number) %>%
   summarize(area = mean(area_norm)) %>%
-  spread(tabasco_id, area) %>%
-  bind_rows(data_frame(strain = "true_ratio", gp10 = 415, gp17=18, gp9=125, gp8=12)) %>%
-  mutate(`gp10A:gp9` = gp10/gp9,
-         `gp10A:gp17` = gp10/gp17,
-         `gp10A:gp8` = gp10/gp8,
-         `gp9:gp17` = gp9/gp17,
-         `gp9:gp8` = gp9/gp8) %>%
-  select(-gp10, -gp9, -gp8, -gp17) %>%
+  spread(gene_number, area) %>%
+  bind_rows(data_frame(strain = "true_ratio", `10` = 415, `17`=18, `9`=125, `8`=12)) %>%
+  mutate(`10A:9` = `10`/`9`,
+         `10A:17` = `10`/`17`,
+         `10A:8` = `10`/`8`,
+         `9:17` = `9`/`17`,
+         `9:8` = `9`/`8`) %>%
+  select(-`10`, -`9`, -`8`, -`17`) %>%
   mutate_all(round, digits = 1)
 
 row.names(ratio_data2) <- ratio_data2$strain

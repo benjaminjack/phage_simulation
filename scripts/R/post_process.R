@@ -62,16 +62,16 @@ process_replicates <- function(files) {
 }
 
 rep1 <- process_replicates(list.files("./Rep1", full.names = T)) %>% mutate(b_rep = 1)
-write_csv(rep1, "./post_processed/rep1.csv")
+write_csv(rep1, "./post_processed/abundances/rep1.csv")
 
 rep2 <- process_replicates(list.files("./Rep2", full.names = T)) %>% mutate(b_rep = 2)
-write_csv(rep2, "./post_processed/rep2.csv")
+write_csv(rep2, "./post_processed/abundances/rep2.csv")
 
 rep3 <- process_replicates(list.files("./Rep3", full.names = T)) %>% mutate(b_rep = 3)
-write_csv(rep3, "./post_processed/rep3.csv")
+write_csv(rep3, "./post_processed/abundances/rep3.csv")
 
 rep4 <- process_replicates(list.files("./Rep4", full.names = T)) %>% mutate(b_rep = 4)
-write_csv(rep4, "./post_processed/rep4.csv")
+write_csv(rep4, "./post_processed/abundances/rep4.csv")
 
 rep5 <- process_replicates(list.files("./Rep5", full.names = T)) %>% mutate(b_rep = 5)
-write_csv(rep5, "./post_processed/rep5.csv")
+write_csv(rep5, "./post_processed/abundances/rep5.csv")
