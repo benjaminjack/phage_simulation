@@ -114,7 +114,7 @@ class3_plot <- ggplot(class3_plot_all_data,
 
 # For manuscript, just show 9 minute
 class3_plot_ms <- class3_plot %+% filter(class3_plot_all_data, time == "9min") + 
-  facet_wrap(~gene_number, scales = "free_y", ncol = 2, dir = "h")
+  facet_wrap(~gene_number, scales = "free_y", ncol = 2, dir = "h", labeller = as_labeller(prepender))
 
 class3_plot
 
