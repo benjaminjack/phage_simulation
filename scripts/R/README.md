@@ -1,1 +1,0 @@
--digest.R: Takes a fasta file of protein sequences and performs an in silico trypsin digest.
