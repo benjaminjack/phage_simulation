@@ -1,0 +1,9 @@
+{
+	"n_targets": 4489,
+	"n_bootstraps": 0,
+	"n_processed": 51151806,
+	"kallisto_version": "0.42.5",
+	"index_version": 10,
+	"start_time": "Thu May 19 13:28:25 2016",
+	"call": "kallisto quant -i /Volumes/Seagate/T7wild_ecoli_ref.idx -o ./PA43-wild10A-46-1min-rep2 --single -l 180 -s 20 /Volumes/Seagate/RNAseq/PA43-wild10A-46-1min-rep2.fastq.gz"
+}
