@@ -40,7 +40,7 @@ all_data <- bind_rows(rep2, rep3, rep4, rep5) %>%
   mutate(protein_desc = trimws(protein_desc))
 
 # Join in standard T7 gene labels.
-labels <- read_csv("data/id_map.csv") %>% mutate(accession = trimws(accession))
+labels <- read_csv("data/proteomics/id_map.csv") %>% mutate(accession = trimws(accession))
 all_data <- filter(all_data, org == "phage") %>% 
   group_by(strain, time, b_rep) %>%
   # Join by each group seperately so that missing phage proteins are filled in with NAs
@@ -63,7 +63,7 @@ time_labels <- c(
 strain_labels <- c(
   "atten" = "recoded",
   "evol" = "evolved",
-  "wt" = "wildtype"
+  "wt" = "wild-type"
 )
 
 strain_colors <- c(
@@ -232,84 +232,6 @@ knitr::kable(wt_atten_9min)
 ```
 
 In the attenuated strain, `r length(unique((wt_atten_9min %>% filter(class == 3, p.value_adj < 0.1))$gene_number))`/`r length(unique((all_data %>% filter(class == 3))$gene_number))` of class 3 proteins have significantly lower abundances. All but one gene (6.5) occur immediately downstream of 10A.
-
-# When do genes get turned on in different strains?
-
-If there are differences between class 3 protein abundances in the wildtype and attenuated strains, then presumably we should also see a difference in the *changes* in protein abundance in these strains between 5 and 9 minutes. The following table compares the *differences* between protein abundances going from 5 min to 9 min in each strain. I find that 6 proteins fall below the 0.1 FDR-corrected p-value cutoff.
-
-
-```{r}
-atten_late <- filter(all_data, time != "1min", strain == "atten") %>%
-  select(time, b_rep, class, gene_number, Proteins, area_norm) %>%
-  spread(time, area_norm) %>%
-  na.omit() %>%
-  group_by(Proteins, gene_number, class) %>%
-  mutate(fold_change_atten = `9min`-`5min`) %>%
-  select(-`9min`, -`5min`, -strain)
-
-wt_late <- filter(all_data, time != "1min", strain == "wt") %>%
-  select(time, b_rep, class, gene_number, Proteins, area_norm) %>%
-  spread(time, area_norm) %>%
-  na.omit() %>%
-  group_by(Proteins, gene_number, class) %>%
-  mutate(fold_change_wt = `9min`-`5min`) %>%
-  select(-`9min`, -`5min`, -strain)
-
-changes_late <- inner_join(atten_late, wt_late) %>%
-  group_by(Proteins, gene_number, class) %>%
-  filter(!is.infinite(fold_change_wt), !is.infinite(fold_change_atten)) %>%
-  na.omit() %>%
-  filter(n() > 2) %>%
-  nest() %>%
-  mutate(t_test = purrr::map(data, ~ broom::tidy(t.test(.$fold_change_wt, .$fold_change_atten, data = ., paired = T)))) %>%
-  select(-data) %>%
-  unnest() %>%
-  select(Proteins, gene_number, class, p.value, estimate) %>%
-  mutate(p.value_adj = p.adjust(p.value, method = "fdr")) %>%
-  arrange(desc(estimate))
-
-knitr::kable(wt_late %>% arrange(desc(fold_change_wt)))
-
-knitr::kable(changes_late)
-
-knitr::kable(changes_late %>% arrange(p.value_adj))
-```
-
-Next, I looked at similar changes in protein abundance between 1 minute and 5 minutes. No significant changes were detected, even class 1 and class 2 proteins. The quantity of proteins at these times are probably just too low and too noisy to detect any trends.
-
-```{r}
-atten_early <- filter(all_data, time != "9min", strain == "atten") %>%
-  select(time, b_rep, class, gene_number, Proteins, area_norm) %>%
-  spread(time, area_norm) %>%
-  na.omit() %>%
-  group_by(Proteins, gene_number, class) %>%
-  mutate(fold_change_atten = `5min`-`1min`) %>%
-  select(-`5min`, -`1min`, -strain)
-
-wt_early <- filter(all_data, time != "9min", strain == "wt") %>%
-  select(time, b_rep, class, gene_number, Proteins, area_norm) %>%
-  spread(time, area_norm) %>%
-  na.omit() %>%
-  group_by(Proteins, gene_number, class) %>%
-  mutate(fold_change_wt = `5min`-`1min`) %>%
-  select(-`5min`, -`1min`, -strain)
-
-changes_early <- inner_join(atten_early, wt_early) %>%
-  group_by(Proteins, gene_number, class) %>%
-  filter(!is.infinite(fold_change_wt), !is.infinite(fold_change_atten)) %>%
-  na.omit() %>%
-  filter(n() > 2) %>%
-  nest() %>%
-  mutate(t_test = purrr::map(data, ~ broom::tidy(t.test(.$fold_change_wt, .$fold_change_atten, data = ., paired = T)))) %>%
-  select(-data) %>%
-  unnest() %>%
-  select(Proteins, gene_number, class, p.value, estimate) %>%
-  mutate(p.value_adj = p.adjust(p.value, method = "fdr")) %>%
-  arrange(p.value_adj)
-
-knitr::kable(changes_early)
-
-```
 
 The following compares 9, which is just upstream of 10A, and 11, which is just downstream:
 

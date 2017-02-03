@@ -11,7 +11,7 @@ process_replicates <- function(files) {
     mutate(tech_reps = n()) %>%
     group_by(strain, time, rep, tech_reps, file_names) %>%
     do(map_peptides(as.character(.$file_names))) %>%
-    group_by(strain, time, Proteins, Pep_seq, start, end) %>%
+    group_by(strain, time, protein_desc, peptide_sequence, start, end) %>%
     # Some samples have more technical replicates, so I'm including a count that's been normalized
     # to the number of technical replicates
     summarize(spectral_count = n(), norm_count = n()/unique(tech_reps))

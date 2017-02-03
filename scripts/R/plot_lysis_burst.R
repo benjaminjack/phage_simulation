@@ -7,10 +7,10 @@ library(cowplot)
 
 # Burst size plot and analysis
 
-burst <- read_csv("data/burst.csv")
+burst <- read_csv("data/burst_lysis/burst.csv")
 
 strain_order <- c("11_44  ( /ul)", "11_42 ( /ul)", "11_46  ( /ul)")
-strain_labels <- c("recoded", "evolved", "wildtype")
+strain_labels <- c("recoded", "evolved", "wild-type")
 strain_colors <- c("11_44  ( /ul)" = "orange", "11_42 ( /ul)" = "lightblue", "11_46  ( /ul)" = "lightgreen")
 
 burst_plot <- ggplot(burst, aes(x = strain, y = burst_size)) +
@@ -18,7 +18,7 @@ burst_plot <- ggplot(burst, aes(x = strain, y = burst_size)) +
   geom_line(aes(group=rep)) +
   geom_point() +
   scale_x_discrete(name = "strain", limits = strain_order, labels = strain_labels) +
-  ylab("burst size") +
+  ylab("burst size (PFUs)") +
   scale_fill_manual(values = strain_colors) + theme(legend.position = "none")
 
 # Do some t-tests
@@ -33,7 +33,7 @@ t.test(burst_wide$`11_44  ( /ul)`, burst_wide$`11_46  ( /ul)`, paired = T)
 
 # Lysis time plot and analysis
 
-lysis <- read_csv('data/lysis_clean.csv',
+lysis <- read_csv('data/burst_lysis/lysis_clean.csv',
                   col_types = list(Date = col_date("%m/%d/%y")))
 
 lysis <- mutate(lysis, `11-42` = ifelse(!is.na(Volume), `11-42`/Volume, `11-42`))
@@ -64,7 +64,7 @@ mod <- lm(data = lysis_mid, formula = inflection ~ strain)
 anova(mod)
 
 strain_order2 <- c("11-44", "11-42", "11-46")
-strain_labels2 <- c("recoded", "evolved", "wildtype")
+strain_labels2 <- c("recoded", "evolved", "wild-type")
 strain_colors2 <- c("11-44" = "orange", "11-42" = "lightblue", "11-46" = "lightgreen")
 
 lysis_plot_mid <- ggplot(lysis_mid, aes(x = strain, y = inflection, group = strain)) +
@@ -74,7 +74,7 @@ lysis_plot_mid <- ggplot(lysis_mid, aes(x = strain, y = inflection, group = stra
   ylab("lysis time (minutes)") +
   scale_fill_manual(values = strain_colors2) + theme(legend.position = "none")
 
-lysis_data <- read_csv("data/lysis_clean_manual.csv") %>% filter(!is.na(time))
+lysis_data <- read_csv("data/burst_lysis/lysis_clean_manual.csv") %>% filter(!is.na(time))
 
 lysis_plot <- ggplot(lysis_data, aes(x = strain, y = time, group = strain)) +
   stat_summary(geom="bar", fun.y = "mean", aes(fill = strain)) +

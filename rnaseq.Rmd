@@ -11,9 +11,9 @@ library(dplyr)
 library(stringr)
 library(cowplot)
 
-rna <- read_csv("./data/all_rna.csv") %>%
+rna <- read_csv("./data/rna_seq/post_processed/all_rna.csv") %>%
   # Replace strain names with something more useful
-  mutate(strain = str_replace_all(strain, c("11-42" = "evolved", "11-44" = "recoded", "11-46" = "wildtype")))
+  mutate(strain = str_replace_all(strain, c("11-42" = "evolved", "11-44" = "recoded", "11-46" = "wild-type")))
 
 ```
 
@@ -112,18 +112,18 @@ Let's look at the overall proportion of transcripts between T7 and E. coli.
 strain_colors <- c(
   "recoded" = "orange",
   "evolved" = "lightblue",
-  "wildtype" = "lightgreen"
+  "wild-type" = "lightgreen"
 )
 
-rna2 <- read_csv("./data/all_rna_no_ribo_trna_merge.csv") %>%
+rna2 <- read_csv("./data/rna_seq/post_processed/all_rna_no_ribo_trna_merge.csv") %>%
   # Replace strain names with something more useful
-  mutate(strain = str_replace_all(strain, c("11-42" = "evolved", "11-44" = "recoded", "11-46" = "wildtype"))) %>%
+  mutate(strain = str_replace_all(strain, c("11-42" = "evolved", "11-44" = "recoded", "11-46" = "wild-type"))) %>%
   filter(gene_type != "tRNA") %>%
   mutate(tpm = tpm/1e6) %>%
   group_by(b_rep, time, strain) %>%
   mutate(tpm = tpm/sum(tpm)) # re-normalize because of the small quantity of tRNAs
 
-rna2$strain <- factor(rna2$strain, levels = c("recoded", "evolved", "wildtype"))
+rna2$strain <- factor(rna2$strain, levels = c("recoded", "evolved", "wild-type"))
 rna2$time <- factor(rna2$time, labels = c("1min" = "1 minute", "5min" = "5 minutes", "9min" = "9 minutes"))
 
 phagerna2 <- rna2 %>% 
@@ -187,56 +187,3 @@ gp1_10_plot <- plot_grid(gp10_plot, gp1_plot, ncol = 1, labels = c("A", "B"), al
 save_plot("figures/gp1_10A_rna.pdf", gp1_10_plot, base_width = 8, base_height = 6)
 
 ```
-
-The overall distributions between the two biological replicates look decent:
-
-```{r fig.width=10, fig.height=8}
-
-# Plot distribution with psuedo counts
-ggplot(rna2 %>% mutate(tpm = tpm + 1), aes(x = tpm, fill = factor(b_rep))) + 
-  geom_density(alpha = 0.5) + 
-  scale_x_log10() + 
-  facet_grid(strain ~ time)
-
-```
-
-### Using tRNA levels for normalization
-
-tRNA content in each sample at each time:
-
-```{r}
-rna <- read_csv("./data/all_rna_no_ribo_trna_merge.csv") %>%
-  # Replace strain names with something more useful
-  mutate(strain = str_replace_all(strain, c("11-42" = "evol", "11-44" = "atten", "11-46" = "wt")))
-
-phagerna <- rna %>%
-  group_by(b_rep, strain, time, gene_type) %>%
-  summarize(counts = sum(est_counts))
-
-ribo_rna <- ggplot(phagerna %>% filter(org == "phage"), aes(x = strain, y = counts)) + 
-  geom_bar(stat = "identity") + 
-  facet_grid(b_rep ~ time)
-
-ribo_rna
-```
-
-Normalizing to total tRNA content does not seem like an effective normalization strategy:
-
-```{r}
-# Normalize to total tRNAs
-
-trnas <- rna %>%
-  filter(gene_type == "tRNA") %>%
-  group_by(b_rep, strain, time) %>%
-  summarize(trna_count = sum(est_counts))
-
-rna2 <- rna %>%
-  left_join(trnas) %>%
-  mutate(count = (est_counts/trna_count)*1e6)
-
-ggplot(rna2 %>% filter(gene_name == "T7p45"), aes(x = strain, y = count, fill = factor(b_rep))) + 
-  geom_bar(stat = "identity", position = "dodge") + 
-  facet_grid(~ time)
-
-```
-
