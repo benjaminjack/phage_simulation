@@ -1,0 +1,162 @@
+---
+title: "Simulating the T7 Infection Cycle"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE)
+library(tidyverse)
+library(stringr)
+library(cowplot)
+library(forcats)
+```
+
+
+## Simulation Data
+
+The following data come from a wild-type simulation of T7, run for a total of 20 minutes of infection time.
+
+### All genes over time
+
+```{r class_3_simulated, echo=FALSE, warning=FALSE, message=FALSE}
+
+labels <- read_csv("data/proteomics/id_map.csv") %>% mutate(accession = trimws(accession))
+
+wildtype <- read_csv("data/simulated/run_033117.out.txt", col_names=F) 
+colnames(wildtype) <- c('iter', 'time', 'gene', 'count')
+wildtype <- left_join(wildtype, labels, by = c("gene" = "pysinthe")) %>% mutate(time = floor(time))
+
+```
+
+```{r line_plot, fig.width=10}
+
+line_sim <- filter(wildtype, !is.na(class))
+
+ggplot(line_sim, aes(x=time, y=count, group=gene, color=factor(class))) +
+  geom_line()
+```
+
+### Class 3 at 20 minutes, simulated
+
+```{r class3_sim}
+
+class3_sim <- filter(wildtype, class == 3, time == 1200)
+
+ggplot(class3_sim, aes(x=gene_number, y=count)) +
+  geom_bar(stat = "identity")
+
+```
+
+## Comparing simulations to experimental data
+
+We have proteomics data for a wild-type T7 infected _E. coli_ at 1, 5, and 9 minutes post-infection. These experiments were conducted at 37C (?), while most rate constants used in the simulation were derived from experiments conducted at 25C or 30C. At higher temperatures the infection cycle is shorter, so 9 minutes at 37C is comparable to 20 minutes at 25C. Thus we will compare the 9 minute time-point experimental data to the 20 minute time-point simulated data.
+
+To begin, here are the experimental abundances for the class 3 (late-expressed) proteins:
+
+```{r load_data, echo=FALSE, warning=FALSE, message=FALSE}
+rep2 <- read_csv("data/proteomics/abundances/rep2.csv")
+rep3 <- read_csv("data/proteomics/abundances/rep3.csv")
+rep4 <- read_csv("data/proteomics/abundances/rep4.csv")
+rep5 <- read_csv("data/proteomics/abundances/rep5.csv")
+
+all_data <- bind_rows(rep2, rep3, rep4, rep5) %>%
+  mutate(strain = str_replace_all(strain, c("11-44" = "atten", "11-42" = "evol", "11-46" = "wt"))) %>%
+  mutate(protein_desc = trimws(protein_desc))
+
+# Join in standard T7 gene labels.
+all_data <- filter(all_data, org == "phage") %>% 
+  group_by(strain, time, b_rep) %>%
+  # Join by each group seperately so that missing phage proteins are filled in with NAs
+  do(full_join(., labels, by = c("protein_desc" = "accession")) %>% fill(strain, time, b_rep)) %>%
+  mutate(area_norm = ifelse(is.na(area_norm), 0, area_norm)) %>% # Fill in missing proteins (NAs) with 0
+  mutate(gene_number = str_replace_all(gene_number, c("10A" = "10"))) # Technically we can't distinguish 10A from 10B so we just compile them together as 10
+```
+
+```{r class_3_experimental}
+class3 <- filter(all_data, class == 3, strain == 'wt', time == '9min')
+
+ggplot(class3, aes(x=gene_number, y=area_norm)) +
+  stat_summary(geom="bar", fun.y = "mean")
+```
+
+### All genes, experimental, 9 minutes
+
+```{r allgenes_experimental, fig.width=15}
+class1 <- filter(all_data, strain == 'wt', time == '9min', !is.na(class))
+
+ggplot(class1, aes(x=fct_reorder(gene_number, class), y=area_norm, fill=factor(class))) +
+  stat_summary(geom="bar", fun.y = "mean")
+```
+
+### All genes simulated, 20 minutes
+
+```{r allgenes_sim, fig.width=15}
+allgenes_sim <- filter(wildtype, time == 1200, !is.na(class))
+
+ggplot(allgenes_sim, aes(x=fct_reorder(gene_number, class), y=count, fill=factor(class))) +
+  geom_bar(stat = "identity")
+
+```
+
+### T7 already expressed gene 10 after 1 minute of infection
+
+```{r allgenes_experimental_1min, fig.width=15}
+allgenes_1min <- filter(all_data, strain == 'wt', time == '1min', !is.na(class))
+
+ggplot(allgenes_1min, aes(x=fct_reorder(gene_number, class), y=area_norm, fill=factor(class))) +
+  stat_summary(geom="bar", fun.y = "mean")
+
+allgenes_5min <- filter(all_data, strain == 'wt', time == '5min', !is.na(class))
+
+ggplot(allgenes_5min, aes(x=fct_reorder(gene_number, class), y=area_norm, fill=factor(class))) +
+  stat_summary(geom="bar", fun.y = "mean")
+
+```
+
+## Genomic manipulations _in silico_
+
+### Wildtype
+
+```{r allgenes_sim2, fig.width=15}
+allgenes_sim <- filter(wildtype, time == 1200, !is.na(class))
+
+ggplot(allgenes_sim, aes(x=fct_reorder(gene_number, class), y=count, fill=factor(class))) +
+  geom_bar(stat = "identity") + ylim(0,22000)
+
+```
+
+### Slow RNA polymerase
+
+The speed of T7 RNA polymerase was reduced from 240bp/s to ~100bp/s.
+
+```{r allgenes_sim_slowpol, fig.width=15}
+
+slowpol <- read_csv("data/simulated/run_033117_slowpol.out.txt", col_names=F) 
+colnames(slowpol) <- c('iter', 'time', 'gene', 'count')
+slowpol <- left_join(slowpol, labels, by = c("gene" = "pysinthe")) %>% mutate(time = floor(time))
+
+allgenes_sim_slowpol <- filter(slowpol, time == 1200, !is.na(class))
+
+ggplot(allgenes_sim_slowpol, aes(x=fct_reorder(gene_number, class), y=count, fill=factor(class))) +
+  geom_bar(stat = "identity") + ylim(0,22000)
+
+```
+
+### Early promoter knockouts
+
+All early T7 promoters were knocked out except for phi1.3, which is required for the full genome to enter the cell. 
+
+```{r allgenes_sim_knockout, fig.width=15}
+
+knockout <- read_csv("data/simulated/run_033117_knockout.out.txt", col_names=F) 
+colnames(knockout) <- c('iter', 'time', 'gene', 'count')
+knockout <- left_join(knockout, labels, by = c("gene" = "pysinthe")) %>% mutate(time = floor(time))
+
+allgenes_sim_knockout <- filter(knockout, time == 1200, !is.na(class))
+
+ggplot(allgenes_sim_knockout, aes(x=fct_reorder(gene_number, class), y=count, fill=factor(class))) +
+  geom_bar(stat = "identity") + ylim(0,22000)
+
+```
