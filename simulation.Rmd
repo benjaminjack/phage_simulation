@@ -11,6 +11,7 @@ library(tidyverse)
 library(stringr)
 library(cowplot)
 library(forcats)
+library(gtools)
 ```
 
 
@@ -70,8 +71,7 @@ all_data <- filter(all_data, org == "phage") %>%
   group_by(strain, time, b_rep) %>%
   # Join by each group seperately so that missing phage proteins are filled in with NAs
   do(full_join(., labels, by = c("protein_desc" = "accession")) %>% fill(strain, time, b_rep)) %>%
-  mutate(area_norm = ifelse(is.na(area_norm), 0, area_norm)) %>% # Fill in missing proteins (NAs) with 0
-  mutate(gene_number = str_replace_all(gene_number, c("10A" = "10"))) # Technically we can't distinguish 10A from 10B so we just compile them together as 10
+  mutate(area_norm = ifelse(is.na(area_norm), 0, area_norm)) # Fill in missing proteins (NAs) with 0
 ```
 
 ```{r class_3_experimental}
@@ -84,19 +84,32 @@ ggplot(class3, aes(x=gene_number, y=area_norm)) +
 ### All genes, experimental, 9 minutes
 
 ```{r allgenes_experimental, fig.width=15}
-class1 <- filter(all_data, strain == 'wt', time == '9min', !is.na(class))
+allgenes <- filter(all_data, strain == 'wt', time == '9min')
 
-ggplot(class1, aes(x=fct_reorder(gene_number, class), y=area_norm, fill=factor(class))) +
+ggplot(allgenes, aes(x=fct_reorder(gene_number, class), y=area_norm, fill=factor(class))) +
   stat_summary(geom="bar", fun.y = "mean")
 ```
 
 ### All genes simulated, 20 minutes
 
 ```{r allgenes_sim, fig.width=15}
-allgenes_sim <- filter(wildtype, time == 1200, !is.na(class))
+allgenes_sim <- filter(wildtype, time == 1200) %>% rename(sim_time = time)
 
-ggplot(allgenes_sim, aes(x=fct_reorder(gene_number, class), y=count, fill=factor(class))) +
-  geom_bar(stat = "identity")
+allgenes_mean <- group_by(allgenes, gene_number, class) %>% summarize(area_norm = mean(area_norm))
+
+allgenes_sim_exp <- full_join(allgenes_mean, allgenes_sim) %>% 
+  rename(exp_count = area_norm, sim_count = count) %>%
+  select(sim_time, gene_number, class, exp_count, sim_count) %>%
+  gather(source, count, exp_count:sim_count) %>%
+  mutate(count = ifelse(is.na(count), 0, count)) %>%
+  filter(!is.na(class))
+
+ggplot(allgenes_sim_exp, aes(x=factor(gene_number, levels=mixedsort(gene_number)), y=count, fill=factor(class))) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~source, scales = "free", ncol = 1, strip.position="left") +
+  background_grid(major = 'y', minor = "none") + # add thin horizontal lines 
+  panel_border() + # and a border around each panel
+  theme(legend.position = "none")
 
 ```
 
@@ -105,7 +118,7 @@ ggplot(allgenes_sim, aes(x=fct_reorder(gene_number, class), y=count, fill=factor
 ```{r allgenes_experimental_1min, fig.width=15}
 allgenes_1min <- filter(all_data, strain == 'wt', time == '1min', !is.na(class))
 
-ggplot(allgenes_1min, aes(x=fct_reorder(gene_number, class), y=area_norm, fill=factor(class))) +
+ggplot(allgenes_1min, aes(x=fct_reorder(gene_number, class, fun = ), y=area_norm, fill=factor(class))) +
   stat_summary(geom="bar", fun.y = "mean")
 
 allgenes_5min <- filter(all_data, strain == 'wt', time == '5min', !is.na(class))
