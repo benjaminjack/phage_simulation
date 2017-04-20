@@ -34,7 +34,7 @@ load_sim_data <- function(path) {
 
 The following simulation data come from a wild-type simulation of a T7 infection about ~25C, run for a total of 20 minutes of infection time. This plot shows all proteins over the course of the infection.
 
-```{r load_sim_data, echo=FALSE, warning=FALSE, message=FALSE}
+```{r load_sim_data}
 
 wildtype_sim <- load_sim_data("data/simulated/run_033117.out.txt")
 
@@ -54,7 +54,7 @@ ggplot(line_sim, aes(x=time, y=count, group=gene, color=factor(class))) +
 
 We have proteomics data for a wild-type T7 infected _E. coli_ at 1, 5, and 9 minutes post-infection. These experiments were conducted at 37C (?), while most rate constants used in the simulation were derived from experiments conducted at 25C or 30C. At higher temperatures the infection cycle is shorter, so 9 minutes at 37C is comparable to 20 minutes at 25C. Thus we will compare the 9 minute time-point experimental data to the 20 minute time-point simulated data.
 
-```{r load_exp_data, echo=FALSE, warning=FALSE, message=FALSE}
+```{r load_exp_data}
 rep2 <- read_csv("data/proteomics/abundances/rep2.csv")
 rep3 <- read_csv("data/proteomics/abundances/rep3.csv")
 rep4 <- read_csv("data/proteomics/abundances/rep4.csv")
@@ -80,7 +80,7 @@ mean_exp <- all_exp %>% filter(strain == "wt") %>%
 
 The following plot shows experimental protein counts 9 minutes after infection (top) and simulated protein counts (bottom)
 
-```{r late_sim_exp_plot, fig.width=15}
+```{r late_sim_exp_plot, fig.height=6.5, fig.width=15}
 late_sim <- filter(wildtype_sim, time == 1200) %>% 
   rename(sim_time = time) # rename to avoid conflicts when joining exp data
   
@@ -101,13 +101,13 @@ ggplot(late_sim_exp, aes(x=factor(gene_number, levels=mixedsort(gene_number)), y
 
 ```
 
-### T7 already expressed gene 10 after 1 minute of infection
+### In our experiments, gene 10 was detected after 1 minute of infection
 
-```{r all_exp_plot, fig.height=9, fig.width=15}
+```{r all_exp_plot, fig.height=10, fig.width=15}
 
-all_exp_plot <- ggplot(mean_exp %>% filter(!is.na(class)), aes(x=factor(gene_number, levels=mixedsort(gene_number)), y=area_norm, fill=factor(class))) +
+all_exp_plot <- ggplot(all_exp %>% filter(!is.na(class)), aes(x=factor(gene_number, levels=mixedsort(gene_number)), y=area_norm, fill=factor(class))) +
   geom_bar(stat="identity") +
-  facet_wrap(~time, ncol = 1, scales="free_x") +
+  facet_grid(time~b_rep, scales="free_x") +
   labs(x="gene", y="relative abundance") +
   theme(legend.position="none")
 
@@ -118,7 +118,7 @@ all_exp_plot
 
 Why do the distribution of genes look so similar across all three time points?
 
-```{r all_exp_scaled_plot, fig.height=9, fig.width=15}
+```{r all_exp_scaled_plot, fig.height=10, fig.width=15}
 
 all_exp_plot + facet_wrap(~time, ncol = 1, scales="free")
 
