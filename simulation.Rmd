@@ -50,6 +50,22 @@ ggplot(line_sim, aes(x=time, y=count, group=gene, color=factor(class))) +
   panel_border(remove=TRUE)
 ```
 
+```{r bar_sim_plot, fig.width=15, fig.height=10}
+bar_sim <- filter(wildtype_sim, !is.na(class), time %in% c(400, 800, 1200)) %>%
+  left_join(labels)
+
+bar_sim_plot <- ggplot(bar_sim, aes(x=factor(gene_number, levels=mixedsort(gene_number)), y=count, fill=factor(class))) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~time, scales = "free_x", ncol = 1) +
+  theme(legend.position = "none") +
+  labs(x="gene", y="count")
+
+bar_sim_plot
+
+bar_sim_plot + facet_wrap(~time, scales = "free", ncol = 1)
+
+```
+
 ## Comparing simulations to experimental data
 
 We have proteomics data for a wild-type T7 infected _E. coli_ at 1, 5, and 9 minutes post-infection. These experiments were conducted at 37C (?), while most rate constants used in the simulation were derived from experiments conducted at 25C or 30C. At higher temperatures the infection cycle is shorter, so 9 minutes at 37C is comparable to 20 minutes at 25C. Thus we will compare the 9 minute time-point experimental data to the 20 minute time-point simulated data.
@@ -105,7 +121,7 @@ ggplot(late_sim_exp, aes(x=factor(gene_number, levels=mixedsort(gene_number)), y
 
 ```{r all_exp_plot, fig.height=10, fig.width=15}
 
-all_exp_plot <- ggplot(all_exp %>% filter(!is.na(class)), aes(x=factor(gene_number, levels=mixedsort(gene_number)), y=area_norm, fill=factor(class))) +
+all_exp_plot <- ggplot(all_exp %>% filter(!is.na(class), strain=="wt"), aes(x=factor(gene_number, levels=mixedsort(gene_number)), y=area_norm, fill=factor(class))) +
   geom_bar(stat="identity") +
   facet_grid(time~b_rep, scales="free_x") +
   labs(x="gene", y="relative abundance") +
@@ -120,7 +136,21 @@ Why do the distribution of genes look so similar across all three time points?
 
 ```{r all_exp_scaled_plot, fig.height=10, fig.width=15}
 
-all_exp_plot + facet_wrap(~time, ncol = 1, scales="free")
+all_exp_plot + facet_grid(time~b_rep, scales="free")
+
+```
+
+### And now excluding replicate 4...
+
+```{r all_exp_scaled_plot_corrected, fig.height=10, fig.width=15}
+
+all_exp_no4 <- all_exp_plot %+% 
+  filter(all_exp, !is.na(class), b_rep != 4, strain == "wt") + 
+  facet_grid(time~b_rep, scales="free_x")
+
+all_exp_no4
+
+all_exp_no4 + facet_grid(time~b_rep, scales="free")
 
 ```
 
