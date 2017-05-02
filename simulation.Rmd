@@ -36,7 +36,7 @@ The following simulation data come from a wild-type simulation of a T7 infection
 
 ```{r load_sim_data}
 
-wildtype_sim <- load_sim_data("data/simulated/run_033117.out.txt")
+wildtype_sim <- load_sim_data("data/simulated/run_041817_wt.out.txt")
 
 ```
 
@@ -50,8 +50,8 @@ ggplot(line_sim, aes(x=time, y=count, group=gene, color=factor(class))) +
   panel_border(remove=TRUE)
 ```
 
-```{r bar_sim_plot, fig.width=15, fig.height=10}
-bar_sim <- filter(wildtype_sim, !is.na(class), time %in% c(400, 800, 1200)) %>%
+```{r bar_sim_plot, fig.width=15, fig.height=15}
+bar_sim <- filter(wildtype_sim, !is.na(class), time %in% c(400, 800, 1200, 1600, 2000)) %>%
   left_join(labels)
 
 bar_sim_plot <- ggplot(bar_sim, aes(x=factor(gene_number, levels=mixedsort(gene_number)), y=count, fill=factor(class))) +
