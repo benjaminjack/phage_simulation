@@ -12,11 +12,16 @@
 # Remove any variables in memory
 rm(list = ls())
 
+# Set raw data directory
+RAW_DATA_SRC <- "/Volumes/Seagate/data"
+
 # Load appropriate libraries
 library(readr)
 library(dplyr)
 library(tidyr)
 library(parsemsf)
+library(readxl)
+library(stringr)
 
 normalize_areas <- function(prots) {
   # Replace an NaN (i.e. unobserved proteins, or proteins without enough peptides to quantitate) values with 0
@@ -40,7 +45,7 @@ normalize_areas <- function(prots) {
   return(prots2)
 }
 
-process_replicates <- function(files) {
+process_replicates <- function(df) {
 
   # Relabel protein groups
   relabel = c('NP_041997.1; NP_041998.1' = 'NP_041998.1',
@@ -49,11 +54,9 @@ process_replicates <- function(files) {
               'NP_041977.1' = 'NP_041975.1'
               )
 
-  out_df <- data.frame(file_names = files) %>%
-    separate(file_names, into = c("strain", "time", "rep"), sep = "_", remove = F, extra = "drop") %>%
-    mutate(strain = basename(strain)) %>%
+  out_df <- df %>%
     group_by(strain, time) %>%
-    do(quantitate(as.character(.$file_names), normalize = F, relabel = relabel)) %>%
+    do(quantitate(as.character(.$file), normalize = F, relabel = relabel)) %>%
     group_by(strain, time) %>%
     do(normalize_areas(.))
 
@@ -61,17 +64,17 @@ process_replicates <- function(files) {
 
 }
 
-rep1 <- process_replicates(list.files("./Rep1", full.names = T)) %>% mutate(b_rep = 1)
-write_csv(rep1, "./post_processed/abundances/rep1.csv")
+samples <- read_excel(paste0(RAW_DATA_SRC, "/sample_list.xlsx")) %>%
+  filter(`Biological replicate` != 1, `Data Type` == "mass-spec") %>% # Skip replicate 1
+  mutate(File = paste0(RAW_DATA_SRC, "/mass_spec/msf_1_4/", str_replace(File, ".raw", ".msf"))) %>%
+  rename(b_rep = `Biological replicate`, time = `Time point`, strain = Strain, file = File) %>%
+  select(b_rep, strain, time, file) %>%
+  nest(-b_rep) %>%
+  mutate(msf = purrr::map(data, process_replicates))
+  
+out <- samples %>% 
+  select(b_rep, msf) %>% 
+  unnest()
 
-rep2 <- process_replicates(list.files("./Rep2", full.names = T)) %>% mutate(b_rep = 2)
-write_csv(rep2, "./post_processed/abundances/rep2.csv")
-
-rep3 <- process_replicates(list.files("./Rep3", full.names = T)) %>% mutate(b_rep = 3)
-write_csv(rep3, "./post_processed/abundances/rep3.csv")
-
-rep4 <- process_replicates(list.files("./Rep4", full.names = T)) %>% mutate(b_rep = 4)
-write_csv(rep4, "./post_processed/abundances/rep4.csv")
-
-rep5 <- process_replicates(list.files("./Rep5", full.names = T)) %>% mutate(b_rep = 5)
-write_csv(rep5, "./post_processed/abundances/rep5.csv")
+# Write out data
+write_csv(out, "./data/proteomics/abundances/all_reps.csv")

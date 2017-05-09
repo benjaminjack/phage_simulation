@@ -35,7 +35,9 @@ rep3 <- read_csv("data/proteomics/abundances/rep3.csv")
 rep4 <- read_csv("data/proteomics/abundances/rep4.csv")
 rep5 <- read_csv("data/proteomics/abundances/rep5.csv")
 
-all_data <- bind_rows(rep2, rep3, rep4, rep5) %>%
+all_reps <- read_csv("data/proteomics/abundances/all_reps.csv")
+
+all_data <- all_reps %>%
   mutate(strain = str_replace_all(strain, c("11-44" = "atten", "11-42" = "evol", "11-46" = "wt"))) %>%
   mutate(protein_desc = trimws(protein_desc))
 
@@ -56,9 +58,9 @@ all_data <- filter(all_data, org == "phage") %>%
 prepender <- function(string, prefix = "protein ") paste0(prefix, string)
 
 time_labels <- c(
-  "1min" = "1 minute",
-  "5min" = "5 minutes",
-  "9min" = "9 minutes"
+  "1" = "1 minute",
+  "5" = "5 minutes",
+  "9" = "9 minutes"
 )
 strain_labels <- c(
   "atten" = "recoded",
@@ -85,6 +87,8 @@ maj_cap_plot <- ggplot(filter(all_data, gene_number == '10'),
   theme(legend.position = "none")
 
 save_plot("figures/maj_cap.pdf", maj_cap_plot, base_aspect_ratio = 2)
+
+maj_cap_plot
 
 ```
 
@@ -113,7 +117,7 @@ class3_plot <- ggplot(class3_plot_all_data,
   theme(legend.position = "none")
 
 # For manuscript, just show 9 minute
-class3_plot_ms <- class3_plot %+% filter(class3_plot_all_data, time == "9min") + 
+class3_plot_ms <- class3_plot %+% filter(class3_plot_all_data, time == "9") + 
   facet_wrap(~gene_number, scales = "free_y", ncol = 2, dir = "h", labeller = as_labeller(prepender))
 
 class3_plot
@@ -124,69 +128,6 @@ save_plot("figures/class3.pdf", class3_plot_ms, base_height = 9, base_width = 7)
 
 The difference in abundance between the wildtype and attenuated strains for the above proteins are all significant (see the table of p-values at the bottom of the document).
 
-## In aggregate, phage protein levels (not including major capsid) look about the same across strains
-
-```{r}
-
-make_abundance_plot <- function(protein_data) {
-
-  sums <- group_by(protein_data, strain, time, class, b_rep) %>% 
-    summarize(area_sum2 = sum(area_norm)) %>% 
-    filter(!is.na(area_sum2)) %>%
-    group_by(strain, time, class) %>%
-    summarize(area_mean = mean(area_sum2), area_sd = sd(area_sum2)/sqrt(n())) %>%
-    mutate(upper_error = area_mean + area_sd, lower_error = area_mean - area_sd)
-
-  myplot <- ggplot(sums %>% filter(time == "9min", !is.na(class)), aes(x = strain, y = area_mean, group = strain)) + 
-    geom_bar(stat="identity") +
-    geom_errorbar(aes(ymin = lower_error, ymax = upper_error), width = 0.5) +
-    facet_wrap(~ class, nrow = 1, scales = "free_y", labeller = "label_both") +
-    scale_x_discrete(label = strain_labels) +
-    panel_border() +
-    ylab('total relative protein abundance') +
-    theme(legend.position = "none")
-  
-  return(myplot)
-
-}
-
-# Plot all data
-plot_all_data <- make_abundance_plot(all_data)
-
-save_plot("figures/class123_prot.pdf", plot_all_data, base_width = 8.5, base_height = 3)
-
-
-# Plot without 10A
-plot_no10 <- make_abundance_plot(filter(all_data, 
-                                        gene_number != '10'))
-
-plot_no10
-
-```
-
-### Class 3 protein levels (not including capsid) look roughly the same
-
-```{r}
-
-plot_class3_no10 <- make_abundance_plot(filter(all_data, 
-                                               gene_number != '10', 
-                                               class == 3))
-
-plot_class3_no10
-
-```
-
-Averaged across all genes and all replicates for a given time point and given strain, class 3 protein levels look similar to 10A (just barely). I have not actually tested to see if any strain is significantly different from another across all genes (see mixed effects ANOVA below).
-
-### Classes 1 and 2 also look roughly the same across all three strains
-
-```{r}
-
-plot_class12 <- make_abundance_plot(filter(all_data, class != 3))
-
-plot_class12
-
-```
 
 ## Which proteins are significantly different across strains?
 
@@ -196,7 +137,7 @@ Looking at the class 3 genes, there seem to be systematic batch effects between 
 library(lmerTest)
 
 # Let's just look at the 9min mark without the evolved strain or 10A
-all_data2 <- filter(all_data, gene_number != "10", time == "9min", strain != "evol", class == 3)
+all_data2 <- filter(all_data, gene_number != "10", time == "9", strain != "evol", class == 3)
 
 # Build a model with protein abundance as the response, strain and protein as fixed, and biological replicate as random
 mod <- lmer(area_norm ~ strain + gene_number + (1 | b_rep), data = all_data2)
@@ -205,12 +146,12 @@ anova(mod)
 
 ```
 
-According to the ANOVA test above, the protein abundances for class 3 genes (excluding 10A) across strains are significantly different. Proteins immediately downstream of 10A are suppressed in the wild-type.
+According to the ANOVA test above, the protein abundances for class 3 genes (excluding 10A) across strains are significantly different. Proteins immediately downstream of 10A (and one protein upstream) are suppressed in the attenuated strain.
 
 
 ```{r}
 
-wt_atten_9min <- filter(all_data, time == "9min", strain != "evol") %>%
+wt_atten_9min <- filter(all_data, time == 9, strain != "evol") %>%
   select(strain, b_rep, class, gene_number, protein_desc, area_norm) %>%
   spread(strain, area_norm) %>%
   na.omit() %>%
@@ -226,19 +167,15 @@ wt_atten_9min <- filter(all_data, time == "9min", strain != "evol") %>%
   mutate_at(vars(p.value, estimate, p.value_adj), signif, digits = 2) %>%
   select(gene_number, estimate, p.value, p.value_adj)
   
-
 knitr::kable(wt_atten_9min)
 
 ```
 
-In the attenuated strain, `r length(unique((wt_atten_9min %>% filter(class == 3, p.value_adj < 0.1))$gene_number))`/`r length(unique((all_data %>% filter(class == 3))$gene_number))` of class 3 proteins have significantly lower abundances. All but one gene (6.5) occur immediately downstream of 10A.
-
-The following compares 9, which is just upstream of 10A, and 11, which is just downstream:
+Gene 9, which is expressed roughly at the same time as gene 10A, is not affected by the recoding. The following compares abundances of gene 9 with that of gene 10A. 
 
 ```{r}
 
-prot_9_10 <- filter(all_data, 
-                           gene_number %in% c('9', '10'), time == "9min")
+prot_9_10 <- filter(all_data, gene_number %in% c('9', '10'), time == 9)
 
 # Put genes in numerical order
 prot_9_10$gene_number <- factor(prot_9_10$gene_number, levels = c('9', '10'))
@@ -258,45 +195,5 @@ plot_9_10 <- ggplot(prot_9_10,
 save_plot("figures/plot_9_10.pdf", plot_9_10, base_height = 5, base_width = 9)
 
 plot_9_10
-
-```
-
-## Exploring protein ratios
-
-```{r}
-ratio_data <- filter(all_data, 
-                   gene_number %in% c('9', '10', '17', '8'), 
-                   time %in% c('1min', '5min', '9min'))
-
-ratio_plot <- ggplot(ratio_data, 
-                      aes(x = strain, y = area_norm, group = strain, color=factor(strain), order = desc(strain))) + 
-  geom_point(size = 3) +
-  stat_summary(geom="errorbar", fun.y="mean", aes(ymin=..y.., ymax=..y..), size=1) +
-  facet_grid(gene_number ~ time, scales = "free_y") +
-  panel_border() +
-  ylab("relative protein abundance") +
-  theme(legend.position = "none") +
-  geom_text(aes(x = strain, y = area_norm, label = b_rep), hjust = -0.5)
-
-ratio_plot
-
-ratio_data2 <- filter(ratio_data, time == "9min") %>%
-  select(-time) %>%
-  group_by(strain, gene_number) %>%
-  summarize(area = mean(area_norm)) %>%
-  spread(gene_number, area) %>%
-  bind_rows(data_frame(strain = "true_ratio", `10` = 415, `17`=18, `9`=125, `8`=12)) %>%
-  mutate(`10A:9` = `10`/`9`,
-         `10A:17` = `10`/`17`,
-         `10A:8` = `10`/`8`,
-         `9:17` = `9`/`17`,
-         `9:8` = `9`/`8`) %>%
-  select(-`10`, -`9`, -`8`, -`17`) %>%
-  mutate_all(round, digits = 1)
-
-row.names(ratio_data2) <- ratio_data2$strain
-ratio_data2 %>% ungroup() %>% select(-strain) %>% t() -> ratio_data2
-
-knitr::kable(ratio_data2)
 
 ```
