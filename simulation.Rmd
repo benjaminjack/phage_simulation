@@ -71,12 +71,9 @@ bar_sim_plot + facet_wrap(~time, scales = "free", ncol = 1)
 We have proteomics data for a wild-type T7 infected _E. coli_ at 1, 5, and 9 minutes post-infection. These experiments were conducted at 37C (?), while most rate constants used in the simulation were derived from experiments conducted at 25C or 30C. At higher temperatures the infection cycle is shorter, so 9 minutes at 37C is comparable to 20 minutes at 25C. Thus we will compare the 9 minute time-point experimental data to the 20 minute time-point simulated data.
 
 ```{r load_exp_data}
-rep2 <- read_csv("data/proteomics/abundances/rep2.csv")
-rep3 <- read_csv("data/proteomics/abundances/rep3.csv")
-rep4 <- read_csv("data/proteomics/abundances/rep4.csv")
-rep5 <- read_csv("data/proteomics/abundances/rep5.csv")
+all_reps <- read_csv("data/proteomics/abundances/all_reps.csv")
 
-all_exp <- bind_rows(rep2, rep3, rep4, rep5) %>%
+all_exp <- all_reps %>%
   mutate(strain = str_replace_all(strain, c("11-44" = "atten", "11-42" = "evol", "11-46" = "wt"))) %>%
   mutate(protein_desc = trimws(protein_desc))
 
@@ -100,7 +97,7 @@ The following plot shows experimental protein counts 9 minutes after infection (
 late_sim <- filter(wildtype_sim, time == 1200) %>% 
   rename(sim_time = time) # rename to avoid conflicts when joining exp data
   
-late_mean_exp <- filter(mean_exp, time == "9min")
+late_mean_exp <- filter(mean_exp, time == 9)
 
 late_sim_exp <- full_join(late_mean_exp, late_sim) %>% 
   rename(exp_count = area_norm, sim_count = count) %>%
@@ -121,7 +118,7 @@ ggplot(late_sim_exp, aes(x=factor(gene_number, levels=mixedsort(gene_number)), y
 
 ```{r all_exp_plot, fig.height=10, fig.width=15}
 
-all_exp_plot <- ggplot(all_exp %>% filter(!is.na(class), strain=="wt"), aes(x=factor(gene_number, levels=mixedsort(gene_number)), y=area_norm, fill=factor(class))) +
+all_exp_plot <- ggplot(all_exp %>% filter(!is.na(class), strain=="wt"), aes(x=gene_number, y=area_norm, fill=factor(class))) +
   geom_bar(stat="identity") +
   facet_grid(time~b_rep, scales="free_x") +
   labs(x="gene", y="relative abundance") +

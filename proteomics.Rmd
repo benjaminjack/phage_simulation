@@ -30,11 +30,6 @@ We have proteomics data from three different strains of T7 after 1, 5, and 9 min
 ```{r}
 
 # Load in replicates
-rep2 <- read_csv("data/proteomics/abundances/rep2.csv")
-rep3 <- read_csv("data/proteomics/abundances/rep3.csv")
-rep4 <- read_csv("data/proteomics/abundances/rep4.csv")
-rep5 <- read_csv("data/proteomics/abundances/rep5.csv")
-
 all_reps <- read_csv("data/proteomics/abundances/all_reps.csv")
 
 all_data <- all_reps %>%
