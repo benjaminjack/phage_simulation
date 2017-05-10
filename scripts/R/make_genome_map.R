@@ -3,7 +3,7 @@ library(cowplot)
 library(ggrepel)
 library(stringr)
 
-genes <- read_csv("./data/ref_seqs/T7_gene_coords.csv")
+genes <- read_csv("./data/T7_gene_coords.csv")
 id_map <- read_csv("./data/proteomics/id_map.csv")
 
 make_transcript <- function(order, start_gene, stop_gene, df) {

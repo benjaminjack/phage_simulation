@@ -1,9 +1,0 @@
-{
-	"n_targets": 4379,
-	"n_bootstraps": 0,
-	"n_processed": 45066153,
-	"kallisto_version": "0.43.0",
-	"index_version": 10,
-	"start_time": "Wed Aug 31 15:53:53 2016",
-	"call": "kallisto quant -i /Volumes/Seagate/T7atten_ecoli_ref_no_ribo_trna_merge.idx -o ./PA51-evol10A-44-9min-rep3 --single -l 450 -s 250 /Volumes/Seagate/RNAseq/PA51-evol10A-44-9min-rep3.fastq.gz"
-}
