@@ -75,7 +75,7 @@ out <- bind_rows(out, c(col1='MTD', col2='modification', col3='[PRIDE, PRIDE:000
 
 # Insert a blank row
 out <- bind_rows(out, c(col1='', col2='', col3='', col4='', col5='', col6='', col7=''))
-samples <- read_excel("sample_list.xlsx") %>% 
+samples <- read_excel("./data/sample_list.xlsx") %>% 
   filter(`Data Type` == "mass-spec", `Biological replicate` != 1) %>% 
   mutate(file_type = "raw")
 samples_msf <- mutate(samples, File = str_replace(File, ".raw", ".msf"), Directory = str_replace(Directory, "raw", "msf_1_4")) %>%
@@ -102,4 +102,4 @@ annot_head <- tibble(col1='SMH', col2='file_id', col3='species', col4='tissue', 
 annots <- tibble(col1=samples$sme, col2=as.character(samples$file_id), col3='[NEWT, 10760, Enterobacteria phage T7, ]', col4='[PRIDE, PRIDE: 0000442, Tissue not applicable to dataset,]', col5='[MS, MS:1001910, LTQ Orbitrap Elite,]', col6='[PRIDE, PRIDE:0000398, No PTMs are included in the dataset, ]', col7=samples$experimental_factor)
 out <- bind_rows(out, annot_head, annots)
 
-write_tsv(out, "summary.px")
+write_tsv(out, "./data/summary.px")
