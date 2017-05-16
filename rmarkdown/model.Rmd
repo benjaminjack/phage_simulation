@@ -1,0 +1,48 @@
+---
+title: "Model of translational coupling"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### General case
+
+$$a_\text{in} = \min\left\{k, \frac{s_a}{\tau_a}\right\}$$
+$$b_\text{in} = \min\left\{a_\text{in}, \frac{s_b}{\tau_b}\right\}q + \min\left\{k, \frac{s_b}{\tau_b}\right\}(1-q)$$
+$$c_\text{in} = \min\left\{b_\text{in}, \frac{s_c}{\tau_c}\right\}q + \min\left\{k, \frac{s_c}{\tau_c}\right\}(1-q)$$
+$$\dot{A} = a_\text{in}I(t-\tau_a)$$
+$$\dot{B} = zb_\text{in}I(t-\tau_b-\tau_a)+(1-z)\min\left\{k, \frac{s_b}{\tau_b}\right\}I(t-\tau_b)$$
+$$\dot{C} = z\left[zc_\text{in}I(t-\tau_c-\tau_b-\tau_a)+(1-z)\min\left\{k, \frac{s_c}{\tau_c}\right\}I(t-\tau_b-\tau_c)\right] + (1-z)\min\left\{k, \frac{s_c}{\tau_c}\right\}I(t-\tau_c)$$
+
+### $q = 0,\ z = 0$
+
+$$a_\text{in} = \min\left\{k, \frac{s_a}{\tau_a}\right\}$$
+$$b_\text{in} = \min\left\{k, \frac{s_b}{\tau_b}\right\}$$
+$$c_\text{in} = \min\left\{k, \frac{s_c}{\tau_c}\right\}$$
+$$\dot{A} = a_\text{in}I(t-\tau_a)$$
+$$\dot{A} = \min\left\{k, \frac{s_a}{\tau_a}\right\}I(t-\tau_a)$$
+$$\dot{B} = \min\left\{k, \frac{s_b}{\tau_b}\right\}I(t-\tau_b)$$
+$$\dot{C} = \min\left\{k, \frac{s_c}{\tau_c}\right\}I(t-\tau_c)$$
+
+### $q = 0,\ z = 1$
+
+$$a_\text{in} = \min\left\{k, \frac{s_a}{\tau_a}\right\}$$
+$$b_\text{in} = \min\left\{k, \frac{s_b}{\tau_b}\right\}$$
+$$c_\text{in} = \min\left\{k, \frac{s_c}{\tau_c}\right\}$$
+$$\dot{A} = a_\text{in}I(t-\tau_a)$$
+$$\dot{A} = \min\left\{k, \frac{s_a}{\tau_a}\right\}I(t-\tau_a)$$
+$$\dot{B} = b_\text{in}I(t-\tau_b-\tau_a)$$
+$$\dot{B} = \min\left\{k, \frac{s_b}{\tau_b}\right\}I(t-\tau_b-\tau_a)$$
+$$\dot{C} = c_\text{in}I(t-\tau_c-\tau_b-\tau_a)$$
+$$\dot{C} = \min\left\{k, \frac{s_c}{\tau_c}\right\}I(t-\tau_c-\tau_b-\tau_a)$$
+### $q = 0,\ z = 0.5$
+
+$$a_\text{in} = \min\left\{k, \frac{s_a}{\tau_a}\right\}$$
+$$b_\text{in} = \min\left\{k, \frac{s_b}{\tau_b}\right\}$$
+$$c_\text{in} = \min\left\{k, \frac{s_c}{\tau_c}\right\}$$
+$$\dot{A} = a_\text{in}I(t-\tau_a)$$
+$$\dot{B} = 0.5b_\text{in}I(t-\tau_b-\tau_a)+0.5\min\left\{k, \frac{s_b}{\tau_b}\right\}I(t-\tau_b)$$
+$$\dot{C} = \left[0.25\min\left\{k, \frac{s_c}{\tau_c}\right\}I(t-\tau_c-\tau_b-\tau_a)+0.25\min\left\{k, \frac{s_c}{\tau_c}\right\}I(t-\tau_b-\tau_c)\right] + 0.5\min\left\{k, \frac{s_c}{\tau_c}\right\}I(t-\tau_c)$$
+$$\dot{C} = \min\left\{k, \frac{s_c}{\tau_c}\right\}$$

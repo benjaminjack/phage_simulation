@@ -28,7 +28,7 @@ delay_func <- function(x) {
 
 a_dot <- function(t) a_in()*delay_func(t - tau_1)
 b_dot <- function(tau_2, c, z, t) z*b_in(tau_2, c)*delay_func(t - tau_2 - tau_1) + (1 - z)*min(k, s_2/tau_2)*delay_func(t - tau_2)
-c_dot <- function(tau_2, c, z, t) z*z*c_in(tau_2, c)*delay_func(t - tau_2 - tau_1 - tau_3) + (1 - z)*min(k, s_3/tau_3)*delay_func(t - tau_3) + z*(1 - z)*min(k, s_2/tau_2)*delay_func(t - tau_2 - tau_3)
+c_dot <- function(tau_2, c, z, t) z*z*c_in(tau_2, c)*delay_func(t - tau_2 - tau_1 - tau_3) + (1 - z)*min(k, s_3/tau_3)*delay_func(t - tau_3) + z*(1 - z)*min(k, s_3/tau_3)*delay_func(t - tau_2 - tau_3)
 # c_dot <- function(tau_2, c, z, t) z*b_dot(tau_2, c, z, t)*delay_func(t - tau_2 - tau_1 - tau_3) + (1 - z)*min(k, s_3/tau_3)*delay_func(t - tau_3)
 
 taus <- seq(15, 30, 0.01)
@@ -45,8 +45,8 @@ make_df <- function(z, t, c) {
 }
 
 coupling <- list(0, 0.2, 0.4, 0.6, 0.8, 1)
-times <- list(20, 30, 40, 50, 60, 70)
-q_vals <- list(0, 0.5, 1)
+times <- list(60)
+q_vals <- list(0, 0.2, 0.4, 0.6, 0.8, 1)
 
 
 
@@ -55,7 +55,7 @@ df <- gather(df, protein, rate, A:C)
 
 plot <- ggplot(df, aes(x = delay_B, y = rate, color = protein)) +
   geom_line() +
-  facet_grid(time~q_vals+coupling) +
+  facet_grid(q_vals~coupling, labeller = label_both) +
   panel_border() +
   xlab("time to translate protein B (s)") +
   ylab("rate of protein production")
