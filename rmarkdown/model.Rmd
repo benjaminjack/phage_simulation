@@ -16,33 +16,104 @@ $$\dot{A} = a_\text{in}I(t-\tau_a)$$
 $$\dot{B} = zb_\text{in}I(t-\tau_b-\tau_a)+(1-z)\min\left\{k, \frac{s_b}{\tau_b}\right\}I(t-\tau_b)$$
 $$\dot{C} = z\left[zc_\text{in}I(t-\tau_c-\tau_b-\tau_a)+(1-z)\min\left\{k, \frac{s_c}{\tau_c}\right\}I(t-\tau_b-\tau_c)\right] + (1-z)\min\left\{k, \frac{s_c}{\tau_c}\right\}I(t-\tau_c)$$
 
-### $q = 0,\ z = 0$
+### $q = 0,\ z = 0, I(t) = 1$
 
 $$a_\text{in} = \min\left\{k, \frac{s_a}{\tau_a}\right\}$$
 $$b_\text{in} = \min\left\{k, \frac{s_b}{\tau_b}\right\}$$
 $$c_\text{in} = \min\left\{k, \frac{s_c}{\tau_c}\right\}$$
 $$\dot{A} = a_\text{in}I(t-\tau_a)$$
-$$\dot{A} = \min\left\{k, \frac{s_a}{\tau_a}\right\}I(t-\tau_a)$$
-$$\dot{B} = \min\left\{k, \frac{s_b}{\tau_b}\right\}I(t-\tau_b)$$
-$$\dot{C} = \min\left\{k, \frac{s_c}{\tau_c}\right\}I(t-\tau_c)$$
-
-### $q = 0,\ z = 1$
-
-$$a_\text{in} = \min\left\{k, \frac{s_a}{\tau_a}\right\}$$
-$$b_\text{in} = \min\left\{k, \frac{s_b}{\tau_b}\right\}$$
-$$c_\text{in} = \min\left\{k, \frac{s_c}{\tau_c}\right\}$$
-$$\dot{A} = a_\text{in}I(t-\tau_a)$$
-$$\dot{A} = \min\left\{k, \frac{s_a}{\tau_a}\right\}I(t-\tau_a)$$
-$$\dot{B} = b_\text{in}I(t-\tau_b-\tau_a)$$
-$$\dot{B} = \min\left\{k, \frac{s_b}{\tau_b}\right\}I(t-\tau_b-\tau_a)$$
-$$\dot{C} = c_\text{in}I(t-\tau_c-\tau_b-\tau_a)$$
-$$\dot{C} = \min\left\{k, \frac{s_c}{\tau_c}\right\}I(t-\tau_c-\tau_b-\tau_a)$$
-### $q = 0,\ z = 0.5$
-
-$$a_\text{in} = \min\left\{k, \frac{s_a}{\tau_a}\right\}$$
-$$b_\text{in} = \min\left\{k, \frac{s_b}{\tau_b}\right\}$$
-$$c_\text{in} = \min\left\{k, \frac{s_c}{\tau_c}\right\}$$
-$$\dot{A} = a_\text{in}I(t-\tau_a)$$
-$$\dot{B} = 0.5b_\text{in}I(t-\tau_b-\tau_a)+0.5\min\left\{k, \frac{s_b}{\tau_b}\right\}I(t-\tau_b)$$
-$$\dot{C} = \left[0.25\min\left\{k, \frac{s_c}{\tau_c}\right\}I(t-\tau_c-\tau_b-\tau_a)+0.25\min\left\{k, \frac{s_c}{\tau_c}\right\}I(t-\tau_b-\tau_c)\right] + 0.5\min\left\{k, \frac{s_c}{\tau_c}\right\}I(t-\tau_c)$$
+$$\dot{A} = \min\left\{k, \frac{s_a}{\tau_a}\right\}$$
+$$\dot{B} = \min\left\{k, \frac{s_b}{\tau_b}\right\}$$
 $$\dot{C} = \min\left\{k, \frac{s_c}{\tau_c}\right\}$$
+
+### $q = 0,\ z = 1,\ I(t) = 1$
+
+$$a_\text{in} = \min\left\{k, \frac{s_a}{\tau_a}\right\}$$
+$$b_\text{in} = \min\left\{k, \frac{s_b}{\tau_b}\right\}$$
+$$c_\text{in} = \min\left\{k, \frac{s_c}{\tau_c}\right\}$$
+$$\dot{A} = a_\text{in}I(t-\tau_a)$$
+$$\dot{A} = \min\left\{k, \frac{s_a}{\tau_a}\right\}$$
+$$\dot{B} = b_\text{in}I(t-\tau_b-\tau_a)$$
+$$\dot{B} = \min\left\{k, \frac{s_b}{\tau_b}\right\}$$
+$$\dot{C} = c_\text{in}I(t-\tau_c-\tau_b-\tau_a)$$
+$$\dot{C} = \min\left\{k, \frac{s_c}{\tau_c}\right\}$$
+
+### $q = 0,\ z = 0.5, I(t) = 1$
+
+$$a_\text{in} = \min\left\{k, \frac{s_a}{\tau_a}\right\}$$
+$$b_\text{in} = \min\left\{k, \frac{s_b}{\tau_b}\right\}$$
+$$c_\text{in} = \min\left\{k, \frac{s_c}{\tau_c}\right\}$$
+$$\dot{A} = a_\text{in}I(t-\tau_a)$$
+$$\dot{A} = \min\left\{k, \frac{s_a}{\tau_a}\right\}$$
+
+$$\dot{B} = 0.5b_\text{in}I(t-\tau_b-\tau_a)+0.5\min\left\{k, \frac{s_b}{\tau_b}\right\}I(t-\tau_b)$$
+$$\dot{B} = 0.5\min\left\{k, \frac{s_b}{\tau_b}\right\}+0.5\min\left\{k, \frac{s_b}{\tau_b}\right\}$$
+$$\dot{B} = min\left\{k, \frac{s_b}{\tau_b}\right\}$$
+$$\dot{C} = 0.5\left[0.5c_\text{in}I(t-\tau_c-\tau_b-\tau_a)+0.5\min\left\{k, \frac{s_c}{\tau_c}\right\}I(t-\tau_b-\tau_c)\right] + 0.5\min\left\{k, \frac{s_c}{\tau_c}\right\}I(t-\tau_c)$$
+
+$$\dot{C} = 0.5\left[0.5\min\left\{k, \frac{s_c}{\tau_c}\right\}I(t-\tau_c-\tau_b-\tau_a)+0.5\min\left\{k, \frac{s_c}{\tau_c}\right\}I(t-\tau_b-\tau_c)\right] + 0.5\min\left\{k, \frac{s_c}{\tau_c}\right\}I(t-\tau_c)$$
+$$\dot{C} = \left[0.25\min\left\{k, \frac{s_c}{\tau_c}\right\}+0.25\min\left\{k, \frac{s_c}{\tau_c}\right\}\right] + 0.5\min\left\{k, \frac{s_c}{\tau_c}\right\}$$
+
+$$\dot{C} = \min\left\{k, \frac{s_c}{\tau_c}\right\}$$
+
+## Plots
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10, fig.height=8}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(cowplot)
+
+k <- 2
+s_1 <- 40
+s_2 <- 40
+s_3 <- 40
+tau_1 <- 10
+tau_3 <- 15
+
+a_in <- function() min(k, s_1 / tau_1)
+# These functions produce a non-linear curve because we vary tau_2, which is in the denominator
+b_in <- function(tau_2, c) min(a_in(), s_2 / tau_2) * c  + (1 - c) * min(k, s_2 /tau_2)
+c_in <- function(tau_2, c) min(b_in(tau_2, c), s_3 / tau_3) * c  + (1 - c) * min(k, s_3 /tau_3)
+
+delay_func <- function(x) {
+  if (x < 0) {
+    return(0)
+  } else {
+    return(1)
+  }
+}
+
+a_dot <- function(t) a_in()*delay_func(t - tau_1)
+b_dot <- function(tau_2, c, z, t) z*b_in(tau_2, c)*delay_func(t - tau_2 - tau_1) + (1 - z)*min(k, s_2/tau_2)*delay_func(t - tau_2)
+c_dot <- function(tau_2, c, z, t) z*z*c_in(tau_2, c)*delay_func(t - tau_2 - tau_1 - tau_3) + (1 - z)*min(k, s_3/tau_3)*delay_func(t - tau_3) + z*(1 - z)*min(k, s_3/tau_3)*delay_func(t - tau_2 - tau_3)
+
+taus <- seq(15, 30, 0.01)
+
+c <- 1
+
+make_df <- function(z, t, c) {
+  data.frame(delay_B = taus,
+             A = a_dot(t),
+             B = sapply(taus, b_dot, c, z, t),
+             C = sapply(taus, c_dot, c, z, t),
+             coupling = z,
+             time = t)
+}
+
+coupling <- list(0, 0.25, 0.5, 0.75, 1)
+times <- list(60)
+q_vals <- list(0, 0.25, 0.5, 0.75, 1)
+
+df <- purrr::cross_d(list(coupling = coupling, times = times, q_vals = q_vals)) %>% mutate(data = purrr::pmap(list(coupling, times, q_vals), make_df)) %>% unnest()
+df <- gather(df, protein, rate, A:C)
+
+plot <- ggplot(df, aes(x = delay_B, y = rate, color = protein)) +
+  geom_line() +
+  facet_grid(q_vals~coupling, labeller = label_both) +
+  panel_border() +
+  xlab("time to translate protein B (s)") +
+  ylab("rate of protein production")
+
+plot
+```
