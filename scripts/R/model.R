@@ -33,9 +33,9 @@ c_dot <- function(tau_2, c, z, t) z*z*c_in(tau_2, c)*delay_func(t - tau_2 - tau_
 
 taus <- seq(15, 30, 0.01)
 
-c <- 0
+c <- 1
 
-make_df <- function(z, t) {
+make_df <- function(z, t, c) {
   data.frame(delay_B = taus,
              A = a_dot(t),
              B = sapply(taus, b_dot, c, z, t),
@@ -46,15 +46,16 @@ make_df <- function(z, t) {
 
 coupling <- list(0, 0.2, 0.4, 0.6, 0.8, 1)
 times <- list(20, 30, 40, 50, 60, 70)
+q_vals <- list(0, 0.5, 1)
 
 
 
-df <- purrr::cross_d(list(coupling = coupling, times = times)) %>% mutate(data = purrr::map2(coupling, times, make_df)) %>% unnest()
+df <- purrr::cross_d(list(coupling = coupling, times = times, q_vals = q_vals)) %>% mutate(data = purrr::pmap(list(coupling, times, q_vals), make_df)) %>% unnest()
 df <- gather(df, protein, rate, A:C)
 
 plot <- ggplot(df, aes(x = delay_B, y = rate, color = protein)) +
   geom_line() +
-  facet_grid(time~coupling) +
+  facet_grid(time~q_vals+coupling) +
   panel_border() +
   xlab("time to translate protein B (s)") +
   ylab("rate of protein production")
