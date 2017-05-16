@@ -1,15 +1,15 @@
 ---
 title: "Model of translational coupling"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-### General case
+## General case
 
 $$a_\text{in} = \min\left\{k, \frac{s_a}{\tau_a}\right\}$$
 $$b_\text{in} = \min\left\{a_\text{in}, \frac{s_b}{\tau_b}\right\}q + \min\left\{k, \frac{s_b}{\tau_b}\right\}(1-q)$$
