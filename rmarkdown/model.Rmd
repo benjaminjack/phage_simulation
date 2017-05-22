@@ -11,21 +11,21 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## The new new model
 
-We first assume a polycistronic transcript with two genes $a$ and $b$. For the effective translation initiation rate $b_in$ of gene $b$, we define the following relationship
+We first assume a polycistronic transcript with two genes $a$ and $b$. For the effective translation initiation rate $b_\text{in}$ of gene $b$, we define the following relationship
 $$b_\text{in} = \min\left\{i_b, \tau_b\right\}$$
 
 where $\tau_b$ is the translation elongation rate of $b$ and $i_b$ is the aggregate translation initiation rate due to upstream-dependent reinitiation and \textit{de novo}
-initiation. We assume that if the initiation rate ever exceeds the elongation rate, ribosomes would quickly back up on the transcript and block initiation. Thus in our model, the translation initiation rate can never exceed the elongation rate. 
+initiation. We assume that if the initiation rate ever exceeds the elongation rate, ribosomes would quickly back up on the transcript and make elongation the rate-limiting step of translation. Thus in our model, the elongation rate can never be exceed by the aggregate translation initiation rate. 
 
-We define the aggregate translation rate
-$$i_b = \min\left\{b_\text{reinit} + b_\text{de novo}, k\right\}$$
-where $k$ is the maximum initiation rate in the absence of any translational coupling effects, $b_\text{reinit}$ is the rate of upstream translating ribosomes reinitiating on gene $b$ and $b_\text{de novo}$ is the rate of ribosomes initiating \textit{de novo} on gene $b$. We assume that together $b_\text{reinit}$ and $b_\text{de novo}$ can never exceed the maximum initiation rate $k$.
+We define the aggregate translation initiation rate
+$$i_b = \min\left\{b_\text{reinit} + b_\text{de novo}, k_b\right\}$$
+where $k_b$ is the maximum initiation rate in the absence of any translational coupling effects, $b_\text{reinit}$ is the rate of upstream translating ribosomes reinitiating on gene $b$ and $b_\text{de novo}$ is the rate of ribosomes initiating \textit{de novo} on gene $b$. We assume that together $b_\text{reinit}$ and $b_\text{de novo}$ can never exceed the maximum initiation rate $k_b$.
 
-Lastly we define reinitiation and de novo initiation rates on gene $b$ as follows
+Lastly we define reinitiation and \textit{de novo} initiation rates on gene $b$ as follows
 
-$$b_\text{reinit} = q\dot{A}$$
-$$b_\text{de novo} = z\dot{A} + w$$
-Where $\dot{A}$ is the rate of ribosomes flowing from the end of upstream gene $a$, and $q$ ranges from 0 to 1 and represents the proportion of that ribosome flow reinitiating on gene $b$. We also assume that the rate of \textit{de novo} initation depends, in part, on upstream ribosomes relaxing secondary structure around the ribosome binding site of gene $b$. Thus, the rate of \textit{de novo} initiation is given the upstream ribosome flow $\dot{A}$ scaled by some constant $z$, and \textit{de novo} initiation rate $w$ that does not depend on upstream ribosome flow.
+$$b_\text{reinit} = q_b\dot{A}$$
+$$b_\text{de novo} = z_b\dot{A} + w_b$$
+Where $\dot{A}$ is the rate of ribosomes flowing from the end of upstream gene $a$, and $q_b$ represents the proportion of that ribosome flow reinitiating on gene $b$. We assume that the rate of \textit{de novo} initation depends, in part, on upstream ribosomes relaxing secondary structure around the ribosome binding site of gene $b$. Thus, the rate of \textit{de novo} initiation is given the upstream ribosome flow $\dot{A}$ scaled by some constant $z_b$, and \textit{de novo} initiation rate $w_b$ that does not depend on upstream ribosome flow.
 
 We can simplify the effective initiation rate to
 $$b_\text{in} = \min\left\{q\dot{A} + z\dot{A} + w, \tau_b, k\right\}$$
