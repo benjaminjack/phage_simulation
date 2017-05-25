@@ -1,8 +1,8 @@
 ---
 title: "Model of translational coupling"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -18,8 +18,8 @@ where $\tau_b$ is the translation elongation rate of $b$ and $i_b$ is the aggreg
 initiation. We assume that if the initiation rate ever exceeds the elongation rate, ribosomes would quickly back up on the transcript and make elongation the rate-limiting step of translation. Thus in our model, the elongation rate can never be exceed by the aggregate translation initiation rate. 
 
 We define the aggregate translation initiation rate
-$$i_b = \min\left\{b_\text{reinit} + b_\text{de novo}, k_b\right\}$$
-where $k_b$ is the maximum initiation rate in the absence of any translational coupling effects, $b_\text{reinit}$ is the rate of upstream translating ribosomes reinitiating on gene $b$ and $b_\text{de novo}$ is the rate of ribosomes initiating \textit{de novo} on gene $b$. We assume that together $b_\text{reinit}$ and $b_\text{de novo}$ can never exceed the maximum initiation rate $k_b$.
+$$i_b = b_\text{reinit} + b_\text{de novo}$$
+where $k_b$ is the maximum initiation rate in the absence of any translational coupling effects, $b_\text{reinit}$ is the rate of upstream translating ribosomes reinitiating on gene $b$ and $b_\text{de novo}$ is the rate of ribosomes initiating \textit{de novo} on gene $b$.
 
 Lastly we define reinitiation and \textit{de novo} initiation rates on gene $b$ as follows
 
@@ -28,7 +28,7 @@ $$b_\text{de novo} = z_b\dot{A} + w_b$$
 Where $\dot{A}$ is the rate of ribosomes flowing from the end of upstream gene $a$, and $q_b$ represents the proportion of that ribosome flow reinitiating on gene $b$. We assume that the rate of \textit{de novo} initation depends, in part, on upstream ribosomes relaxing secondary structure around the ribosome binding site of gene $b$. Thus, the rate of \textit{de novo} initiation is given the upstream ribosome flow $\dot{A}$ scaled by some constant $z_b$, and \textit{de novo} initiation rate $w_b$ that does not depend on upstream ribosome flow.
 
 We can simplify the effective initiation rate to
-$$b_\text{in} = \min\left\{q\dot{A} + z\dot{A} + w, \tau_b, k\right\}$$
+$$b_\text{in} = \min\left\{q\dot{A} + z\dot{A} + w, \tau_b\right\}$$
 <!--
 ## General case
 To model the effects of translational coupling on rates of protein production, we first assume that we have a polycistronic transcript with genes $a$, $b$, and $c$. For the effective translation initiation rate $a_\text{in}$ of gene $a$, we define the following relationship
