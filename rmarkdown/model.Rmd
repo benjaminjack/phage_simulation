@@ -1,8 +1,8 @@
 ---
 title: "Model of translational coupling"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -11,15 +11,21 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## The new new model
 
-We first assume a polycistronic transcript with two genes $a$ and $b$. For the effective translation initiation rate $b_\text{in}$ of gene $b$, we define the following relationship
+To model the effects of translational coupling on protein production, we first assume a polycistronic transcript with two genes $a$, $b$, and $c$. For the effective initiation rate of $a_\text{in}$ we define the following relationship
+$$a_\text{in} = \min\left\{i_a, \tau_a\right\}$$
+where $i_a$ is the aggregate initiation rate of $a$ and $\tau_a$ is the translation elongation rate of gene $a$. We assume that if the initiation rate ever exceeds the elongation rate, ribosomes would quickly back up on the transcript and make elongation the rate-limiting step of translation. Thus in our model, the elongation rate can never be exceed by the aggregate translation initiation rate. For gene $a$, the aggregate initiation rate is simply the _de novo_ initiation rate because there are no genes upstream of $a$.
+
+The rate at which ribosomes complete translation of gene $a$, or protein production rate of A, is defined as
+
+$$ \dot{A} = a_\text{in} $$
+at steady state.
+
+For the effective translation initiation rate $b_\text{in}$ of gene $b$, we define the following relationship
 $$b_\text{in} = \min\left\{i_b, \tau_b\right\}$$
 
-where $\tau_b$ is the translation elongation rate of $b$ and $i_b$ is the aggregate translation initiation rate due to upstream-dependent reinitiation and \textit{de novo}
-initiation. We assume that if the initiation rate ever exceeds the elongation rate, ribosomes would quickly back up on the transcript and make elongation the rate-limiting step of translation. Thus in our model, the elongation rate can never be exceed by the aggregate translation initiation rate. 
-
-We define the aggregate translation initiation rate
+where $\tau_b$ is the translation elongation rate of $b$ and $i_b$ is the aggregate translation initiation rate due to upstream-dependent reinitiation and \textit{de novo} initiation. We define the aggregate translation initiation rate
 $$i_b = b_\text{reinit} + b_\text{de novo}$$
-where $k_b$ is the maximum initiation rate in the absence of any translational coupling effects, $b_\text{reinit}$ is the rate of upstream translating ribosomes reinitiating on gene $b$ and $b_\text{de novo}$ is the rate of ribosomes initiating \textit{de novo} on gene $b$.
+where $b_\text{reinit}$ is the rate of upstream translating ribosomes reinitiating on gene $b$ and $b_\text{de novo}$ is the rate of ribosomes initiating \textit{de novo} on gene $b$.
 
 Lastly we define reinitiation and \textit{de novo} initiation rates on gene $b$ as follows
 
@@ -28,50 +34,19 @@ $$b_\text{de novo} = z_b\dot{A} + w_b$$
 Where $\dot{A}$ is the rate of ribosomes flowing from the end of upstream gene $a$, and $q_b$ represents the proportion of that ribosome flow reinitiating on gene $b$. We assume that the rate of \textit{de novo} initation depends, in part, on upstream ribosomes relaxing secondary structure around the ribosome binding site of gene $b$. Thus, the rate of \textit{de novo} initiation is given the upstream ribosome flow $\dot{A}$ scaled by some constant $z_b$, and \textit{de novo} initiation rate $w_b$ that does not depend on upstream ribosome flow.
 
 We can simplify the effective initiation rate to
-$$b_\text{in} = \min\left\{q\dot{A} + z\dot{A} + w, \tau_b\right\}$$
-<!--
-## General case
-To model the effects of translational coupling on rates of protein production, we first assume that we have a polycistronic transcript with genes $a$, $b$, and $c$. For the effective translation initiation rate $a_\text{in}$ of gene $a$, we define the following relationship
+$$b_\text{in} = \min\left\{q_b\dot{A} + z_b\dot{A} + w_b, \tau_b\right\}$$
 
-$$ a_\text{in} = \min\left\{k, \frac{s_a}{\tau_a}\right\} $$
-where $k$ is some arbitrary initiation rate, $s_a$ is the length of gene $a$ and $\tau_a$ is the time it takes to translate gene $a$. As the time to translate gene $a$ increases, the elongation rate will eventually be less than $k$ and become the rate-limiting step as the transcripts back up with ribosomes. 
+Similar to the protein production rate of gene A, we define the protein production of gene B 
 
-The rate at which ribosomes complete translation of gene $a$, or protein production rate of A, is defined as
+$$ \dot{B} = b_\text{in} $$
 
-$$ \dot{A} = a_\text{in}I(t-\tau_a) $$
-where 
+at steady state.
 
-$$I(x) =
-    \begin{cases}
-        0 & \text{for $x < 0$} \\
-        1 & \text{for $x \geq 0$} \\
-    \end{cases}$$
+The effective initiation rate of gene $c$ is similar to that of gene $a$
 
-and $t$ is time. 
+$$c_\text{in} = \min\left\{q_c\dot{B} + z_c\dot{B} + w_c, \tau_c\right\}$$
 
-For the effective initiation rate $b_\text{in}$ of gene $b$ we define the following relationship
-
-$$ b_\text{in} = \min\left\{\dot{A}, \frac{s_b}{\tau_b}\right\}q + \min\left\{k, \frac{s_b}{\tau_b}\right\}(1-q) $$
-
-where $s_b$ and $\tau_b$ are the length of gene $b$ and the time to translate gene $b$, respectively. The constant $q$ indicates the proportion of upstream-dependent initiation events due reinitiation (i.e., ribosomes terminating translation on gene $a$ and reinitiating translation on gene $b$). The term $(1-q)$ indicates the proportion of upstream-dependent translation initiation events due to facilitated binding (i.e., the exposure of an the gene $b$ RBS due to upstream translating ribosomes). Thus, the effective initiation rate is the sum of both the reinitiation rate from gene $a$ to gene $b$, and rate of facilitated binding to gene $b$. 
-
-The protein production rate of B consists of two terms
-
-$$ \dot{B} = zb_\text{in}I(t-\tau_b-\tau_a)+(1-z)\min\left\{k, \frac{s_b}{\tau_b}\right\}I(t-\tau_b) $$
-
-where the first term represents the upstream-dependent effective initiation rate weighted by $z$, the coupling constant. The second term represents _de novo_ initiation, weighted by $(1 - z)$. When $z = 1$, gene $b$ is fully-coupled to $a$ and production of protein B depends entirely on the rate of ribosomes completing translation on $a$. When $z = 0$, gene $b$ is uncoupled from $a$, and production of protein B is independent from that of A.
-
-The effective initiation rate of gene $c$ and protein production rate of C are defined similarly.
-
-$$ c_\text{in} = \min\left\{ \dot{B}, \frac{s_c}{\tau_c}\right\}q + \min\left\{k, \frac{s_c}{\tau_c}\right\}(1-q) $$
-
-$$ \dot{C} = zc_\text{in}I(t-\tau_c-\tau_b-\tau_a) + (1-z)\min\left\{k, \frac{s_c}{\tau_c}\right\}I(t-\tau_c) $$
-
-To summarize, our model accounts for three different mechanisms of translation initiation:
-
-1. Upstream-dependent re-initiation.
-2. Upstream-dependent exposure of the RBS and binding (facilitated binding, described by Rex at el)
-3. _De novo_ initiation
+where $\dot{B}$ is the rate of ribosomes flowing from the end of upstream gene $b$, and $q_c$ represents the proportion of that ribosome flow reinitiating on gene $c$. The rate of _de novo_ initiation dependent on upstream ribosome flow is given by $z_c$, and $w_c$ is the _de novo_ initation rate independent of upstream ribosome flow. 
 
 ### Plots
 
@@ -89,84 +64,45 @@ library(tidyr)
 library(ggplot2)
 library(cowplot)
 
-k <- 2
-s_1 <- 40
-s_2 <- 40
-s_3 <- 40
-tau_1 <- 10
-tau_3 <- 15
+k <- 3
+tau_1 <- 3.5
+tau_3 <- 3.5
 
-delay_func <- function(x) {
-  if (x < 0) {
-    return(0)
-  } else {
-    return(1)
-  }
-}
-
-a_in <- function() min(k, s_1 / tau_1)
-a_dot <- function(t) a_in()*delay_func(t - tau_1)
+a_in <- function() min(k, tau_1)
+a_dot <- function() a_in()
 # These functions produce a non-linear curve because we vary tau_2, which is in the denominator
-b_in <- function(tau_2, c, z, t) min(a_dot(t), s_2 / tau_2) * c  + (1 - c) * min(k, s_2 /tau_2)
-b_dot <- function(tau_2, c, z, t) z*b_in(tau_2, c, z, t)*delay_func(t - tau_2 - tau_1) + (1 - z)*min(k, s_2/tau_2)*delay_func(t - tau_2)
-c_in <- function(tau_2, c, z, t) min(b_dot(tau_2, c, z, t), s_3 / tau_3) * c  + (1 - c) * min(k, s_3 /tau_3)
-c_dot <- function(tau_2, c, z, t) z*c_in(tau_2, c, z, t)*delay_func(t - tau_2 - tau_1 - tau_3) + (1 - z)*min(k, s_3/tau_3)*delay_func(t - tau_3)
+b_in <- function(tau_2, z, q, w) min(a_dot()*(z + q) + w, tau_2)
+b_dot <- function(tau_2, z, q, w) b_in(tau_2, z, q, w)
+c_in <- function(tau_2, z, q, w) min(b_dot(tau_2, z, q, w)*(z + q) + w, tau_3)
+c_dot <- function(tau_2, z, q, w) c_in(tau_2, z, q, w)
 
-taus <- seq(15, 30, 0.01)
+taus <- seq(0, 8, 0.01)
 
-c <- 1
+w <- 0
 
-make_df <- function(z, t, c) {
-  data.frame(delay_B = taus,
-             A = a_dot(t),
-             B = sapply(taus, b_dot, c, z, t),
-             C = sapply(taus, c_dot, c, z, t),
-             coupling = z,
-             time = t)
+make_df <- function(z, q) {
+  data.frame(rate_B = taus,
+             A = a_dot(),
+             B = sapply(taus, b_dot, z, q, w),
+             C = sapply(taus, c_dot, z, q, w),
+             z = z,
+             q = q)
 }
 
-coupling <- list(0, 0.25, 0.5, 0.75, 1)
-times <- list(60)
+z_vals <- list(0, 0.25, 0.5, 0.75, 1)
 q_vals <- list(0, 0.25, 0.5, 0.75, 1)
 
-df <- purrr::cross_d(list(coupling = coupling, times = times, q_vals = q_vals)) %>% mutate(data = purrr::pmap(list(coupling, times, q_vals), make_df)) %>% unnest()
+df <- purrr::cross_d(list(z_vals = z_vals, q_vals = q_vals)) %>% 
+  mutate(data = purrr::map2(z_vals, q_vals, make_df)) %>% unnest()
 df <- gather(df, protein, rate, A:C)
 
-plot <- ggplot(df, aes(x = delay_B, y = rate, color = protein)) +
+plot <- ggplot(df, aes(x = rate_B, y = rate, color = protein)) +
   geom_line() +
-  facet_grid(q_vals~coupling, labeller = label_both) +
+  facet_grid(q_vals~z_vals, labeller = label_both) +
   panel_border() +
-  xlab("time to translate protein B (s)") +
-  ylab("rate of protein production")
+  xlab("translate elongation rate of protein B (s)") +
+  ylab("rate of protein production") +
+  scale_x_continuous(trans="reverse")
 
 plot
 ```
--->
-
-<!--
-## Some special cases derived analytically
-
-### $q = 0,\ z = 0, I(t) = 1$
-
-$$a_\text{in} = \min\left\{k, \frac{s_a}{\tau_a}\right\}$$
-$$b_\text{in} = \min\left\{k, \frac{s_b}{\tau_b}\right\}$$
-$$c_\text{in} = \min\left\{k, \frac{s_c}{\tau_c}\right\}$$
-$$\dot{A} = a_\text{in}I(t-\tau_a)$$
-$$\dot{A} = \min\left\{k, \frac{s_a}{\tau_a}\right\}$$
-$$\dot{B} = \min\left\{k, \frac{s_b}{\tau_b}\right\}$$
-$$\dot{C} = \min\left\{k, \frac{s_c}{\tau_c}\right\}$$
-
-### $q = 0,\ z = 1,\ I(t) = 1$
-
-$$a_\text{in} = \min\left\{k, \frac{s_a}{\tau_a}\right\}$$
-$$b_\text{in} = \min\left\{k, \frac{s_b}{\tau_b}\right\}$$
-$$c_\text{in} = \min\left\{k, \frac{s_c}{\tau_c}\right\}$$
-$$\dot{A} = a_\text{in}I(t-\tau_a)$$
-$$\dot{A} = \min\left\{k, \frac{s_a}{\tau_a}\right\}$$
-$$\dot{B} = b_\text{in}I(t-\tau_b-\tau_a)$$
-$$\dot{B} = \min\left\{k, \frac{s_b}{\tau_b}\right\}$$
-$$\dot{C} = c_\text{in}I(t-\tau_c-\tau_b-\tau_a)$$
-$$\dot{C} = \min\left\{k, \frac{s_c}{\tau_c}\right\}$$
-
-
--->
