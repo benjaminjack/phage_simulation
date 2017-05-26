@@ -89,8 +89,8 @@ make_df <- function(z, q) {
              q = q)
 }
 
-z_vals <- list(0, 0.25, 0.5, 0.75, 1)
-q_vals <- list(0, 0.25, 0.5, 0.75, 1)
+z_vals <- list(0, 0.1, 0.2, 0.3, 0.4, 0.5)
+q_vals <- list(0, 0.1, 0.2, 0.3, 0.4, 0.5)
 
 df <- purrr::cross_d(list(z_vals = z_vals, q_vals = q_vals)) %>% 
   mutate(data = purrr::map2(z_vals, q_vals, make_df)) %>% unnest()
