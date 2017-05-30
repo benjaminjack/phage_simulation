@@ -1,8 +1,9 @@
 ---
 title: "Model of translational coupling"
 output:
+  pdf_document:
+    keep_tex: yes
   html_document: default
-  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -23,7 +24,7 @@ at steady state. In this context, the steady state assumption means that all thr
 For the effective translation initiation rate $b_\text{in}$ of gene _b_, we similarly write
 $$b_\text{in} = \min\left\{i_b, \tau_b\right\}$$
 
-where $i_b$ is the aggregate translation initiation rate due to upstream-dependent reinitiation and \textit{de novo} initiation, and $\tau_b$ is the translation elongation rate of \textit{b}. We define the aggregate translation initiation rate
+where $i_b$ is the aggregate translation initiation rate due to upstream-dependent reinitiation and \textit{de novo} initiation, and $\tau_b$ is the translation elongation rate of _b_. We define the aggregate translation initiation rate
 $$i_b = b_\text{reinit} + b_\text{de novo}$$
 where $b_\text{reinit}$ is the rate of upstream translating ribosomes reinitiating on gene \textit{b} and $b_\text{de novo}$ is the rate of ribosomes initiating _de novo_ on gene _b_.
 
@@ -103,7 +104,7 @@ df <- purrr::cross_d(list(y_vals = y_vals, w_vals = w_vals)) %>%
   mutate(data = purrr::map2(y_vals, w_vals, make_df)) %>% unnest()
 df <- gather(df, protein, rate, A:C)
 
-prepender_w <- function(string, prefix = "independent init.: ") paste0(prefix, string)
+prepender_w <- function(string, prefix = "initiation: ") paste0(prefix, string)
 prepender_y <- function(string, prefix = "coupling: ") paste0(prefix, string)
 
 plot <- ggplot(df, aes(x = rate_B, y = rate, color = protein)) +
