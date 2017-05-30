@@ -1,24 +1,24 @@
 ---
 title: "Model of translational coupling"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## The new new model
+## A model of translational coupling
 
-To model the effects of translational coupling on protein production, we first assume a polycistronic transcript with two genes $a$, $b$, and $c$. For the effective initiation rate of $a_\text{in}$ we define the following relationship
+To model the effects of translational coupling on protein production, we first assume a polycistronic transcript with three genes $a$, $b$, and $c$. For the effective initiation rate of $a_\text{in}$ we define the following relationship
 $$a_\text{in} = \min\left\{i_a, \tau_a\right\}$$
 where $i_a$ is the aggregate initiation rate of $a$ and $\tau_a$ is the translation elongation rate of gene $a$. We assume that if the initiation rate ever exceeds the elongation rate, ribosomes would quickly back up on the transcript and make elongation the rate-limiting step of translation. Thus in our model, the elongation rate can never be exceed by the aggregate translation initiation rate. For gene $a$, the aggregate initiation rate is simply the _de novo_ initiation rate because there are no genes upstream of $a$.
 
 The rate at which ribosomes complete translation of gene $a$, or protein production rate of A, is defined as
 
 $$ \dot{A} = a_\text{in} $$
-at steady state.
+at steady state. In this context, the steady state assumption means that all three protein products are being formed continuously.
 
 For the effective translation initiation rate $b_\text{in}$ of gene $b$, we define the following relationship
 $$b_\text{in} = \min\left\{i_b, \tau_b\right\}$$
@@ -31,12 +31,22 @@ Lastly we define reinitiation and \textit{de novo} initiation rates on gene $b$ 
 
 $$b_\text{reinit} = q_b\dot{A}$$
 $$b_\text{de novo} = z_b\dot{A} + w_b$$
-Where $\dot{A}$ is the rate of ribosomes flowing from the end of upstream gene $a$, and $q_b$ represents the proportion of that ribosome flow reinitiating on gene $b$. We assume that the rate of \textit{de novo} initation depends, in part, on upstream ribosomes relaxing secondary structure around the ribosome binding site of gene $b$. Thus, the rate of \textit{de novo} initiation is given the upstream ribosome flow $\dot{A}$ scaled by some constant $z_b$, and \textit{de novo} initiation rate $w_b$ that does not depend on upstream ribosome flow.
+Where $\dot{A}$ is the rate of ribosomes flowing from upstream translation of gene $a$, and $q_b$ represents the proportion of that ribosome flow reinitiating on gene $b$. We assume that the rate of \textit{de novo} initation depends, in part, on upstream ribosomes relaxing secondary structure around the ribosome binding site of gene $b$. Thus, the rate of \textit{de novo} initiation is given by the upstream ribosome flow $\dot{A}$ scaled by some constant $z_b$, and by a constant rate $w_b$ that does not depend on upstream ribosome flow.
 
 We can simplify the effective initiation rate to
-$$b_\text{in} = \min\left\{q_b\dot{A} + z_b\dot{A} + w_b, \tau_b\right\}$$
+$$b_\text{in} = \min\left\{\dot{A}(q_b + z_b) + w_b, \tau_b\right\}$$
 
-Similar to the protein production rate of gene A, we define the protein production of gene B 
+We simplify the effective initiation rate further by defining a coupling constant 
+$$
+y_b = q_b + z_b
+$$
+which accounts for both the effects of facilitated binding and ribosome reinitiation. The final effective initiation rate of $b$ is defined as
+
+$$
+b_\text{in} = \min\left\{\dot{A}y_b + w_b, \tau_b\right\}
+$$
+
+Similar to the protein production rate of gene $a$, we define the protein production of gene $b$ 
 
 $$ \dot{B} = b_\text{in} $$
 
@@ -44,19 +54,18 @@ at steady state.
 
 The effective initiation rate of gene $c$ is similar to that of gene $a$
 
-$$c_\text{in} = \min\left\{q_c\dot{B} + z_c\dot{B} + w_c, \tau_c\right\}$$
+$$
+c_\text{in} = \min\left\{\dot{B}y_c + w_c, \tau_c\right\}
+$$
+$$
+y_c = q_c + z_c
+$$
 
-where $\dot{B}$ is the rate of ribosomes flowing from the end of upstream gene $b$, and $q_c$ represents the proportion of that ribosome flow reinitiating on gene $c$. The rate of _de novo_ initiation dependent on upstream ribosome flow is given by $z_c$, and $w_c$ is the _de novo_ initation rate independent of upstream ribosome flow. 
+where $\dot{B}$ is the rate of ribosomes flowing from the end of upstream gene $b$, and $q_c$ represents the proportion of that ribosome flow reinitiating on gene $c$. The rate of _de novo_ initiation dependent on upstream ribosome flow is given by $z_c$, and $w_c$ is the _de novo_ initation rate independent of upstream ribosome flow. Again, $y_c$ is a coupling constant that incorporates the effects of both facilitated binding and ribosome reinitiation.
 
-### Plots
+### Results and figures
 
-I have made plots similar to Fig 7 in our paper over a range of $z$ and $q$ values at steady state. A few cases to note:
-
-* $q = 0$, top row. Since $q = 0$, any upstream-dependent initiation events are due to facilitated binding. Changing $z$ does not affect protein production of C at all because at steady state, all RBSes should be exposed by upstream ribosomes, and facilitated binding events will be indistinguishible from _de novo_ initiation.
-
-* $z = 0$, left-most column. Since $z = 0$, there is no translational coupling. All initiation events occur independently.
-
-So, at steady state, the system behaves the same if either $q = 0$ or $z = 0$. I think this makes sense biologically.
+I have made plots similar to Fig 7 in our paper over a range of $y$ and $w$ values at steady state. We assume that $y_c = y_b$ and $w_b = w_c$. We also assume that $\tau_a = \tau_c$, and we vary $\tau_b$.
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10, fig.height=8}
 library(dplyr)
@@ -71,34 +80,33 @@ tau_3 <- 3.5
 a_in <- function() min(k, tau_1)
 a_dot <- function() a_in()
 # These functions produce a non-linear curve because we vary tau_2, which is in the denominator
-b_in <- function(tau_2, z, q, w) min(a_dot()*(z + q) + w, tau_2)
-b_dot <- function(tau_2, z, q, w) b_in(tau_2, z, q, w)
-c_in <- function(tau_2, z, q, w) min(b_dot(tau_2, z, q, w)*(z + q) + w, tau_3)
-c_dot <- function(tau_2, z, q, w) c_in(tau_2, z, q, w)
+b_in <- function(tau_2, y, w) min(a_dot()*(y) + w, tau_2)
+b_dot <- function(tau_2, y, w) b_in(tau_2, y, w)
+c_in <- function(tau_2, y, w) min(b_dot(tau_2, y, w)*(y) + w, tau_3)
+c_dot <- function(tau_2, y, w) c_in(tau_2, y, w)
 
 taus <- seq(0, 8, 0.01)
 
-w <- 0
 
-make_df <- function(z, q) {
+make_df <- function(y, w) {
   data.frame(rate_B = taus,
              A = a_dot(),
-             B = sapply(taus, b_dot, z, q, w),
-             C = sapply(taus, c_dot, z, q, w),
-             z = z,
-             q = q)
+             B = sapply(taus, b_dot, y, w),
+             C = sapply(taus, c_dot, y, w),
+             y = y,
+             w = w)
 }
 
-z_vals <- list(0, 0.1, 0.2, 0.3, 0.4, 0.5)
-q_vals <- list(0, 0.1, 0.2, 0.3, 0.4, 0.5)
+y_vals <- list(0, 0.2, 0.4, 0.6, 0.8, 1.0)
+w_vals <- list(0, 0.1, 0.2, 0.3, 0.4, 0.5)
 
-df <- purrr::cross_d(list(z_vals = z_vals, q_vals = q_vals)) %>% 
-  mutate(data = purrr::map2(z_vals, q_vals, make_df)) %>% unnest()
+df <- purrr::cross_d(list(y_vals = y_vals, w_vals = w_vals)) %>% 
+  mutate(data = purrr::map2(y_vals, w_vals, make_df)) %>% unnest()
 df <- gather(df, protein, rate, A:C)
 
 plot <- ggplot(df, aes(x = rate_B, y = rate, color = protein)) +
   geom_line() +
-  facet_grid(q_vals~z_vals, labeller = label_both) +
+  facet_grid(w_vals~y_vals, labeller = label_both) +
   panel_border() +
   xlab("translate elongation rate of protein B (s)") +
   ylab("rate of protein production") +
