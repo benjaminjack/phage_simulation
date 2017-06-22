@@ -97,7 +97,7 @@ make_df <- function(y, w) {
              w = w)
 }
 
-y_vals <- list(0.1, 0.5, 0.9)
+y_vals <- list(0.1, 0.7, 1.2)
 w_vals <- list(0.2, 0.4)
 
 df <- purrr::cross_d(list(y_vals = y_vals, w_vals = w_vals)) %>% 
@@ -113,7 +113,7 @@ plot <- ggplot(df, aes(x = rate_B, y = rate, color = protein)) +
   panel_border() +
   xlab("translation elongation rate of protein B (1/s)") +
   ylab("relative rate of protein production") +
-  xlim(0, 1.4)
+  xlim(0, 1.6)
 
 plot
 
