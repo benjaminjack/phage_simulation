@@ -1,0 +1,111 @@
+---
+title: "Correlating proteomics and RNA-seq"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(stringr)
+library(cowplot)
+library(gtools)
+```
+
+## Distribution of transcript abundances
+
+```{r histograms, fig.width=16, fig.height = 10}
+strain_colors <- c(
+  "recoded" = "orange",
+  "evolved" = "lightblue",
+  "wild-type" = "lightgreen"
+)
+
+labels <- read_csv("data/proteomics/id_map.csv") %>% mutate(accession = trimws(accession))
+
+rna2 <- read_csv("./data/rna_seq/post_processed/all_rna_no_ribo_trna_merge.csv") %>%
+  # Replace strain names with something more useful
+  mutate(strain = str_replace_all(strain, c("11-42" = "evolved", "11-44" = "recoded", "11-46" = "wild-type"))) %>%
+  filter(gene_type != "tRNA") %>%
+  mutate(tpm = tpm/1e6) %>%
+  group_by(b_rep, time, strain) %>%
+  mutate(tpm = tpm/sum(tpm)) %>% # re-normalize because of the small quantity of tRNAs
+  filter(org == "phage") %>%
+  group_by(strain, time, b_rep) %>%
+  do(full_join(., labels, by = c("prot_id" = "accession")) %>% fill(strain, time, b_rep)) %>%
+  ungroup() %>%
+  mutate(gene_number = str_replace_all(gene_number, c("10A" = "10")), time = as.numeric(str_replace_all(time, c("min" = "")))) %>%
+  group_by(time, strain, gene_name, gene_number, prot_id, org) %>%
+  summarize(avg_tpm = mean(tpm))
+
+
+phage_rna <- rna2 %>% filter(org == "phage", strain=="wild-type", !is.na(gene_number))
+
+ggplot(phage_rna, aes(x = factor(gene_number, levels=unique(mixedsort(gene_number))), y = avg_tpm)) + geom_bar(stat="identity") + facet_wrap(~time, ncol = 1)
+```
+
+## Correlation between proteomics and RNA seq
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+all_exp <- read_csv("data/proteomics/abundances/all_reps.csv")
+
+all_exp <- all_exp %>%
+  mutate(strain = str_replace_all(strain, c("11-44" = "atten", "11-42" = "evol", "11-46" = "wt"))) %>%
+  mutate(protein_desc = trimws(protein_desc))
+
+# Join in standard T7 gene labels.
+all_exp <- filter(all_exp, org == "phage") %>% 
+  group_by(strain, time, b_rep) %>%
+  # Join by each group seperately so that missing phage proteins are filled in with NAs
+  do(full_join(., labels, by = c("protein_desc" = "accession")) %>% fill(strain, time, b_rep)) %>%
+  mutate(area_norm = ifelse(is.na(area_norm), 0, area_norm)) # Fill in missing proteins (NAs) with 0
+
+mean_exp <- all_exp %>% filter(strain == "wt") %>%
+  group_by(time, gene_number, class, protein_desc) %>% 
+  summarize(area_norm = mean(area_norm))
+
+proteomics_rna <- full_join(mean_exp, phage_rna, by = c("protein_desc" = "prot_id", "time" = "time"))
+
+proteomics_rna_9 <- filter(proteomics_rna, time == 9)
+
+cor.test(proteomics_rna_9$area_norm, proteomics_rna_9$avg_tpm)
+
+ggplot(proteomics_rna_9, aes(x = area_norm, y = avg_tpm)) + geom_point()
+
+```
+
+# Correlating RNA-seq and simulated transcripts
+
+```{r, fig.width = 16, fig.height= 10}
+
+labels <- read_csv("data/proteomics/id_map.csv")
+load_sim_data <- function(path) {
+  raw_data <- read_tsv(path, col_names=F) 
+  colnames(raw_data) <- c('time', 'gene', 'ribosomes', 'transcripts', 'density')
+  labeled_data <- left_join(raw_data, labels, by = c("gene" = "pysinthe")) %>% 
+    mutate(time = round(time)) # round times to whole seconds
+}
+
+sim_data <- load_sim_data("./data/simulated/run_050217_wt_density.tsv") 
+  
+bar_sim <- filter(sim_data, time %in% c(400, 800, 1200, 1600, 2000)) %>%
+  left_join(labels) %>% filter(!is.na(gene_number))
+
+bar_sim_plot <- ggplot(bar_sim, aes(x=factor(gene_number, unique(mixedsort(gene_number))), y=transcripts)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~time, scales = "free_x", ncol = 1) +
+  theme(legend.position = "none") +
+  labs(x="gene", y="count")
+
+bar_sim_plot
+
+sim_data_2 <- sim_data %>%
+  filter(time == 1200) %>%
+  left_join(phage_rna %>% filter(time == 9), by = c("gene_number" = "gene_number"))
+
+ggplot(phage_rna, aes(x = factor(gene_number, levels=unique(mixedsort(gene_number))), y = avg_tpm)) + geom_bar(stat="identity") + facet_wrap(~time, ncol = 1)
+
+cor.test(sim_data_2$avg_tpm, sim_data_2$transcripts)
+
+```
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
