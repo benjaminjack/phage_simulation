@@ -20,9 +20,9 @@ strain_colors <- c(
   "wild-type" = "lightgreen"
 )
 
-labels <- read_csv("data/proteomics/id_map.csv") %>% mutate(accession = trimws(accession))
+labels <- read_csv("../data/proteomics/id_map.csv") %>% mutate(accession = trimws(accession))
 
-rna2 <- read_csv("./data/rna_seq/post_processed/all_rna_no_ribo_trna_merge.csv") %>%
+rna2 <- read_csv("../data/rna_seq/post_processed/all_rna_no_ribo_trna_merge.csv") %>%
   # Replace strain names with something more useful
   mutate(strain = str_replace_all(strain, c("11-42" = "evolved", "11-44" = "recoded", "11-46" = "wild-type"))) %>%
   filter(gene_type != "tRNA") %>%
@@ -40,14 +40,19 @@ rna2 <- read_csv("./data/rna_seq/post_processed/all_rna_no_ribo_trna_merge.csv")
 
 phage_rna <- rna2 %>% filter(org == "phage", strain=="wild-type", !is.na(gene_number))
 
-ggplot(phage_rna, aes(x = factor(gene_number, levels=unique(mixedsort(gene_number))), y = avg_tpm)) + geom_bar(stat="identity") + facet_wrap(~time, ncol = 1)
+rna_plot <- ggplot(phage_rna, aes(x = factor(gene_number, levels=unique(mixedsort(gene_number))), y = avg_tpm)) + geom_bar(stat="identity") + facet_wrap(~time, ncol = 1) + xlab("genes") + ylab("relative transcript abundance") +
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+
+rna_plot
+
+save_plot("../figures/rna_plot.pdf", rna_plot, base_width=9, base_height = 5.5)
 ```
 
 ## Correlation between proteomics and RNA seq
 You can also embed plots, for example:
 
 ```{r pressure, echo=FALSE}
-all_exp <- read_csv("data/proteomics/abundances/all_reps.csv")
+all_exp <- read_csv("../data/proteomics/abundances/all_reps.csv")
 
 all_exp <- all_exp %>%
   mutate(strain = str_replace_all(strain, c("11-44" = "atten", "11-42" = "evol", "11-46" = "wt"))) %>%
@@ -64,13 +69,22 @@ mean_exp <- all_exp %>% filter(strain == "wt") %>%
   group_by(time, gene_number, class, protein_desc) %>% 
   summarize(area_norm = mean(area_norm))
 
+protein_plot <- ggplot(mean_exp %>% filter(!is.na(gene_number)), aes(x = factor(gene_number, levels=unique(mixedsort(gene_number))), y = area_norm)) + geom_bar(stat="identity") + facet_wrap(~time, ncol = 1) + xlab("genes") + ylab("relative protein abundance") +
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+
+protein_plot
+
+save_plot("../figures/protein_plot.pdf", protein_plot, base_width=9, base_height = 5.5)
+
 proteomics_rna <- full_join(mean_exp, phage_rna, by = c("protein_desc" = "prot_id", "time" = "time"))
 
-proteomics_rna_9 <- filter(proteomics_rna, time == 9)
+proteomics_rna_9 <- filter(proteomics_rna, time == 9, avg_tpm != 0, area_norm != 0) %>% mutate(avg_tpm = log(avg_tpm), area_norm = log(area_norm))
 
 cor.test(proteomics_rna_9$area_norm, proteomics_rna_9$avg_tpm)
 
-ggplot(proteomics_rna_9, aes(x = area_norm, y = avg_tpm)) + geom_point()
+protein_rna_plot <- ggplot(proteomics_rna_9, aes(x = area_norm, y = avg_tpm)) + geom_point() + xlab("log(protein abundance)") + ylab("log(transcript abundance)")
+
+save_plot("../figures/protein_rna_plot.pdf", protein_rna_plot) 
 
 ```
 
@@ -78,7 +92,6 @@ ggplot(proteomics_rna_9, aes(x = area_norm, y = avg_tpm)) + geom_point()
 
 ```{r, fig.width = 16, fig.height= 10}
 
-labels <- read_csv("data/proteomics/id_map.csv")
 load_sim_data <- function(path) {
   raw_data <- read_tsv(path, col_names=F) 
   colnames(raw_data) <- c('time', 'gene', 'ribosomes', 'transcripts', 'density')
@@ -86,18 +99,20 @@ load_sim_data <- function(path) {
     mutate(time = round(time)) # round times to whole seconds
 }
 
-sim_data <- load_sim_data("./data/simulated/run_050217_wt_density.tsv") 
+sim_data <- load_sim_data("../data/simulated/run_050217_wt_density.tsv") 
   
-bar_sim <- filter(sim_data, time %in% c(400, 800, 1200, 1600, 2000)) %>%
+bar_sim <- filter(sim_data, time %in% c(1200)) %>%
   left_join(labels) %>% filter(!is.na(gene_number))
 
 bar_sim_plot <- ggplot(bar_sim, aes(x=factor(gene_number, unique(mixedsort(gene_number))), y=transcripts)) +
   geom_bar(stat = "identity") +
-  facet_wrap(~time, scales = "free_x", ncol = 1) +
   theme(legend.position = "none") +
-  labs(x="gene", y="count")
+  labs(x="gene", y="transcript count") + theme(axis.text.x=element_text(angle=45,hjust=1))
 
 bar_sim_plot
+
+save_plot("../figures/sim_transcripts_9_plot.pdf", bar_sim_plot, base_width = 11, base_height = 3) 
+
 
 sim_data_2 <- sim_data %>%
   filter(time == 1200) %>%
@@ -109,3 +124,44 @@ cor.test(sim_data_2$avg_tpm, sim_data_2$transcripts)
 
 ```
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r}
+
+load_sim_data <- function(path) {
+  raw_data <- read_tsv(path, col_names=F) 
+  colnames(raw_data) <- c('time', 'gene', 'count')
+  labeled_data <- left_join(raw_data, labels, by = c("gene" = "pysinthe")) %>% 
+    mutate(time = round(time)) # round times to whole seconds
+}
+
+sim_data2 <- load_sim_data("../data/simulated/run_050217_wt_counts.tsv") 
+  
+bar_sim <- filter(sim_data2, time %in% c(1200)) %>%
+  left_join(labels) %>% filter(!is.na(gene_number))
+
+bar_sim_plot <- ggplot(bar_sim, aes(x=factor(gene_number, unique(mixedsort(gene_number))), y=count)) +
+  geom_bar(stat = "identity") +
+  theme(legend.position = "none") +
+  labs(x="gene", y="protein count") + theme(axis.text.x=element_text(angle=45,hjust=1))
+
+bar_sim_plot
+
+save_plot("../figures/sim_proteins_9_plot.pdf", bar_sim_plot, base_width = 11, base_height = 3) 
+
+```
+```{r}
+
+sim_data3 <- inner_join(sim_data, sim_data2, by=c("gene", "time")) %>%
+  filter(count > 0) %>%
+  group_by(time) %>%
+  filter(n() > 4) %>%
+  mutate(transcripts = log(transcripts), count = log(count)) %>%
+  summarize(cor = cor.test(transcripts, count)$estimate, pval = cor.test(transcripts, count)$p.value)
+
+cor_plot <- ggplot(sim_data3, aes(x = time, y = cor, color = -log(pval))) + geom_line() + ylim(0,1) + geom_vline(xintercept = 1200)
+
+save_plot("../figures/cor_plot.pdf", cor_plot, base_width = 6)
+
+sim_data3 %>% filter(time == 1200) %>% print()
+
+```
