@@ -57,7 +57,8 @@ load_proteomics <- function(path) {
     group_by(strain, time, b_rep) %>%
     # Join by each group seperately so that missing phage proteins are filled in with NAs
     do(full_join(., labels, by = c("protein_desc" = "accession")) %>% fill(strain, time, b_rep)) %>%
-    mutate(area_norm = ifelse(is.na(area_norm), 0, area_norm)) # Fill in missing proteins (NAs) with 0
+    mutate(area_norm = ifelse(is.na(area_norm), 0, area_norm),
+           gene_number = str_replace_all(gene_number, c("10A" = "10"))) # Fill in missing proteins (NAs) with 0
   
   mean_exp <- proteomics %>%
     group_by(time, strain, gene_number, class, protein_desc) %>% 
@@ -73,7 +74,7 @@ load_proteomics <- function(path) {
 
 rna <- load_rna("../data/rna_seq/post_processed/all_rna_no_ribo_trna_merge.csv")
 
-phage_rna <- rna %>% filter(org == "phage", time == 9, strain != "evol", !is.na(gene_number))
+phage_rna <- rna %>% filter(strain != "evol", !is.na(avg_tpm), !is.na(gene_number))
 
 rna_plot <- ggplot(phage_rna, aes(x = factor(gene_number, levels=unique(mixedsort(gene_number))), y = avg_tpm,
                                   fill = strain)) + 
@@ -105,10 +106,9 @@ protein_plot
 
 if(SAVE_PLOTS) { save_plot("../figures/protein_plot.pdf", protein_plot, base_width=9, base_height = 5.5) }
 
-proteomics_rna <- inner_join(proteomics, phage_rna, by = c("protein_desc" = "prot_id", 
+proteomics_rna <- full_join(proteomics, phage_rna, by = c("protein_desc" = "prot_id", 
                                                            "time" = "time", 
-                                                           "strain" = "strain", 
-                                                           "gene_number" = "gene_number"))
+                                                           "strain" = "strain"))
 
 proteomics_rna_9 <- filter(proteomics_rna, time == 9, avg_tpm != 0, area_norm != 0) %>% 
   group_by(strain) %>%
