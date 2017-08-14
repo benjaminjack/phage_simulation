@@ -6,85 +6,130 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 library(tidyverse)
+library(broom)
+library(purrr)
 library(stringr)
 library(cowplot)
 library(gtools)
-```
 
-## Distribution of transcript abundances
+SAVE_PLOTS <- FALSE
 
-```{r histograms, fig.width=16, fig.height = 10}
+# Set strain colors for all plots
 strain_colors <- c(
   "recoded" = "orange",
   "evolved" = "lightblue",
   "wild-type" = "lightgreen"
 )
 
-labels <- read_csv("../data/proteomics/id_map.csv") %>% mutate(accession = trimws(accession))
+load_rna <- function(path) {
+  labels <- read_csv("../data/proteomics/id_map.csv") %>% mutate(accession = trimws(accession))
 
-rna2 <- read_csv("../data/rna_seq/post_processed/all_rna_no_ribo_trna_merge.csv") %>%
-  # Replace strain names with something more useful
-  mutate(strain = str_replace_all(strain, c("11-42" = "evolved", "11-44" = "recoded", "11-46" = "wild-type"))) %>%
-  filter(gene_type != "tRNA") %>%
-  mutate(tpm = tpm/1e6) %>%
-  group_by(b_rep, time, strain) %>%
-  mutate(tpm = tpm/sum(tpm)) %>% # re-normalize because of the small quantity of tRNAs
-  filter(org == "phage") %>%
-  group_by(strain, time, b_rep) %>%
-  do(full_join(., labels, by = c("prot_id" = "accession")) %>% fill(strain, time, b_rep)) %>%
-  ungroup() %>%
-  mutate(gene_number = str_replace_all(gene_number, c("10A" = "10")), time = as.numeric(str_replace_all(time, c("min" = "")))) %>%
-  group_by(time, strain, gene_name, gene_number, prot_id, org) %>%
-  summarize(avg_tpm = mean(tpm))
+  rna <- read_csv(path) %>%
+    # Replace strain names with something more useful
+    mutate(strain = str_replace_all(strain, c("11-42" = "evol", "11-44" = "atten", "11-46" = "wt"))) %>%
+    filter(gene_type != "tRNA") %>%
+    mutate(tpm = tpm/1e6) %>%
+    group_by(b_rep, time, strain) %>%
+    mutate(tpm = tpm/sum(tpm)) %>% # re-normalize because of the small quantity of tRNAs
+    filter(org == "phage") %>%
+    group_by(strain, time, b_rep) %>%
+    do(full_join(., labels, by = c("prot_id" = "accession")) %>% fill(strain, time, b_rep)) %>%
+    ungroup() %>%
+    mutate(gene_number = str_replace_all(gene_number, c("10A" = "10")), 
+           time = as.numeric(str_replace_all(time, c("min" = "")))) %>%
+    group_by(time, strain, gene_name, gene_number, prot_id, org) %>%
+    summarize(avg_tpm = mean(tpm))
+  
+  rna
+}
 
+load_proteomics <- function(path) {
+  labels <- read_csv("../data/proteomics/id_map.csv") %>% mutate(accession = trimws(accession))
+  
+  proteomics <- read_csv("../data/proteomics/abundances/all_reps.csv")
 
-phage_rna <- rna2 %>% filter(org == "phage", strain=="wild-type", !is.na(gene_number))
+  proteomics <- proteomics %>%
+    mutate(strain = str_replace_all(strain, c("11-44" = "atten", "11-42" = "evol", "11-46" = "wt"))) %>%
+    mutate(protein_desc = trimws(protein_desc))
+  
+  # Join in standard T7 gene labels.
+  proteomics <- filter(proteomics, org == "phage") %>% 
+    group_by(strain, time, b_rep) %>%
+    # Join by each group seperately so that missing phage proteins are filled in with NAs
+    do(full_join(., labels, by = c("protein_desc" = "accession")) %>% fill(strain, time, b_rep)) %>%
+    mutate(area_norm = ifelse(is.na(area_norm), 0, area_norm)) # Fill in missing proteins (NAs) with 0
+  
+  mean_exp <- proteomics %>%
+    group_by(time, strain, gene_number, class, protein_desc) %>% 
+    summarize(area_norm = mean(area_norm))
+  
+  mean_exp
+}
+```
 
-rna_plot <- ggplot(phage_rna, aes(x = factor(gene_number, levels=unique(mixedsort(gene_number))), y = avg_tpm)) + geom_bar(stat="identity") + facet_wrap(~time, ncol = 1) + xlab("genes") + ylab("relative transcript abundance") +
+## Distribution of transcript abundances
+
+```{r histograms, fig.width=16, fig.height = 10}
+
+rna <- load_rna("../data/rna_seq/post_processed/all_rna_no_ribo_trna_merge.csv")
+
+phage_rna <- rna %>% filter(org == "phage", time == 9, strain != "evol", !is.na(gene_number))
+
+rna_plot <- ggplot(phage_rna, aes(x = factor(gene_number, levels=unique(mixedsort(gene_number))), y = avg_tpm,
+                                  fill = strain)) + 
+  geom_bar(stat="identity", position="dodge") + 
+  xlab("genes") + 
+  ylab("relative transcript abundance") +
   theme(axis.text.x=element_text(angle=45,hjust=1))
 
 rna_plot
 
-save_plot("../figures/rna_plot.pdf", rna_plot, base_width=9, base_height = 5.5)
+if(SAVE_PLOTS) { save_plot("../figures/rna_plot.pdf", rna_plot, base_width=9, base_height = 5.5) }
 ```
 
 ## Correlation between proteomics and RNA seq
 You can also embed plots, for example:
 
 ```{r pressure, echo=FALSE}
-all_exp <- read_csv("../data/proteomics/abundances/all_reps.csv")
+proteomics <- load_proteomics("../data/proteomics/abundances/all_reps.csv") %>% filter(strain != "evol")
 
-all_exp <- all_exp %>%
-  mutate(strain = str_replace_all(strain, c("11-44" = "atten", "11-42" = "evol", "11-46" = "wt"))) %>%
-  mutate(protein_desc = trimws(protein_desc))
-
-# Join in standard T7 gene labels.
-all_exp <- filter(all_exp, org == "phage") %>% 
-  group_by(strain, time, b_rep) %>%
-  # Join by each group seperately so that missing phage proteins are filled in with NAs
-  do(full_join(., labels, by = c("protein_desc" = "accession")) %>% fill(strain, time, b_rep)) %>%
-  mutate(area_norm = ifelse(is.na(area_norm), 0, area_norm)) # Fill in missing proteins (NAs) with 0
-
-mean_exp <- all_exp %>% filter(strain == "wt") %>%
-  group_by(time, gene_number, class, protein_desc) %>% 
-  summarize(area_norm = mean(area_norm))
-
-protein_plot <- ggplot(mean_exp %>% filter(!is.na(gene_number)), aes(x = factor(gene_number, levels=unique(mixedsort(gene_number))), y = area_norm)) + geom_bar(stat="identity") + facet_wrap(~time, ncol = 1) + xlab("genes") + ylab("relative protein abundance") +
+protein_plot <- ggplot(proteomics %>% filter(!is.na(gene_number)), 
+                       aes(x = factor(gene_number, levels=unique(mixedsort(gene_number))), 
+                           y = area_norm, fill = strain)) + 
+  geom_bar(stat="identity", position = "dodge") + 
+  xlab("genes") + 
+  ylab("relative protein abundance") +
   theme(axis.text.x=element_text(angle=45,hjust=1))
 
 protein_plot
 
-save_plot("../figures/protein_plot.pdf", protein_plot, base_width=9, base_height = 5.5)
+if(SAVE_PLOTS) { save_plot("../figures/protein_plot.pdf", protein_plot, base_width=9, base_height = 5.5) }
 
-proteomics_rna <- full_join(mean_exp, phage_rna, by = c("protein_desc" = "prot_id", "time" = "time"))
+proteomics_rna <- inner_join(proteomics, phage_rna, by = c("protein_desc" = "prot_id", 
+                                                           "time" = "time", 
+                                                           "strain" = "strain", 
+                                                           "gene_number" = "gene_number"))
 
-proteomics_rna_9 <- filter(proteomics_rna, time == 9, avg_tpm != 0, area_norm != 0) %>% mutate(avg_tpm = log(avg_tpm), area_norm = log(area_norm))
+proteomics_rna_9 <- filter(proteomics_rna, time == 9, avg_tpm != 0, area_norm != 0) %>% 
+  group_by(strain) %>%
+  mutate(avg_tpm = log(avg_tpm), area_norm = log(area_norm)) 
 
-cor.test(proteomics_rna_9$area_norm, proteomics_rna_9$avg_tpm)
+proteomics_rna_9_cor <- proteomics_rna_9 %>%
+  nest() %>%
+  mutate(cor = purrr::map(data, ~tidy(cor.test(.$area_norm, .$avg_tpm)))) %>%
+  unnest(cor) %>%
+  select(-data)
 
-protein_rna_plot <- ggplot(proteomics_rna_9, aes(x = area_norm, y = avg_tpm)) + geom_point() + xlab("log(protein abundance)") + ylab("log(transcript abundance)")
+proteomics_rna_9_cor
 
-save_plot("../figures/protein_rna_plot.pdf", protein_rna_plot) 
+protein_rna_plot <- ggplot(proteomics_rna_9, aes(x = area_norm, y = avg_tpm, color=strain)) + 
+  geom_point() + 
+  xlab("log(protein abundance)") + 
+  ylab("log(transcript abundance)")
+
+protein_rna_plot
+
+if(SAVE_PLOTS) { save_plot("../figures/protein_rna_plot.pdf", protein_rna_plot) } 
 
 ```
 
