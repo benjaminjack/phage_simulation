@@ -99,7 +99,7 @@ load_sim_data <- function(path) {
     mutate(time = round(time)) # round times to whole seconds
 }
 
-sim_data <- load_sim_data("../data/simulated/run_050217_wt_density.tsv") 
+sim_data <- load_sim_data("../data/simulated/run_072717_wt_density.tsv") 
   
 bar_sim <- filter(sim_data, time %in% c(1200)) %>%
   left_join(labels) %>% filter(!is.na(gene_number))
@@ -123,7 +123,6 @@ ggplot(phage_rna, aes(x = factor(gene_number, levels=unique(mixedsort(gene_numbe
 cor.test(sim_data_2$avg_tpm, sim_data_2$transcripts)
 
 ```
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 
 ```{r}
 
@@ -134,7 +133,7 @@ load_sim_data <- function(path) {
     mutate(time = round(time)) # round times to whole seconds
 }
 
-sim_data2 <- load_sim_data("../data/simulated/run_050217_wt_counts.tsv") 
+sim_data2 <- load_sim_data("../data/simulated/run_072717_wt_counts.tsv") 
   
 bar_sim <- filter(sim_data2, time %in% c(1200)) %>%
   left_join(labels) %>% filter(!is.na(gene_number))
@@ -154,11 +153,11 @@ save_plot("../figures/sim_proteins_9_plot.pdf", bar_sim_plot, base_width = 11, b
 sim_data3 <- inner_join(sim_data, sim_data2, by=c("gene", "time")) %>%
   filter(count > 0) %>%
   group_by(time) %>%
-  filter(n() > 4) %>%
+  filter(n() > 6) %>%
   mutate(transcripts = log(transcripts), count = log(count)) %>%
   summarize(cor = cor.test(transcripts, count)$estimate, pval = cor.test(transcripts, count)$p.value)
 
-cor_plot <- ggplot(sim_data3, aes(x = time, y = cor, color = -log(pval))) + geom_line() + ylim(0,1) + geom_vline(xintercept = 1200)
+cor_plot <- ggplot(sim_data3, aes(x = time, y = cor, color = -log(pval))) + geom_line() + ylim(-1,1) + geom_vline(xintercept = 1200)
 
 save_plot("../figures/cor_plot.pdf", cor_plot, base_width = 6)
 

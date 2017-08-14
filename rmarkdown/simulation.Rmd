@@ -22,7 +22,7 @@ theme_cowplot <- theme_cowplot() +
 theme_set(theme_cowplot)
 
 # Helper simulation data loading function
-labels <- read_csv("data/proteomics/id_map.csv")
+labels <- read_csv("../data/proteomics/id_map.csv")
 load_sim_data <- function(path) {
   raw_data <- read_tsv(path, col_names=F) 
   colnames(raw_data) <- c('time', 'gene', 'count')
@@ -37,7 +37,7 @@ The following simulation data come from a wild-type simulation of a T7 infection
 
 ```{r load_sim_data}
 
-wildtype_sim <- load_sim_data("data/simulated/run_050217_wt_counts.tsv")
+wildtype_sim <- load_sim_data("../data/simulated/run_072717_wt_counts.tsv")
 
 ```
 
@@ -85,9 +85,11 @@ bar_sim_plot
 
 ```
 
+### Ribosome densities, wildtype
+
 ```{r ribo_density_plot, fig.width = 10, fig.height = 10}
 
-ribo_data <- read_tsv("data/simulated/run_050217_wt_density.tsv", col_names = c("time", "gene", "ribosomes", "transcripts", "density"))
+ribo_data <- read_tsv("../data/simulated/run_072717_wt_density.tsv", col_names = c("time", "gene", "ribosomes", "transcripts", "density"))
 
 ggplot(ribo_data, aes(x = time, y = density, group = gene, color = gene)) + 
   geom_line() +
@@ -103,12 +105,29 @@ ggplot(ribo_data, aes(x = time, y = density, group = gene, color = gene)) +
 
 ```
 
+### Ribosome densities on gene 10, wildtype and recoded
+
+```{r ribo_density_plot2, fig.width = 10, fig.height = 10}
+
+ribo_data_10 <- read_tsv("../data/simulated/run_072717b_rec_density.tsv", col_names = c("time", "gene", "ribosomes", "transcripts", "density")) %>%
+  filter(gene == "gene 10A") %>% mutate(condition = "recoded")
+
+ribo_data_10_wild <- read_tsv("../data/simulated/run_072717_wt_density.tsv", col_names = c("time", "gene", "ribosomes", "transcripts", "density")) %>%
+  filter(gene == "gene 10A") %>% mutate(condition = "wildtype")
+
+all_ribo <- bind_rows(ribo_data_10, ribo_data_10_wild)
+
+ggplot(all_ribo, aes(x = time, y = density, group = condition, color = condition)) + 
+  geom_line()
+
+```
+
 ## Comparing simulations to experimental data
 
 We have proteomics data for a wild-type T7 infected _E. coli_ at 1, 5, and 9 minutes post-infection. These experiments were conducted at 37C (?), while most rate constants used in the simulation were derived from experiments conducted at 25C or 30C. At higher temperatures the infection cycle is shorter, so 9 minutes at 37C is comparable to 20 minutes at 25C. Thus we will compare the 9 minute time-point experimental data to the 20 minute time-point simulated data.
 
 ```{r load_exp_data}
-all_exp <- read_csv("data/proteomics/abundances/all_reps.csv")
+all_exp <- read_csv("../data/proteomics/abundances/all_reps.csv")
 
 all_exp <- all_exp %>%
   mutate(strain = str_replace_all(strain, c("11-44" = "atten", "11-42" = "evol", "11-46" = "wt"))) %>%
@@ -192,7 +211,7 @@ sim_exp_plot
 
 ```
 
-<!-- ## Genomic manipulations _in silico_ -->
+## Genomic manipulations _in silico_
 
 <!-- - `wildtype`: wildtype T7 simulation -->
 <!-- - `slow_pol`: the speed of T7 RNA polymerase was reduced from 240bp/s to ~100bp/s -->
@@ -200,15 +219,14 @@ sim_exp_plot
 
 ```{r genome_manip_plots, fig.height=9, fig.width=15}
 
-# slowpol_sim <- load_sim_data("data/simulated/run_033117_slowpol.out.txt") %>% mutate(condition="slow_pol")
-# knockout_sim <- load_sim_data("data/simulated/run_033117_knockout.out.txt") %>% mutate(condition="promoter_knockout")
-# wildtype_sim <- load_sim_data("data/simulated/run_033117.out.txt") %>% mutate(condition="wildtype")
-# all_sim <- bind_rows(wildtype_sim, slowpol_sim, knockout_sim) %>% filter(time == 1200)
-# 
-# ggplot(all_sim %>% filter(!is.na(class)), aes(x=factor(gene_number, levels=mixedorder(gene_number)), y=count, fill=factor(class))) +
-#   geom_bar(stat="identity") +
-#   facet_wrap(~fct_relevel(condition, "wildtype", "slow_pol", "promoter_knockout"), ncol = 1, scales="free_x") +
-#   labs(x="gene", y="count") +
-#   theme(legend.position="none")
+recoded_sim <- load_sim_data("../data/simulated/run_072717b_rec_counts.tsv") %>% mutate(condition="recoded")
+wildtype_sim <- load_sim_data("../data/simulated/run_072717_wt_counts.tsv") %>% mutate(condition="wildtype")
+all_sim <- bind_rows(wildtype_sim, recoded_sim) %>% filter(time == 1200)
+
+ggplot(all_sim %>% filter(!is.na(class)), aes(x=factor(gene_number, unique(mixedsort(gene_number))), y=count, fill=factor(class))) +
+  geom_bar(stat="identity") +
+  facet_wrap(~fct_relevel(condition, "wildtype", "recoded"), ncol = 1, scales="free_x") +
+  labs(x="gene", y="count") +
+  theme(legend.position="none")
 
 ```
