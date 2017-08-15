@@ -1,4 +1,4 @@
-data/ - all post-processed data
+data/ - all post-processed experimental data
 params/ - parameter files for simulation runs; also contains README that explains which conditions the runs were run under
 runs/ - simulation run data
 figures/ - figures that appear in publication in PDF format
