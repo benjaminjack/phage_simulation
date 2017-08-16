@@ -4,7 +4,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 library(tidyverse)
 library(broom)
 library(purrr)
@@ -71,7 +71,7 @@ load_proteomics <- function(path) {
 
 ## Distribution of transcript abundances
 
-```{r histograms, fig.width=16, fig.height = 10}
+```{r histograms, fig.width=16, fig.height = 6}
 
 rna <- load_rna("../data/rna_seq/post_processed/all_rna_no_ribo_trna_merge.csv")
 
@@ -92,7 +92,7 @@ if(SAVE_PLOTS) { save_plot("../figures/rna_plot.pdf", rna_plot, base_width=9, ba
 ## Correlation between proteomics and RNA seq
 You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
+```{r pressure, fig.width=16, echo=FALSE}
 proteomics <- load_proteomics("../data/proteomics/abundances/all_reps.csv") %>% filter(strain != "evol")
 
 protein_plot <- ggplot(proteomics %>% filter(!is.na(gene_number)), 
@@ -122,6 +122,10 @@ proteomics_rna_9_cor <- proteomics_rna_9 %>%
   select(-data)
 
 proteomics_rna_9_cor
+
+```
+
+``` {r}
 
 protein_rna_plot <- ggplot(proteomics_rna_9, aes(x = area_norm, y = avg_tpm, color=strain)) + 
   geom_point() + 
@@ -161,19 +165,28 @@ load_multiple_simulations <- function(paths, names, weights) {
     select(-path)
 }
 
+# test <- load_simulation("../runs/run_081417c_wt")
+
 sim_data <- load_multiple_simulations(c("../runs/run_081417b_rec",
                                         "../runs/run_081417b_wt",
                                         "../runs/run_081417_wt",
                                         "../runs/run_081417_rec"), 
                                       c("rec", "wt", "wt", "rec"), 
                                       c("7x", "7x", "20x", "20x"))
+
+# sim_data <- load_multiple_simulations(c("../runs/run_081417b_rec",
+#                                         "../runs/run_081417b_wt",
+#                                         "../runs/run_081417_wt",
+#                                         "../runs/run_081417_rec",
+#                                         "../runs/run_081417c_wt"), 
+#                                       c("rec", "wt", "wt", "rec", "wt"), 
+#                                       c("7x", "7x", "20x", "20x", "1x"))
   
 bar_sim <- filter(sim_data, time == 1200)
 
 bar_sim_plot <- ggplot(bar_sim, aes(x=factor(gene_number, unique(mixedsort(gene_number))), y=proteins, fill=condition)) +
   geom_bar(stat = "identity", position="dodge") +
-  facet_wrap(~weight, ncol = 1, scales = "free_y") +
-  theme(legend.position = "none") +
+  facet_wrap(~weight, ncol = 1, scales = "free") +
   labs(x="gene", y="protein count") + theme(axis.text.x=element_text(angle=45,hjust=1))
 
 bar_sim_plot
@@ -182,12 +195,11 @@ bar_sim_plot
 
 ```
 
-```{r}
+```{r, fig.width=16, fig.height = 10}
 
 bar_sim_plot_transcript <- bar_sim_plot <- ggplot(bar_sim, aes(x=factor(gene_number, unique(mixedsort(gene_number))), y=transcripts, fill=condition)) +
   geom_bar(stat = "identity", position="dodge") +
-  facet_wrap(~weight, ncol = 1, scales = "free_y") +
-  theme(legend.position = "none") +
+  facet_wrap(~weight, ncol = 1, scales = "free") +
   labs(x="gene", y="transcript count") + theme(axis.text.x=element_text(angle=45,hjust=1))
 
 bar_sim_plot_transcript
@@ -197,9 +209,35 @@ cor.test(bar_sim$transcripts, bar_sim$proteins)
 # save_plot("../figures/sim_proteins_9_plot.pdf", bar_sim_plot, base_width = 11, base_height = 3) 
 
 ```
+
+### 20x
+
 ```{r}
 
 sim_data_cors <- filter(sim_data, proteins > 0, transcripts > 0, weight == "20x") %>%
+  group_by(condition, weight, time) %>%
+  filter(n() > 6) %>%
+  mutate(transcripts = log(transcripts), proteins = log(proteins)) %>%
+  summarize(cor = cor.test(transcripts, proteins)$estimate, pval = cor.test(transcripts, proteins)$p.value)
+
+cor_plot <- ggplot(sim_data_cors, aes(x = time, y = cor, alpha = -log(pval), color = condition, group = condition)) + 
+  geom_line() + 
+  ylim(-1,1) + 
+  geom_vline(xintercept = 1200)
+
+cor_plot
+
+# save_plot("../figures/cor_plot.pdf", cor_plot, base_width = 6)
+
+sim_data_cors %>% filter(time == 1200) %>% print()
+
+```
+
+
+### 7x
+```{r}
+
+sim_data_cors <- filter(sim_data, proteins > 0, transcripts > 0, weight == "7x") %>%
   group_by(condition, weight, time) %>%
   filter(n() > 6) %>%
   mutate(transcripts = log(transcripts), proteins = log(proteins)) %>%

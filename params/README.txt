@@ -5,3 +5,4 @@ T7_081417_rec.yml: fast codons - 2.0, slow codons - 0.1
 T7_081417_wt.yml: fast codons - 2.0, slow codons - 0.1, gene 10 recoded
 T7_081417b_rec.yml: fast codons - 1.75, slow codons - 0.25, gene 10 recoded
 T7_081417b_wt.yml: fast codons - 1.75, slow codons - 0.25
+T7_081417c_wt.yml: no codon weights
