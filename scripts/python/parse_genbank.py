@@ -537,7 +537,7 @@ def construct_transcript(feature):
 
 def normalize_weights(weights):
     # Average over all CDSs, which will have non-zero weights
-    non_zero = sum(1 if i != 0 else 0 for i in weights)
+    non_zero = sum(1 if i != 0 else 0.0 for i in weights)
     mean_weight = sum(weights)/non_zero
     norm_weights = [i/mean_weight for i in weights]
     # Replace non-CDS weights with 1
@@ -640,7 +640,7 @@ def main():
     output["genome"]["translation_weights"] = norm_weights
     output["genome"]["length"] = len(record.seq)
 
-    print(sum(norm_weights)/len(norm_weights))
+    print(dump(output))
 
 if __name__ == "__main__":
     main()
