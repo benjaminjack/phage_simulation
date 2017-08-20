@@ -13,7 +13,7 @@ so I'm avoiding it.
 
 from Bio import Entrez, SeqIO
 from yaml import dump, safe_load
-import math
+import argparse
 
 # CONFIGURATION OPTIONS
 RUNTIME = 1800
@@ -559,8 +559,6 @@ def compute_cds_weights(record, feature, factor, weights):
                     weights[genome_index] = factor
                 else:
                     weights[genome_index] = 1
-        # if feature.qualifiers["protein_id"][0] == 'NP_041998.1':
-        #     translation_scale_factors[genome_index] = 0.15
     return weights
 
 def recode_gene(protein_id, weights, record):
@@ -588,6 +586,15 @@ def main():
     # position.
     # 
 
+    parser = argparse.ArgumentParser(description='Generate a pinetree parameter file for T7.')
+
+    parser.add_argument('-w', '--weights', type=int, default = 1,
+                        help='set the ratio between fast and slow codons')
+    parser.add_argument('-r', '--recode', default = False, action='store_true',
+                        help='recode gene 10A')
+
+    args = parser.parse_args()
+
     # Download T7 wild-type genbank records
     Entrez.email = "benjamin.r.jack@gmail.com"
     handle = Entrez.efetch(db="nuccore",
@@ -596,15 +603,11 @@ def main():
                         retmode="text")
 
     records = SeqIO.parse(handle, "genbank")
-
     output = set_up()
-
     output["elements"] =[]
 
     for record in records:
-
         weights = [0.0]*len(record.seq)
-
         for feature in record.features:
             # Convert to inclusive genomic coordinates
             start = feature.location.start.position + 1
@@ -629,12 +632,15 @@ def main():
                 output['elements'].append(construct_transcript(feature))
             if feature.type == "CDS":
                 # Grab the gene name
-                weights = compute_cds_weights(record, feature, 10, weights)
+                weights = compute_cds_weights(record, feature, args.weights, weights)
 
     norm_weights = normalize_weights(weights)
-    rec_norm_weights = recode_gene("NP_041998.1", norm_weights.copy(), record)
-    output["genome"]["translation_weights"] = rec_norm_weights
+    if args.recode:
+        norm_weights = recode_gene("NP_041998.1", norm_weights.copy(), record)
+    output["genome"]["translation_weights"] = norm_weights
     output["genome"]["length"] = len(record.seq)
+
+    print(sum(norm_weights)/len(norm_weights))
 
 if __name__ == "__main__":
     main()
