@@ -6,6 +6,6 @@ for i in $(seq $START $END); do
     REC=T7_$(date +'%m%d%y')_w${i}_r;
     python3 ./scripts/python/parse_genbank.py -w $i > ./params/$WT.yml;
     python3 ./scripts/python/parse_genbank.py -w $i -r > ./params/$REC.yml;
-    echo "pinetree_run.py $WT.yml -o $WT";
-    echo "pinetree_run.py $REC.yml -o $REC";
+    echo "pinetree_run.py $WT.yml -o ./runs/$WT";
+    echo "pinetree_run.py $REC.yml -o ./runs/$REC";
 done;
