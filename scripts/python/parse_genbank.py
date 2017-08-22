@@ -548,6 +548,7 @@ def compute_cds_weights(record, feature, factor, weights):
     # Grab the gene name
     nuc_seq = feature.location.extract(record).seq
     aa_seq = feature.qualifiers["translation"][0]
+    weight_sum = 0
     for index, nuc in enumerate(nuc_seq):
         aa_index = int(index / 3)
         codon_start = aa_index * 3
@@ -557,8 +558,13 @@ def compute_cds_weights(record, feature, factor, weights):
             if aa_seq[aa_index] in OPT_CODONS_E_COLI:
                 if codon in OPT_CODONS_E_COLI[aa_seq[aa_index]]:
                     weights[genome_index] = factor
+                    weight_sum += factor
                 else:
                     weights[genome_index] = 1
+                    weight_sum += 1
+    print(feature.qualifiers["note"][0])
+    print(weight_sum/len(nuc_seq))
+    print(weight_sum)
     return weights
 
 def recode_gene(protein_id, weights, record):
@@ -640,7 +646,7 @@ def main():
     output["genome"]["translation_weights"] = norm_weights
     output["genome"]["length"] = len(record.seq)
 
-    print(dump(output))
+    # print(dump(output))
 
 if __name__ == "__main__":
     main()

@@ -25,7 +25,7 @@ strain_colors <- c(
 )
 
 load_rna <- function(path) {
-  labels <- read_csv("../data/proteomics/id_map.csv") %>% mutate(accession = trimws(accession))
+  labels <- read_csv("../../data/id_map.csv") %>% mutate(accession = trimws(accession))
 
   rna <- read_csv(path) %>%
     # Replace strain names with something more useful
@@ -47,9 +47,9 @@ load_rna <- function(path) {
 }
 
 load_proteomics <- function(path) {
-  labels <- read_csv("../data/proteomics/id_map.csv") %>% mutate(accession = trimws(accession))
+  labels <- read_csv("../../data/id_map.csv") %>% mutate(accession = trimws(accession))
   
-  proteomics <- read_csv("../data/proteomics/abundances/all_reps.csv")
+  proteomics <- read_csv("../../data/proteomics.csv")
 
   proteomics <- proteomics %>%
     mutate(strain = str_replace_all(strain, c("11-44" = "atten", "11-42" = "evol", "11-46" = "wt"))) %>%
@@ -76,7 +76,7 @@ load_proteomics <- function(path) {
 
 ```{r histograms, fig.width=16, fig.height = 6}
 
-rna <- load_rna("../data/rna_seq/post_processed/all_rna_no_ribo_trna_merge.csv")
+rna <- load_rna("../../data/transcripts.csv")
 
 phage_rna <- rna %>% filter(strain != "evol", !is.na(avg_tpm), !is.na(gene_number))
 
@@ -90,13 +90,13 @@ rna_plot <- ggplot(phage_rna, aes(x = factor(gene_number, levels=unique(mixedsor
 
 rna_plot
 
-if(SAVE_PLOTS) { save_plot("../figures/rna_plot.pdf", rna_plot, base_width=9, base_height = 5.5) }
+if(SAVE_PLOTS) { save_plot("../../figures/rna_plot.pdf", rna_plot, base_width=9, base_height = 5.5) }
 ```
 
 ## Correlation between proteomics and RNA seq
 
 ```{r pressure, fig.width=16, fig.height = 6, echo=FALSE}
-proteomics <- load_proteomics("../data/proteomics/abundances/all_reps.csv") %>% filter(strain != "evol")
+proteomics <- load_proteomics("../../data/proteomics.csv") %>% filter(strain != "evol")
 
 protein_plot <- ggplot(proteomics %>% filter(!is.na(gene_number)), 
                        aes(x = factor(gene_number, levels=unique(mixedsort(gene_number))), 
@@ -109,7 +109,7 @@ protein_plot <- ggplot(proteomics %>% filter(!is.na(gene_number)),
 
 protein_plot
 
-if(SAVE_PLOTS) { save_plot("../figures/protein_plot.pdf", protein_plot, base_width=9, base_height = 5.5) }
+if(SAVE_PLOTS) { save_plot("../../figures/protein_plot.pdf", protein_plot, base_width=9, base_height = 5.5) }
 
 proteomics_rna <- full_join(proteomics, phage_rna, by = c("protein_desc" = "prot_id", 
                                                            "time" = "time", 
@@ -120,6 +120,8 @@ proteomics_rna_9 <- filter(proteomics_rna, time == 9, avg_tpm != 0, area_norm !=
   mutate(avg_tpm = log10(avg_tpm * 10000), area_norm = log10(area_norm*100000)) 
 
 proteomics_rna_9_cor <- proteomics_rna_9 %>%
+  group_by(strain, class) %>%
+  filter(n() > 2) %>%
   nest() %>%
   mutate(cor = purrr::map(data, ~tidy(cor.test(.$area_norm, .$avg_tpm)))) %>%
   unnest(cor) %>%
@@ -152,16 +154,16 @@ protein_rna_plot
 
 protein_rna_plot_labels
 
-if(SAVE_PLOTS) { save_plot("../figures/protein_rna_plot.pdf", protein_rna_plot, base_aspect_ratio = 1.4) } 
+if(SAVE_PLOTS) { save_plot("../../figures/protein_rna_plot.pdf", protein_rna_plot, base_aspect_ratio = 1.4) } 
 
 ```
 
 # Correlating RNA-seq and simulated transcripts
 
-```{r, fig.width = 16, fig.height= 10}
+```{r, fig.width = 16, fig.height= 40}
 
 load_simulation <- function(path) {
-  labels <- read_csv("../data/proteomics/id_map.csv") %>% mutate(accession = trimws(accession))
+  labels <- read_csv("../../data/id_map.csv") %>% mutate(accession = trimws(accession))
   raw_counts <- read_tsv(paste0(path, "_counts.tsv"), col_names=F) 
   colnames(raw_counts) <- c('time', 'gene', 'proteins')
   raw_densities <- read_tsv(paste0(path, "_density.tsv"), col_names = F)
@@ -176,12 +178,17 @@ load_simulation <- function(path) {
     select(-accession)
 }
 
-load_multiple_simulations <- function(paths, names, weights) {
-  df <- data_frame(path = paths, condition = names, weight = weights) %>%
-    mutate(data = map(path, load_simulation)) %>%
-    unnest() %>%
-    select(-path)
-}
+sim_data_wt <- data_frame(path = paste0("T7_082017_w", seq(1,20)), weight = seq(1, 20)) %>%
+  mutate(data = map(path, ~load_simulation(paste0("../../runs/", .)))) %>%
+  mutate(condition = "wt") %>%
+  unnest()
+
+sim_data_atten <- data_frame(path = paste0("T7_082017_w", seq(1,20), "_r"), weight = seq(1, 20)) %>%
+  mutate(data = map(path, ~load_simulation(paste0("../../runs/", .)))) %>%
+  mutate(condition = "atten") %>%
+  unnest()
+
+sim_data <- bind_rows(sim_data_wt, sim_data_atten)
 
 # test <- load_simulation("../runs/run_081417c_wt")
 
@@ -192,13 +199,13 @@ load_multiple_simulations <- function(paths, names, weights) {
 #                                       c("rec", "wt", "wt", "rec"),
 #                                       c("7x", "7x", "20x", "20x"))
 
-sim_data <- load_multiple_simulations(c("../runs/run_081417b_rec",
-                                        "../runs/run_081417b_wt",
-                                        "../runs/run_081417_wt",
-                                        "../runs/run_081417_rec",
-                                        "../runs/run_081617_wt"),
-                                      c("rec", "wt", "wt", "rec", "wt"),
-                                      c(7, 7, 20, 20, 1))
+# sim_data <- load_multiple_simulations(c("../runs/run_081417b_rec",
+#                                         "../runs/run_081417b_wt",
+#                                         "../runs/run_081417_wt",
+#                                         "../runs/run_081417_rec",
+#                                         "../runs/run_081617_wt"),
+#                                       c("rec", "wt", "wt", "rec", "wt"),
+#                                       c(7, 7, 20, 20, 1))
   
 bar_sim <- filter(sim_data, time == 1200)
 
@@ -210,13 +217,21 @@ bar_sim_plot <- ggplot(bar_sim, aes(x=factor(gene_number, unique(mixedsort(gene_
 
 bar_sim_plot
 
-# save_plot("../figures/sim_transcripts_9_plot.pdf", bar_sim_plot, base_width = 11, base_height = 3) 
+bar_sim_plot_density <- ggplot(bar_sim, aes(x=factor(gene_number, unique(mixedsort(gene_number))), y=density, fill=condition)) +
+  geom_bar(stat = "identity", position="dodge") +
+  facet_wrap(~weight, ncol = 1, scales = "free_x") +
+  labs(x="gene", y="ribosome density") + theme(axis.text.x=element_text(angle=45,hjust=1)) +
+  scale_fill_manual(values = cbPalette)
+
+bar_sim_plot_density
+
+save_plot("../../figures/sim_transcripts_9_plot.pdf", bar_sim_plot, base_width = 11, base_height = 30) 
 
 ```
 
-```{r, fig.width=16, fig.height = 10}
+```{r, fig.width=16, fig.height = 30}
 
-bar_sim_plot_transcript <- bar_sim_plot <- ggplot(bar_sim, aes(x=factor(gene_number, unique(mixedsort(gene_number))), y=transcripts, fill=condition)) +
+bar_sim_plot_transcript <- ggplot(bar_sim, aes(x=factor(gene_number, unique(mixedsort(gene_number))), y=transcripts, fill=condition)) +
   geom_bar(stat = "identity", position="dodge") +
   facet_wrap(~weight, ncol = 1, scales = "free") +
   labs(x="gene", y="transcript count") + theme(axis.text.x=element_text(angle=45,hjust=1)) +
@@ -249,7 +264,7 @@ protein_rna_sim_scatter_labeled <- protein_rna_sim_scatter +
 
 protein_rna_sim_scatter
 
-if(SAVE_PLOTS) { save_plot("../figures/protein_rna_sim_scatter.pdf", protein_rna_sim_scatter, base_aspect_ratio = 3) } 
+if(SAVE_PLOTS) { save_plot("../../figures/protein_rna_sim_scatter.pdf", protein_rna_sim_scatter, base_width = 15, base_height = 10) } 
   
 
 ```
@@ -258,24 +273,41 @@ if(SAVE_PLOTS) { save_plot("../figures/protein_rna_sim_scatter.pdf", protein_rna
 ### 20x
 
 ```{r}
+library(viridis)
 
-sim_data_cors <- filter(sim_data, proteins > 0, transcripts > 0) %>%
-  group_by(condition, weight, time) %>%
-  filter(n() > 4) %>%
+sim_data_cors <- filter(sim_data, proteins > 0, transcripts > 0, condition=="wt") %>%
+  group_by(condition, weight, time, class) %>%
+  filter(n() > 3) %>%
   mutate(transcripts = log(transcripts), proteins = log(proteins)) %>%
   summarize(cor = cor.test(transcripts, proteins)$estimate, pval = cor.test(transcripts, proteins)$p.value)
 
-cor_plot <- ggplot(sim_data_cors, aes(x = time, y = cor, color = factor(weight), group = factor(weight))) + 
+cor_plot <- ggplot(sim_data_cors %>% filter(weight == 1), aes(x = time, y = cor, color = factor(weight), group = factor(weight))) + 
   geom_vline(xintercept = 1200, linetype="dotted") +
   geom_hline(yintercept = 0) +
   geom_line() + 
   ylim(-1,1) + 
-  facet_wrap(~condition) +
-  scale_color_manual(values = cbPalette)
+  facet_wrap(~class)
+#  scale_color_manual(values = cbPalette)
 
 cor_plot
 
-save_plot("../figures/cor_plot.pdf", cor_plot, base_aspect_ratio = 2.5)
+sim_data_cors2 <- filter(sim_data, proteins > 0, transcripts > 0, condition=="wt") %>%
+  group_by(condition, weight, time) %>%
+  filter(n() > 20) %>%
+  mutate(transcripts = log(transcripts), proteins = log(proteins)) %>%
+  summarize(cor = cor.test(transcripts, proteins)$estimate, pval = cor.test(transcripts, proteins)$p.value)
+
+cor_plot2 <- ggplot(sim_data_cors2, aes(x = time, y = cor, color = weight, group = factor(weight))) + 
+  geom_vline(xintercept = 1200, linetype="dotted") +
+  geom_hline(yintercept = 0) +
+  geom_line() + 
+  ylim(-1,1) +
+  scale_color_viridis(begin = 0.2, end = 0.8, option="B")
+
+cor_plot2
+
+save_plot("../../figures/cor_plot_by_class.pdf", cor_plot, base_aspect_ratio = 2.5)
+save_plot("../../figures/cor_plot.pdf", cor_plot2, base_aspect_ratio = 1.8)
 
 sim_data_cors %>% filter(time == 1200) %>% print()
 
