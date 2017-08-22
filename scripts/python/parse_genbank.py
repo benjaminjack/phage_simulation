@@ -298,7 +298,7 @@ def set_up():
 
     species:
     - name: bound_ribosome
-      copy_number: 10000 # Assume 10000 total ribosomes bound
+      copy_number: 40000 # Assume 40000 total ribosomes bound
     - name: bound_ecolipol
       copy_number: 1800
     - name: bound_ecolipol_p
@@ -562,9 +562,6 @@ def compute_cds_weights(record, feature, factor, weights):
                 else:
                     weights[genome_index] = 1
                     weight_sum += 1
-    print(feature.qualifiers["note"][0])
-    print(weight_sum/len(nuc_seq))
-    print(weight_sum)
     return weights
 
 def recode_gene(protein_id, weights, record):
@@ -646,7 +643,7 @@ def main():
     output["genome"]["translation_weights"] = norm_weights
     output["genome"]["length"] = len(record.seq)
 
-    # print(dump(output))
+    print(dump(output))
 
 if __name__ == "__main__":
     main()
