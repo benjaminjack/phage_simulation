@@ -323,6 +323,17 @@ if(SAVE_PLOTS) { save_plot("../../figures/protein_rna_sim_scatter.pdf", protein_
 ```
 
 
+
+```{r}
+
+sim_data_3 <- filter(sim_data, weight == 3, condition == "wt")
+
+ggplot(sim_data_3, aes(x = time, y = proteins, group = factor(gene_number), color = factor(class))) +
+  geom_line() +
+  scale_color_manual("class", values = cbPalette[c(3,4,7)])
+
+```
+
 ### 20x
 
 ```{r}
