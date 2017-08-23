@@ -298,7 +298,7 @@ def set_up():
 
     species:
     - name: bound_ribosome
-      copy_number: 40000 # Assume 40000 total ribosomes bound
+      copy_number: 10000 # Assume 40000 total ribosomes bound
     - name: bound_ecolipol
       copy_number: 1800
     - name: bound_ecolipol_p
@@ -404,7 +404,7 @@ def set_up():
           - gp-2
           - ecolipol-p
     - name: reaction7
-      propensity: 3.8e7
+      propensity: 3.8e9
       reactants:
           - lysozyme-3.5
           - rnapol-1
@@ -461,16 +461,16 @@ def get_promoter_interactions(name):
                 'rnapol-3.5': {'binding_constant': PHI10_BIND*0.01*0.5}}
     elif name in phi6_5:
         return {'rnapol-1': {'binding_constant': PHI10_BIND*0.05},
-                'rnapol-3.5': {'binding_constant': PHI10_BIND*0.05*0.5}}
+                'rnapol-3.5': {'binding_constant': PHI10_BIND*0.05}}
     elif name in phi9:
         return {'rnapol-1': {'binding_constant': PHI10_BIND*0.2},
-                'rnapol-3.5': {'binding_constant': PHI10_BIND*0.2*0.5}}
+                'rnapol-3.5': {'binding_constant': PHI10_BIND*0.2}}
     elif name in phi10:
         return {'rnapol-1': {'binding_constant': PHI10_BIND},
-                'rnapol-3.5': {'binding_constant': PHI10_BIND*0.5}}
+                'rnapol-3.5': {'binding_constant': PHI10_BIND}}
     elif name in phi13:
         return {'rnapol-1': {'binding_constant': PHI10_BIND*0.1},
-                'rnapol-3.5': {'binding_constant': PHI10_BIND*0.1*0.5}}
+                'rnapol-3.5': {'binding_constant': PHI10_BIND*0.1}}
     else:
         raise ValueError("Promoter strength for {0} not assigned.".format(name))
 
