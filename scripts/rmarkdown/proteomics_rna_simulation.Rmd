@@ -211,12 +211,12 @@ load_simulation <- function(path) {
     select(-accession)
 }
 
-sim_data_wt <- data_frame(path = paste0("T7_082017_w", seq(1,20)), weight = seq(1, 20)) %>%
+sim_data_wt <- data_frame(path = paste0("T7_082117_w", seq(1,20)), weight = seq(1, 20)) %>%
   mutate(data = map(path, ~load_simulation(paste0("../../runs/", .)))) %>%
   mutate(condition = "wt") %>%
   unnest()
 
-sim_data_atten <- data_frame(path = paste0("T7_082017_w", seq(1,20), "_r"), weight = seq(1, 20)) %>%
+sim_data_atten <- data_frame(path = paste0("T7_082117_w", seq(1,20), "_r"), weight = seq(1, 20)) %>%
   mutate(data = map(path, ~load_simulation(paste0("../../runs/", .)))) %>%
   mutate(condition = "atten") %>%
   unnest()
@@ -240,7 +240,7 @@ sim_data <- bind_rows(sim_data_wt, sim_data_atten)
 #                                       c("rec", "wt", "wt", "rec", "wt"),
 #                                       c(7, 7, 20, 20, 1))
   
-bar_sim <- filter(sim_data, time == 1200)
+bar_sim <- filter(sim_data, time == 1200, !is.na(gene_number))
 
 bar_sim_plot <- ggplot(bar_sim, aes(x=factor(gene_number, unique(mixedsort(gene_number))), y=proteins, fill=condition)) +
   geom_bar(stat = "identity", position="dodge") +
@@ -285,19 +285,19 @@ protein_rna_sim_scatter <- ggplot(sim_data %>% filter(time == 1200, gene_number 
   geom_line(color = "grey80") +
   geom_point() +
   scale_color_manual("strain", values = cbPalette) +
-  xlim(1, 3.5) + ylim(2, 3.8) +
-  facet_wrap(~weight, scales = "free_y")
+  # xlim(1, 3.5) + ylim(2, 3.8) +
+  facet_wrap(~weight, scales = "free")
 
 protein_rna_sim_scatter_wt <- ggplot(sim_data %>% filter(time == 1200, gene_number != 1, weight == 11, condition=="wt"), 
        aes(y = log10(proteins), x = log10(transcripts))) +
   geom_point() +
-  xlim(1, 3.5) + ylim(2, 3.8) +
+#  xlim(1, 3.5) + ylim(2, 3.8) +
   scale_color_manual(values = cbPalette)
 
 protein_rna_sim_scatter_wt_class <- ggplot(sim_data %>% filter(time == 1200, gene_number != 1, weight == 11, condition=="wt"), 
        aes(y = log10(proteins), x = log10(transcripts), color=factor(class))) +
   geom_point() +
-  xlim(1, 3.5) + ylim(2, 3.8) +
+#  xlim(1, 3.5) + ylim(2, 3.8) +
   scale_color_manual("class", values = cbPalette)
 
 protein_rna_sim_scatter_labeled <- protein_rna_sim_scatter + 
@@ -326,11 +326,15 @@ if(SAVE_PLOTS) { save_plot("../../figures/protein_rna_sim_scatter.pdf", protein_
 
 ```{r}
 
-sim_data_3 <- filter(sim_data, weight == 3, condition == "wt")
+sim_data_3 <- filter(sim_data, weight == 3, condition == "wt", !is.na(gene_number)) # %>% bind_rows(sim_data %>% filter(gene == "bound_ribosome", weight == 3, condition == "wt") %>% mutate(class = 0))
 
-ggplot(sim_data_3, aes(x = time, y = proteins, group = factor(gene_number), color = factor(class))) +
-  geom_line() +
-  scale_color_manual("class", values = cbPalette[c(3,4,7)])
+line_plot <- ggplot(sim_data_3, aes(x = time, y = proteins, group = factor(gene), color = factor(class))) +
+  geom_line() + xlim(0, 800) + ylim(0, 4000) +
+  scale_color_manual("class", values = cbPalette[c(3,4,7)]) +
+  theme(legend.position = c(0.1, 0.85))
+
+save_plot("../../figures/line_plot.pdf", line_plot, base_aspect_ratio = 1.4)
+
 
 ```
 
