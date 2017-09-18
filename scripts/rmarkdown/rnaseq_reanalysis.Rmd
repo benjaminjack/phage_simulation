@@ -1,0 +1,47 @@
+---
+title: "RNA-seq Re-analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warnings = FALSE, message = FALSE)
+library(tidyverse)
+library(ggplot2)
+library(gtools)
+library(stringr)
+library(cowplot)
+```
+
+## Tools
+
+Reads were mapped with HISAT2 and counted with bedtools multicov. Counts were normalized and given as TPM values. 
+
+## Normalized counts show full coverage of genome
+
+```{r, echo=FALSE, fig.width = 10, fig.height = 6, fig.width = 12}
+
+import_counts <- function(file_name) {
+  read_tsv(file_name, col_names=FALSE) %>%
+  filter(X3 == "CDS") %>%
+  select("start" = X4, "end" = X5, "gene" = X9, "count" = X10) %>%
+  mutate(gene_name = str_match(gene, "Note=([^;|%]*)")[,2],
+         lengthkb = (end - start)/1000,
+         rpk = count/lengthkb,
+         scale_factor = sum(rpk)/1000000,
+         tpm = rpk/scale_factor)
+} 
+
+rep1 <- import_counts("../../data/gene_counts_rep1.gff") %>% mutate(rep = 1)
+rep2 <- import_counts("../../data/gene_counts_rep2.gff") %>% mutate(rep = 2)
+rep3 <- import_counts("../../data/gene_counts_rep3.gff") %>% mutate(rep = 3)
+
+all_reps <- bind_rows(rep1, rep2, rep3)
+
+ggplot(all_reps, aes(x = factor(gene_name, levels=unique(mixedsort(gene_name))), y = tpm)) + 
+  geom_bar(stat="summary", fun.y = "mean", fill = "grey80") +
+  geom_point(aes(color = factor(rep))) +
+  theme(axis.text.x=element_text(angle=45,hjust=1), legend.position = "none") +
+  xlab("transcript")
+```
+
+
