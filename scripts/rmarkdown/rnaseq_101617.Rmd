@@ -48,6 +48,7 @@ samples <- samples %>%
 
 ```{r calc_tpm}
 tpms <- samples %>%
+  filter(org == "V01146.1") %>%
   group_by(strain, time, brep) %>%
   mutate(lengthkb = (end - start)/1000,
          rpk = count/lengthkb,
@@ -68,7 +69,7 @@ phage <- tpms %>%
 ```{r, fig.height=20, fig.width=10}
 ggplot(phage, aes(x = factor(gene_number, levels=unique(mixedsort(gene_number))), y = tpm)) + 
   geom_bar(stat="summary", fun.y = "mean", aes(fill = strain), position = "dodge") +
-  #geom_point(aes(color = factor(brep))) +
+  geom_point(aes(color = factor(brep))) +
   theme(axis.text.x=element_text(angle=45,hjust=1), legend.position = "top") +
   xlab("gene") +
   facet_wrap(~ time, ncol = 1, scales = "free")
@@ -108,5 +109,32 @@ prot_rna <- phage %>%
 ggplot(prot_rna %>% filter(mean_tpm > 1e-6, mean_area > 1e-6), aes(x = log2(mean_tpm), y = log2(mean_area), color=factor(class))) + 
   geom_point() + 
   facet_grid(time~strain)
+
+```
+
+```{r}
+
+wt_atten_9min <- filter(phage, time == 9, strain != "evol") %>%
+  ungroup() %>%
+  select(strain, brep, gene_number, tpm) %>%
+  group_by(strain, brep, gene_number) %>%
+  summarize(mean_tpm = mean(tpm)) %>%
+  spread(strain, mean_tpm) %>%
+  na.omit() %>%
+  group_by(gene_number) %>%
+  nest() %>%
+  mutate(t_test = purrr::map(data, ~ broom::tidy(t.test(.$wt, .$atten, data = ., paired = T)))) %>%
+  select(-data) %>%
+  unnest() %>%
+  select(gene_number, p.value, estimate) %>%
+  mutate(p.value_adj = p.adjust(p.value, method = "fdr")) %>%
+  filter(p.value_adj < 0.1) %>%
+  arrange(p.value_adj) %>%
+  mutate_at(vars(p.value, estimate, p.value_adj), signif, digits = 2) %>%
+  select(gene_number, estimate, p.value, p.value_adj)
+  
+knitr::kable(wt_atten_9min)
+
+```
 
 ```
