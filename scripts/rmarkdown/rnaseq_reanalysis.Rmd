@@ -67,9 +67,9 @@ plot_5 <- ggplot(all_reps %>% filter(time == 5, !is.na(class)), aes(x = factor(g
   theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), legend.position = c(0.0, 0.9)) +
   scale_fill_discrete("class") +
   xlab("gene") + ylab("transcripts per million") + scale_y_continuous(expand = c(0,0))
-save_plot("../../figures/transcripts_5min.pdf", plot_5, base_width = 12, base_height = 5)
+# save_plot("../../figures/transcripts_5min.pdf", plot_5, base_width = 12, base_height = 5)
 
-write_csv(all_reps, "../../data/transcripts_remapped.csv")
+# write_csv(all_reps, "../../data/transcripts_remapped.csv")
 ```
 
 ### Simulating a terminator T3.8
@@ -91,7 +91,7 @@ load_simulation <- function(path) {
     filter(!is.na(gene_number))
 }
 
-sim_data_wt <- load_simulation("../../runs/run_081617_wt")
+sim_data_wt <- load_simulation("../../runs/012318/run_T7_012318b_wt")
 
 bar_sim <- filter(sim_data_wt, time %in% c(300, 400, 450, 500, 1100), !is.na(gene_number))
 
@@ -110,8 +110,8 @@ kallisto <- read_csv("../../data/transcripts.csv")
 kal_plot <- ggplot2(kallisto %>% filter(strain == "wt"))
 
 sim_exp_9 <- plot_grid(plot_5, sim_plot_5, ncol = 1, align="v")
-save_plot("../../figures/old_sim_exp_9min.pdf", sim_plot_9, base_width=10, base_height = 4)
-save_plot("../../figures/old_sim_exp_9min_transcripts.pdf", sim_exp_9, base_width = 10, base_height = 8)
+# save_plot("../../figures/old_sim_exp_9min.pdf", sim_plot_9, base_width=10, base_height = 4)
+# save_plot("../../figures/old_sim_exp_9min_transcripts.pdf", sim_exp_9, base_width = 10, base_height = 8)
 ```
 
 ### Simulation and real transcripts side-by-side
