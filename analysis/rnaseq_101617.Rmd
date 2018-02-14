@@ -1,0 +1,140 @@
+---
+title: "RNA Seq Re-analysis (w/ E. coli genes)"
+author: "Benjamin Jack"
+date: "10/16/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Load transcript count data
+
+```{r load_data}
+library(readxl)
+library(purrr)
+library(readr)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(gtools)
+library(ggplot2)
+library(cowplot)
+
+sample_list <- read_excel("../../data/sample_list.xlsx") %>% 
+  filter(`Data Type` == "rna-seq") %>%
+  select(`Sample`, `Strain`, `Biological replicate`, `Time point`)
+
+file_list <- list.files("../../data/mapped_to_T7_ecoli/", full.names = TRUE)
+
+samples <- data_frame(file_name = file_list)
+
+samples <- samples %>%
+  mutate(sample_id = str_extract(file_list, "PA[0-9]+"),
+         data = purrr::map(file_list, read_tsv, col_names = FALSE)) %>%
+  left_join(sample_list, by = c("sample_id" = "Sample")) %>%
+  unnest() %>%
+  rename(org = X1, strain = `Strain`, brep = `Biological replicate`, time = `Time point`, 
+         gene_type = X3, details = X9, start = X4, end = X5, count = X10) %>%
+  select(-file_name, -X2, -X6, -X7, -X8) %>%
+  mutate(strain = str_replace_all(strain, c("11-46" = "wt", "11-44" = "atten", "11-42" = "evol")),
+         time = as.numeric(time),
+         brep = as.numeric(brep)) %>%
+  filter(gene_type == "CDS")
+```
+
+## Calculate TPMs
+
+```{r calc_tpm}
+tpms <- samples %>%
+  filter(org == "V01146.1") %>%
+  group_by(strain, time, brep) %>%
+  mutate(lengthkb = (end - start)/1000,
+         rpk = count/lengthkb,
+         scale_factor = sum(rpk)/1000000,
+         tpm = rpk/scale_factor)
+```
+
+## Label phage transcripts
+
+```{r}
+phage <- tpms %>%
+  filter(org == "V01146.1") %>%
+  mutate(gene_number = str_match(details, "Note=(possible )?gene ([0-9\\.\\-AB]*)")[,3])
+```
+
+## Phage transcripts by time and strain
+
+```{r, fig.height=20, fig.width=10}
+ggplot(phage, aes(x = factor(gene_number, levels=unique(mixedsort(gene_number))), y = tpm)) + 
+  geom_bar(stat="summary", fun.y = "mean", aes(fill = strain), position = "dodge") +
+  geom_point(aes(color = factor(brep))) +
+  theme(axis.text.x=element_text(angle=45,hjust=1), legend.position = "top") +
+  xlab("gene") +
+  facet_wrap(~ time, ncol = 1, scales = "free")
+```
+
+```{r}
+
+labels <- read_csv("../../data/id_map.csv") %>% mutate(accession = trimws(accession))
+
+proteomics <- read_csv("../../data/proteomics.csv")
+
+proteomics <- proteomics %>%
+  mutate(strain = str_replace_all(strain, c("11-44" = "atten", "11-42" = "evol", "11-46" = "wt"))) %>%
+  mutate(protein_desc = trimws(protein_desc))
+
+# Join in standard T7 gene labels.
+proteomics <- filter(proteomics, org == "phage") %>% 
+  group_by(strain, time, b_rep) %>%
+  # Join by each group seperately so that missing phage proteins are filled in with NAs
+  do(full_join(., labels, by = c("protein_desc" = "accession")) %>% fill(strain, time, b_rep)) %>%
+  mutate(area_norm = ifelse(is.na(area_norm), 0, area_norm),  # Fill in missing proteins (NAs) with 0
+         gene_number = str_replace_all(gene_number, c("10A" = "10"))) %>%
+  group_by(strain, time, gene_number, class) %>%
+  summarize(mean_area = mean(area_norm))
+
+prot_rna <- phage %>%
+  filter(gene_number != "10B") %>%
+  mutate(gene_number = str_replace_all(gene_number, c("10A" = "10"))) %>%
+  group_by(strain, time, gene_number) %>%
+  summarize(mean_tpm = mean(tpm)/1000000) %>%
+  left_join(proteomics, by = c("gene_number", "strain", "time"))
+
+```
+
+```{r, fig.width=10, fig.height=8}
+
+ggplot(prot_rna %>% filter(mean_tpm > 1e-6, mean_area > 1e-6), aes(x = log2(mean_tpm), y = log2(mean_area), color=factor(class))) + 
+  geom_point() + 
+  facet_grid(time~strain)
+
+```
+
+```{r}
+
+wt_atten_9min <- filter(phage, time == 9, strain != "evol") %>%
+  ungroup() %>%
+  select(strain, brep, gene_number, tpm) %>%
+  group_by(strain, brep, gene_number) %>%
+  summarize(mean_tpm = mean(tpm)) %>%
+  spread(strain, mean_tpm) %>%
+  na.omit() %>%
+  group_by(gene_number) %>%
+  nest() %>%
+  mutate(t_test = purrr::map(data, ~ broom::tidy(t.test(.$wt, .$atten, data = ., paired = T)))) %>%
+  select(-data) %>%
+  unnest() %>%
+  select(gene_number, p.value, estimate) %>%
+  mutate(p.value_adj = p.adjust(p.value, method = "fdr")) %>%
+  filter(p.value_adj < 0.1) %>%
+  arrange(p.value_adj) %>%
+  mutate_at(vars(p.value, estimate, p.value_adj), signif, digits = 2) %>%
+  select(gene_number, estimate, p.value, p.value_adj)
+  
+knitr::kable(wt_atten_9min)
+
+```
+
+```
