@@ -3,67 +3,67 @@ V01146.1	EMBL	promoter	224	224	.	+	.	ID=id1;Note=E. coli promoter A0 (leftward);
 V01146.1	EMBL	promoter	405	405	.	+	.	ID=id2;Note=T7 promoter phiOL;gbkey=promoter	4
 V01146.1	EMBL	promoter	498	498	.	+	.	ID=id3;Note=E. coli promoter A1;gbkey=promoter	10
 V01146.1	EMBL	promoter	626	626	.	+	.	ID=id4;Note=E. coli promoter A2;gbkey=promoter	1986
-V01146.1	EMBL	promoter	750	750	.	+	.	ID=id5;Note=E. coli promoter A3;gbkey=promoter	15079
-V01146.1	EMBL	sequence_secondary_structure	890	890	.	+	.	ID=id6;Note=RNase III site R0.3;gbkey=misc_structure	47
-V01146.1	EMBL	mRNA	891	1468	.	+	.	ID=rna0;gbkey=mRNA;product=0.3 mRNA	186288
-V01146.1	EMBL	exon	891	1468	.	+	.	ID=id7;Parent=rna0;gbkey=mRNA;product=0.3 mRNA	186288
-V01146.1	EMBL	CDS	925	1278	.	+	0	ID=cds0;Parent=rna0;Dbxref=InterPro:IPR014798,PDB:1S7Z,UniProtKB/Swiss-Prot:P03775,NCBI_GP:CAA24384.1;Name=CAA24384.1;Note=gene 0.3%2C inhibits EcoB and EcoK host restriction;gbkey=CDS;product=CAA24384.1;protein_id=CAA24384.1;transl_table=11	138069
-V01146.1	EMBL	CDS	1278	1433	.	+	0	ID=cds1;Parent=rna0;Dbxref=UniProtKB/Swiss-Prot:P03776,NCBI_GP:CAA24385.1;Name=CAA24385.1;Note=gene 0.4;gbkey=CDS;product=CAA24385.1;protein_id=CAA24385.1;transl_table=11	86076
-V01146.1	EMBL	sequence_secondary_structure	1468	1468	.	+	.	ID=id8;Note=RNase III site R0.5;gbkey=misc_structure	977
-V01146.1	EMBL	mRNA	1469	3138	.	+	.	ID=rna1;gbkey=mRNA;product=0.7 mRNA	162577
-V01146.1	EMBL	exon	1469	3138	.	+	.	ID=id9;Parent=rna1;gbkey=mRNA;product=0.7 mRNA	162577
-V01146.1	EMBL	CDS	1496	1639	.	+	0	ID=cds2;Parent=rna1;Dbxref=UniProtKB/Swiss-Prot:P03777,NCBI_GP:CAA24386.1;Name=CAA24386.1;Note=gene 0.5;gbkey=CDS;product=CAA24386.1;protein_id=CAA24386.1;transl_table=11	4600
-V01146.1	EMBL	CDS	1636	1797	.	+	0	ID=cds3;Parent=rna1;Dbxref=UniProtKB/Swiss-Prot:P03778,NCBI_GP:CAA24387.1;Name=CAA24387.1;Note=gene 0.6A;gbkey=CDS;product=CAA24387.1;protein_id=CAA24387.1;transl_table=11	30802
-V01146.1	EMBL	CDS	2021	3100	.	+	0	ID=cds4;Parent=rna1;Dbxref=GOA:P00513,InterPro:IPR014374,UniProtKB/Swiss-Prot:P00513,NCBI_GP:CAA24389.1;Name=CAA24389.1;Note=gene 0.7%2C protein kinase;gbkey=CDS;product=CAA24389.1;protein_id=CAA24389.1;transl_table=11	105242
-V01146.1	EMBL	promoter	1514	1514	.	+	.	ID=id10;Note=E. coli B promoter;gbkey=promoter	236
-V01146.1	EMBL	CDS	1636	1794	.	+	0	ID=cds5;Dbxref=UniProtKB/Swiss-Prot:P03778,NCBI_GP:CAA24388.1;Name=CAA24388.1;Note=possible gene 0.6B;gbkey=CDS;product=CAA24388.1;protein_id=CAA24388.1;transl_table=11	30795
-V01146.1	EMBL	CDS	1796	1972	.	+	0	ID=cds5;Dbxref=UniProtKB/Swiss-Prot:P03778,NCBI_GP:CAA24388.1;Name=CAA24388.1;Note=possible gene 0.6B;gbkey=CDS;product=CAA24388.1;protein_id=CAA24388.1;transl_table=11	31977
-V01146.1	EMBL	promoter	3113	3113	.	+	.	ID=id11;Note=E. coli C promoter;gbkey=promoter	274
-V01146.1	EMBL	sequence_secondary_structure	3138	3138	.	+	.	ID=id12;Note=RNase III site R1;gbkey=misc_structure	343
-V01146.1	EMBL	mRNA	3139	5887	.	+	.	ID=rna2;gbkey=mRNA;product=1 mRNA	50411
-V01146.1	EMBL	exon	3139	5887	.	+	.	ID=id13;Parent=rna2;gbkey=mRNA;product=1 mRNA	50411
-V01146.1	EMBL	CDS	3171	5822	.	+	0	ID=cds6;Parent=rna2;Dbxref=GOA:P00573,InterPro:IPR002092,PDB:1ARO,PDB:1CEZ,PDB:1H38,PDB:1MSW,PDB:1QLN,PDB:1S0V,PDB:1S76,PDB:1S77,PDB:2PI4,PDB:2PI5,PDB:3E2E,PDB:3E3J,PDB:4RNP,UniProtKB/Swiss-Prot:P00573,NCBI_GP:CAA24390.1;Name=CAA24390.1;Note=gene 1%2C T7 RNA polymerase;gbkey=CDS;product=CAA24390.1;protein_id=CAA24390.1;transl_table=11	50079
-V01146.1	EMBL	promoter	5848	5848	.	+	.	ID=id14;Note=T7 promoter phi1.1A;gbkey=promoter	904
-V01146.1	EMBL	sequence_secondary_structure	5887	5887	.	+	.	ID=id15;Note=RNase III site R1.1;gbkey=misc_structure	79
-V01146.1	EMBL	mRNA	5888	6448	.	+	.	ID=rna3;gbkey=mRNA;product=1.1 mRNA	10541
-V01146.1	EMBL	exon	5888	6448	.	+	.	ID=id16;Parent=rna3;gbkey=mRNA;product=1.1 mRNA	10541
-V01146.1	EMBL	CDS	6007	6135	.	+	0	ID=cds7;Parent=rna3;Dbxref=InterPro:IPR013232,UniProtKB/Swiss-Prot:P03779,NCBI_GP:CAA24391.1;Name=CAA24391.1;Note=gene 1.1;gbkey=CDS;product=CAA24391.1;protein_id=CAA24391.1;transl_table=11	3341
-V01146.1	EMBL	CDS	6137	6394	.	+	0	ID=cds8;Parent=rna3;Dbxref=GOA:P03780,InterPro:IPR020147,UniProtKB/Swiss-Prot:P03780,NCBI_GP:CAA24392.1;Name=CAA24392.1;Note=gene 1.2%2C inhibits host dGTP triphosphohydrolase [8] /target for F plasmid exclusion [11];gbkey=CDS;product=CAA24392.1;protein_id=CAA24392.1;transl_table=11	9119
-V01146.1	EMBL	promoter	5923	5923	.	+	.	ID=id17;Note=T7 promoter phi1.1B;gbkey=promoter	21
-V01146.1	EMBL	promoter	6409	6409	.	+	.	ID=id18;Note=T7 promoter phi1.3;gbkey=promoter	1780
-V01146.1	EMBL	sequence_secondary_structure	6448	6448	.	+	.	ID=id19;Note=RNase III site R1.3;gbkey=misc_structure	380
-V01146.1	EMBL	mRNA	6449	7588	.	+	.	ID=rna4;gbkey=mRNA;product=1.3 mRNA	7494
-V01146.1	EMBL	exon	6449	7588	.	+	.	ID=id20;Parent=rna4;gbkey=mRNA;product=1.3 mRNA	7494
-V01146.1	EMBL	CDS	6475	7554	.	+	0	ID=cds9;Parent=rna4;Dbxref=GOA:P00969,InterPro:IPR012310,InterPro:IPR012340,InterPro:IPR016027,InterPro:IPR016059,InterPro:IPR016306,PDB:1A0I,UniProtKB/Swiss-Prot:P00969,NCBI_GP:CAA24393.1;Name=CAA24393.1;Note=gene 1.3%2C DNA ligase;gbkey=CDS;product=CAA24393.1;protein_id=CAA24393.1;transl_table=11	7282
-V01146.1	EMBL	terminator	7588	7588	.	+	.	ID=id21;Note=E. coli transcription terminator TE;gbkey=terminator	19
-V01146.1	EMBL	CDS	7608	7763	.	+	0	ID=cds10;Dbxref=UniProtKB/Swiss-Prot:P03791,NCBI_GP:CAA24394.1;Name=CAA24394.1;Note=gene 1.4;gbkey=CDS;product=CAA24394.1;protein_id=CAA24394.1;transl_table=11	32
-V01146.1	EMBL	promoter	7778	7778	.	+	.	ID=id22;Note=T7 promoter phi1.5;gbkey=promoter	11
-V01146.1	EMBL	CDS	7791	7880	.	+	0	ID=cds11;Dbxref=UniProtKB/Swiss-Prot:P03792,NCBI_GP:CAA24395.1;Name=CAA24395.1;Note=gene 1.5;gbkey=CDS;product=CAA24395.1;protein_id=CAA24395.1;transl_table=11	49
-V01146.1	EMBL	promoter	7895	7895	.	+	.	ID=id23;Note=T7 promoter phi1.6;gbkey=promoter	27
-V01146.1	EMBL	CDS	7906	8166	.	+	0	ID=cds12;Dbxref=InterPro:IPR018015,UniProtKB/Swiss-Prot:P03793,NCBI_GP:CAA24396.1;Name=CAA24396.1;Note=gene 1.6;gbkey=CDS;product=CAA24396.1;protein_id=CAA24396.1;transl_table=11	141
-V01146.1	EMBL	CDS	8166	8756	.	+	0	ID=cds13;Dbxref=InterPro:IPR021739,UniProtKB/Swiss-Prot:P03781,NCBI_GP:CAA24397.1;Name=CAA24397.1;Note=gene 1.7;gbkey=CDS;product=CAA24397.1;protein_id=CAA24397.1;transl_table=11	303
-V01146.1	EMBL	CDS	8749	8895	.	+	0	ID=cds14;Dbxref=UniProtKB/Swiss-Prot:P03794,NCBI_GP:CAA24398.1;Name=CAA24398.1;Note=gene 1.8;gbkey=CDS;product=CAA24398.1;protein_id=CAA24398.1;transl_table=11	64
-V01146.1	EMBL	CDS	8898	9092	.	+	0	ID=cds15;Dbxref=InterPro:IPR016412,PDB:2WNM,UniProtKB/Swiss-Prot:P03704,NCBI_GP:CAA24399.1;Name=CAA24399.1;Note=gene 2%2C inhibits E. coli RNA polymerase;gbkey=CDS;product=CAA24399.1;protein_id=CAA24399.1;transl_table=11	55
-V01146.1	EMBL	promoter	9107	9107	.	+	.	ID=id24;Note=T7 promoter phi2.5;gbkey=promoter	18
-V01146.1	EMBL	CDS	9158	9856	.	+	0	ID=cds16;Dbxref=GOA:P03696,InterPro:IPR012340,InterPro:IPR016027,InterPro:IPR016411,PDB:1JE5,UniProtKB/Swiss-Prot:P03696,NCBI_GP:CAA24400.1;Name=CAA24400.1;Note=gene 2.5%2C single-stranded DNA-binding protein;gbkey=CDS;product=CAA24400.1;protein_id=CAA24400.1;transl_table=11	190
-V01146.1	EMBL	CDS	9857	10276	.	+	0	ID=cds17;Dbxref=UniProtKB/Swiss-Prot:P03795,NCBI_GP:CAA24401.1;Name=CAA24401.1;Note=gene 2.8;gbkey=CDS;product=CAA24401.1;protein_id=CAA24401.1;transl_table=11	118
-V01146.1	EMBL	CDS	10257	10706	.	+	0	ID=cds18;Dbxref=GOA:P00641,InterPro:IPR008029,InterPro:IPR011335,InterPro:IPR011578,PDB:1FZR,PDB:1M0D,PDB:1M0I,PDB:2PFJ,PDB:3CAE,UniProtKB/Swiss-Prot:P00641,NCBI_GP:CAA24402.1;Name=CAA24402.1;Note=gene 3%2C endonuclease;gbkey=CDS;product=CAA24402.1;protein_id=CAA24402.1;transl_table=11	159
-V01146.1	EMBL	CDS	10706	11161	.	+	0	ID=cds19;Dbxref=GOA:P00806,InterPro:IPR002502,InterPro:IPR015510,PDB:1ARO,PDB:1LBA,UniProtKB/Swiss-Prot:P00806,NCBI_GP:CAA24403.1;Name=CAA24403.1;Note=gene 3.5%2C lysozyme/inhibits T7 RNA polymerase [7];gbkey=CDS;product=CAA24403.1;protein_id=CAA24403.1;transl_table=11	159
-V01146.1	EMBL	promoter	11180	11180	.	+	.	ID=id25;Note=T7 promoter phi3.8;gbkey=promoter	11
-V01146.1	EMBL	sequence_secondary_structure	11203	11203	.	+	.	ID=id26;Note=possible RNase III site R3.8;gbkey=misc_structure	5
-V01146.1	EMBL	CDS	11225	11590	.	+	0	ID=cds20;Dbxref=GOA:P03797,InterPro:IPR002711,InterPro:IPR003615,UniProtKB/Swiss-Prot:P03797,NCBI_GP:CAA24404.1;Name=CAA24404.1;Note=gene 3.8;gbkey=CDS;product=CAA24404.1;protein_id=CAA24404.1;transl_table=11	61
-V01146.1	EMBL	CDS	11565	13265	.	+	0	ID=cds21;Dbxref=GOA:P03692,InterPro:IPR006171,InterPro:IPR007694,InterPro:IPR013237,PDB:1CR0,PDB:1CR1,PDB:1CR2,PDB:1CR4,PDB:1E0J,PDB:1E0K,PDB:1NUI,PDB:1Q57,UniProtKB/Swiss-Prot:P03692,NCBI_GP:CAA24405.1;Name=CAA24405.1;Note=gene 4A%2C primase/helicase [14%2C15];gbkey=CDS;product=CAA24405.1;protein_id=CAA24405.1;transl_table=11	316
-V01146.1	EMBL	CDS	11635	11757	.	+	0	ID=cds22;Dbxref=UniProtKB/Swiss-Prot:P03782,NCBI_GP:CAA24406.1;Name=CAA24406.1;Note=gene 4.1;gbkey=CDS;product=CAA24406.1;protein_id=CAA24406.1;transl_table=11	60
-V01146.1	EMBL	CDS	11754	13265	.	+	0	ID=cds23;Dbxref=GOA:P03692,InterPro:IPR006171,InterPro:IPR007694,InterPro:IPR013237,PDB:1CR0,PDB:1CR1,PDB:1CR2,PDB:1CR4,PDB:1E0J,PDB:1E0K,PDB:1NUI,PDB:1Q57,UniProtKB/Swiss-Prot:P03692,NCBI_GP:CAA24407.1;Name=CAA24407.1;Note=gene 4B/helicase [14%2C15];gbkey=CDS;product=CAA24407.1;protein_id=CAA24407.1;transl_table=11	267
-V01146.1	EMBL	promoter	12671	12671	.	+	.	ID=id27;Note=T7 promoter phi4c;gbkey=promoter	8
-V01146.1	EMBL	CDS	12988	13326	.	+	0	ID=cds24;Dbxref=UniProtKB/Swiss-Prot:P03783,NCBI_GP:CAA24408.1;Name=CAA24408.1;Note=gene 4.2;gbkey=CDS;product=CAA24408.1;protein_id=CAA24408.1;transl_table=11	98
-V01146.1	EMBL	promoter	13341	13341	.	+	.	ID=id28;Note=T7 promoter phi4.3;gbkey=promoter	41
-V01146.1	EMBL	CDS	13352	13564	.	+	0	ID=cds25;Dbxref=UniProtKB/Swiss-Prot:P03784,NCBI_GP:CAA24409.1;Name=CAA24409.1;Note=gene 4.3;gbkey=CDS;product=CAA24409.1;protein_id=CAA24409.1;transl_table=11	113
-V01146.1	EMBL	CDS	13584	13853	.	+	0	ID=cds26;Dbxref=UniProtKB/Swiss-Prot:P03785,NCBI_GP:CAA24410.1;Name=CAA24410.1;Note=gene 4.5;gbkey=CDS;product=CAA24410.1;protein_id=CAA24410.1;transl_table=11	94
-V01146.1	EMBL	sequence_secondary_structure	13892	13892	.	+	.	ID=id29;Note=RNase III site R4.7;gbkey=misc_structure	4
-V01146.1	EMBL	promoter	13915	13915	.	+	.	ID=id30;Note=T7 promoter phi4.7;gbkey=promoter	4
-V01146.1	EMBL	CDS	13927	14334	.	+	0	ID=cds27;Dbxref=UniProtKB/Swiss-Prot:P03786,NCBI_GP:CAA24411.1;Name=CAA24411.1;Note=gene 4.7;gbkey=CDS;product=CAA24411.1;protein_id=CAA24411.1;transl_table=11	49
-V01146.1	EMBL	CDS	14353	16467	.	+	0	ID=cds28;Dbxref=GOA:P00581,InterPro:IPR001098,InterPro:IPR002298,InterPro:IPR012337,InterPro:IPR019760,PDB:1SKR,PDB:1SKS,PDB:1SKW,PDB:1SL0,PDB:1SL1,PDB:1SL2,PDB:1T7P,PDB:1T8E,PDB:1TK0,PDB:1TK5,PDB:1TK8,PDB:1TKD,PDB:1X9M,PDB:1X9S,PDB:1X9W,PDB:1ZYQ,PDB:2AJQ,UniProtKB/Swiss-Prot:P00581,NCBI_GP:CAA24412.1;Name=CAA24412.1;Note=gene 5%2C DNA polymerase;gbkey=CDS;product=CAA24412.1;protein_id=CAA24412.1;transl_table=11	222
+V01146.1	EMBL	promoter	750	750	.	+	.	ID=id5;Note=E. coli promoter A3;gbkey=promoter	15078
+V01146.1	EMBL	sequence_secondary_structure	890	890	.	+	.	ID=id6;Note=RNase III site R0.3;gbkey=misc_structure	43
+V01146.1	EMBL	mRNA	891	1468	.	+	.	ID=rna0;gbkey=mRNA;product=0.3 mRNA	186284
+V01146.1	EMBL	exon	891	1468	.	+	.	ID=id7;Parent=rna0;gbkey=mRNA;product=0.3 mRNA	186284
+V01146.1	EMBL	CDS	925	1278	.	+	0	ID=cds0;Parent=rna0;Dbxref=InterPro:IPR014798,PDB:1S7Z,UniProtKB/Swiss-Prot:P03775,NCBI_GP:CAA24384.1;Name=CAA24384.1;Note=gene 0.3%2C inhibits EcoB and EcoK host restriction;gbkey=CDS;product=CAA24384.1;protein_id=CAA24384.1;transl_table=11	138065
+V01146.1	EMBL	CDS	1278	1433	.	+	0	ID=cds1;Parent=rna0;Dbxref=UniProtKB/Swiss-Prot:P03776,NCBI_GP:CAA24385.1;Name=CAA24385.1;Note=gene 0.4;gbkey=CDS;product=CAA24385.1;protein_id=CAA24385.1;transl_table=11	86072
+V01146.1	EMBL	sequence_secondary_structure	1468	1468	.	+	.	ID=id8;Note=RNase III site R0.5;gbkey=misc_structure	971
+V01146.1	EMBL	mRNA	1469	3138	.	+	.	ID=rna1;gbkey=mRNA;product=0.7 mRNA	162571
+V01146.1	EMBL	exon	1469	3138	.	+	.	ID=id9;Parent=rna1;gbkey=mRNA;product=0.7 mRNA	162571
+V01146.1	EMBL	CDS	1496	1639	.	+	0	ID=cds2;Parent=rna1;Dbxref=UniProtKB/Swiss-Prot:P03777,NCBI_GP:CAA24386.1;Name=CAA24386.1;Note=gene 0.5;gbkey=CDS;product=CAA24386.1;protein_id=CAA24386.1;transl_table=11	4594
+V01146.1	EMBL	CDS	1636	1797	.	+	0	ID=cds3;Parent=rna1;Dbxref=UniProtKB/Swiss-Prot:P03778,NCBI_GP:CAA24387.1;Name=CAA24387.1;Note=gene 0.6A;gbkey=CDS;product=CAA24387.1;protein_id=CAA24387.1;transl_table=11	30796
+V01146.1	EMBL	CDS	2021	3100	.	+	0	ID=cds4;Parent=rna1;Dbxref=GOA:P00513,InterPro:IPR014374,UniProtKB/Swiss-Prot:P00513,NCBI_GP:CAA24389.1;Name=CAA24389.1;Note=gene 0.7%2C protein kinase;gbkey=CDS;product=CAA24389.1;protein_id=CAA24389.1;transl_table=11	105234
+V01146.1	EMBL	promoter	1514	1514	.	+	.	ID=id10;Note=E. coli B promoter;gbkey=promoter	230
+V01146.1	EMBL	CDS	1636	1794	.	+	0	ID=cds5;Dbxref=UniProtKB/Swiss-Prot:P03778,NCBI_GP:CAA24388.1;Name=CAA24388.1;Note=possible gene 0.6B;gbkey=CDS;product=CAA24388.1;protein_id=CAA24388.1;transl_table=11	30789
+V01146.1	EMBL	CDS	1796	1972	.	+	0	ID=cds5;Dbxref=UniProtKB/Swiss-Prot:P03778,NCBI_GP:CAA24388.1;Name=CAA24388.1;Note=possible gene 0.6B;gbkey=CDS;product=CAA24388.1;protein_id=CAA24388.1;transl_table=11	31969
+V01146.1	EMBL	promoter	3113	3113	.	+	.	ID=id11;Note=E. coli C promoter;gbkey=promoter	266
+V01146.1	EMBL	sequence_secondary_structure	3138	3138	.	+	.	ID=id12;Note=RNase III site R1;gbkey=misc_structure	335
+V01146.1	EMBL	mRNA	3139	5887	.	+	.	ID=rna2;gbkey=mRNA;product=1 mRNA	50404
+V01146.1	EMBL	exon	3139	5887	.	+	.	ID=id13;Parent=rna2;gbkey=mRNA;product=1 mRNA	50404
+V01146.1	EMBL	CDS	3171	5822	.	+	0	ID=cds6;Parent=rna2;Dbxref=GOA:P00573,InterPro:IPR002092,PDB:1ARO,PDB:1CEZ,PDB:1H38,PDB:1MSW,PDB:1QLN,PDB:1S0V,PDB:1S76,PDB:1S77,PDB:2PI4,PDB:2PI5,PDB:3E2E,PDB:3E3J,PDB:4RNP,UniProtKB/Swiss-Prot:P00573,NCBI_GP:CAA24390.1;Name=CAA24390.1;Note=gene 1%2C T7 RNA polymerase;gbkey=CDS;product=CAA24390.1;protein_id=CAA24390.1;transl_table=11	50072
+V01146.1	EMBL	promoter	5848	5848	.	+	.	ID=id14;Note=T7 promoter phi1.1A;gbkey=promoter	896
+V01146.1	EMBL	sequence_secondary_structure	5887	5887	.	+	.	ID=id15;Note=RNase III site R1.1;gbkey=misc_structure	71
+V01146.1	EMBL	mRNA	5888	6448	.	+	.	ID=rna3;gbkey=mRNA;product=1.1 mRNA	10533
+V01146.1	EMBL	exon	5888	6448	.	+	.	ID=id16;Parent=rna3;gbkey=mRNA;product=1.1 mRNA	10533
+V01146.1	EMBL	CDS	6007	6135	.	+	0	ID=cds7;Parent=rna3;Dbxref=InterPro:IPR013232,UniProtKB/Swiss-Prot:P03779,NCBI_GP:CAA24391.1;Name=CAA24391.1;Note=gene 1.1;gbkey=CDS;product=CAA24391.1;protein_id=CAA24391.1;transl_table=11	3333
+V01146.1	EMBL	CDS	6137	6394	.	+	0	ID=cds8;Parent=rna3;Dbxref=GOA:P03780,InterPro:IPR020147,UniProtKB/Swiss-Prot:P03780,NCBI_GP:CAA24392.1;Name=CAA24392.1;Note=gene 1.2%2C inhibits host dGTP triphosphohydrolase [8] /target for F plasmid exclusion [11];gbkey=CDS;product=CAA24392.1;protein_id=CAA24392.1;transl_table=11	9111
+V01146.1	EMBL	promoter	5923	5923	.	+	.	ID=id17;Note=T7 promoter phi1.1B;gbkey=promoter	13
+V01146.1	EMBL	promoter	6409	6409	.	+	.	ID=id18;Note=T7 promoter phi1.3;gbkey=promoter	1772
+V01146.1	EMBL	sequence_secondary_structure	6448	6448	.	+	.	ID=id19;Note=RNase III site R1.3;gbkey=misc_structure	372
+V01146.1	EMBL	mRNA	6449	7588	.	+	.	ID=rna4;gbkey=mRNA;product=1.3 mRNA	7489
+V01146.1	EMBL	exon	6449	7588	.	+	.	ID=id20;Parent=rna4;gbkey=mRNA;product=1.3 mRNA	7489
+V01146.1	EMBL	CDS	6475	7554	.	+	0	ID=cds9;Parent=rna4;Dbxref=GOA:P00969,InterPro:IPR012310,InterPro:IPR012340,InterPro:IPR016027,InterPro:IPR016059,InterPro:IPR016306,PDB:1A0I,UniProtKB/Swiss-Prot:P00969,NCBI_GP:CAA24393.1;Name=CAA24393.1;Note=gene 1.3%2C DNA ligase;gbkey=CDS;product=CAA24393.1;protein_id=CAA24393.1;transl_table=11	7277
+V01146.1	EMBL	terminator	7588	7588	.	+	.	ID=id21;Note=E. coli transcription terminator TE;gbkey=terminator	13
+V01146.1	EMBL	CDS	7608	7763	.	+	0	ID=cds10;Dbxref=UniProtKB/Swiss-Prot:P03791,NCBI_GP:CAA24394.1;Name=CAA24394.1;Note=gene 1.4;gbkey=CDS;product=CAA24394.1;protein_id=CAA24394.1;transl_table=11	26
+V01146.1	EMBL	promoter	7778	7778	.	+	.	ID=id22;Note=T7 promoter phi1.5;gbkey=promoter	5
+V01146.1	EMBL	CDS	7791	7880	.	+	0	ID=cds11;Dbxref=UniProtKB/Swiss-Prot:P03792,NCBI_GP:CAA24395.1;Name=CAA24395.1;Note=gene 1.5;gbkey=CDS;product=CAA24395.1;protein_id=CAA24395.1;transl_table=11	43
+V01146.1	EMBL	promoter	7895	7895	.	+	.	ID=id23;Note=T7 promoter phi1.6;gbkey=promoter	21
+V01146.1	EMBL	CDS	7906	8166	.	+	0	ID=cds12;Dbxref=InterPro:IPR018015,UniProtKB/Swiss-Prot:P03793,NCBI_GP:CAA24396.1;Name=CAA24396.1;Note=gene 1.6;gbkey=CDS;product=CAA24396.1;protein_id=CAA24396.1;transl_table=11	135
+V01146.1	EMBL	CDS	8166	8756	.	+	0	ID=cds13;Dbxref=InterPro:IPR021739,UniProtKB/Swiss-Prot:P03781,NCBI_GP:CAA24397.1;Name=CAA24397.1;Note=gene 1.7;gbkey=CDS;product=CAA24397.1;protein_id=CAA24397.1;transl_table=11	297
+V01146.1	EMBL	CDS	8749	8895	.	+	0	ID=cds14;Dbxref=UniProtKB/Swiss-Prot:P03794,NCBI_GP:CAA24398.1;Name=CAA24398.1;Note=gene 1.8;gbkey=CDS;product=CAA24398.1;protein_id=CAA24398.1;transl_table=11	58
+V01146.1	EMBL	CDS	8898	9092	.	+	0	ID=cds15;Dbxref=InterPro:IPR016412,PDB:2WNM,UniProtKB/Swiss-Prot:P03704,NCBI_GP:CAA24399.1;Name=CAA24399.1;Note=gene 2%2C inhibits E. coli RNA polymerase;gbkey=CDS;product=CAA24399.1;protein_id=CAA24399.1;transl_table=11	49
+V01146.1	EMBL	promoter	9107	9107	.	+	.	ID=id24;Note=T7 promoter phi2.5;gbkey=promoter	12
+V01146.1	EMBL	CDS	9158	9856	.	+	0	ID=cds16;Dbxref=GOA:P03696,InterPro:IPR012340,InterPro:IPR016027,InterPro:IPR016411,PDB:1JE5,UniProtKB/Swiss-Prot:P03696,NCBI_GP:CAA24400.1;Name=CAA24400.1;Note=gene 2.5%2C single-stranded DNA-binding protein;gbkey=CDS;product=CAA24400.1;protein_id=CAA24400.1;transl_table=11	186
+V01146.1	EMBL	CDS	9857	10276	.	+	0	ID=cds17;Dbxref=UniProtKB/Swiss-Prot:P03795,NCBI_GP:CAA24401.1;Name=CAA24401.1;Note=gene 2.8;gbkey=CDS;product=CAA24401.1;protein_id=CAA24401.1;transl_table=11	115
+V01146.1	EMBL	CDS	10257	10706	.	+	0	ID=cds18;Dbxref=GOA:P00641,InterPro:IPR008029,InterPro:IPR011335,InterPro:IPR011578,PDB:1FZR,PDB:1M0D,PDB:1M0I,PDB:2PFJ,PDB:3CAE,UniProtKB/Swiss-Prot:P00641,NCBI_GP:CAA24402.1;Name=CAA24402.1;Note=gene 3%2C endonuclease;gbkey=CDS;product=CAA24402.1;protein_id=CAA24402.1;transl_table=11	156
+V01146.1	EMBL	CDS	10706	11161	.	+	0	ID=cds19;Dbxref=GOA:P00806,InterPro:IPR002502,InterPro:IPR015510,PDB:1ARO,PDB:1LBA,UniProtKB/Swiss-Prot:P00806,NCBI_GP:CAA24403.1;Name=CAA24403.1;Note=gene 3.5%2C lysozyme/inhibits T7 RNA polymerase [7];gbkey=CDS;product=CAA24403.1;protein_id=CAA24403.1;transl_table=11	156
+V01146.1	EMBL	promoter	11180	11180	.	+	.	ID=id25;Note=T7 promoter phi3.8;gbkey=promoter	8
+V01146.1	EMBL	sequence_secondary_structure	11203	11203	.	+	.	ID=id26;Note=possible RNase III site R3.8;gbkey=misc_structure	2
+V01146.1	EMBL	CDS	11225	11590	.	+	0	ID=cds20;Dbxref=GOA:P03797,InterPro:IPR002711,InterPro:IPR003615,UniProtKB/Swiss-Prot:P03797,NCBI_GP:CAA24404.1;Name=CAA24404.1;Note=gene 3.8;gbkey=CDS;product=CAA24404.1;protein_id=CAA24404.1;transl_table=11	58
+V01146.1	EMBL	CDS	11565	13265	.	+	0	ID=cds21;Dbxref=GOA:P03692,InterPro:IPR006171,InterPro:IPR007694,InterPro:IPR013237,PDB:1CR0,PDB:1CR1,PDB:1CR2,PDB:1CR4,PDB:1E0J,PDB:1E0K,PDB:1NUI,PDB:1Q57,UniProtKB/Swiss-Prot:P03692,NCBI_GP:CAA24405.1;Name=CAA24405.1;Note=gene 4A%2C primase/helicase [14%2C15];gbkey=CDS;product=CAA24405.1;protein_id=CAA24405.1;transl_table=11	313
+V01146.1	EMBL	CDS	11635	11757	.	+	0	ID=cds22;Dbxref=UniProtKB/Swiss-Prot:P03782,NCBI_GP:CAA24406.1;Name=CAA24406.1;Note=gene 4.1;gbkey=CDS;product=CAA24406.1;protein_id=CAA24406.1;transl_table=11	57
+V01146.1	EMBL	CDS	11754	13265	.	+	0	ID=cds23;Dbxref=GOA:P03692,InterPro:IPR006171,InterPro:IPR007694,InterPro:IPR013237,PDB:1CR0,PDB:1CR1,PDB:1CR2,PDB:1CR4,PDB:1E0J,PDB:1E0K,PDB:1NUI,PDB:1Q57,UniProtKB/Swiss-Prot:P03692,NCBI_GP:CAA24407.1;Name=CAA24407.1;Note=gene 4B/helicase [14%2C15];gbkey=CDS;product=CAA24407.1;protein_id=CAA24407.1;transl_table=11	264
+V01146.1	EMBL	promoter	12671	12671	.	+	.	ID=id27;Note=T7 promoter phi4c;gbkey=promoter	5
+V01146.1	EMBL	CDS	12988	13326	.	+	0	ID=cds24;Dbxref=UniProtKB/Swiss-Prot:P03783,NCBI_GP:CAA24408.1;Name=CAA24408.1;Note=gene 4.2;gbkey=CDS;product=CAA24408.1;protein_id=CAA24408.1;transl_table=11	95
+V01146.1	EMBL	promoter	13341	13341	.	+	.	ID=id28;Note=T7 promoter phi4.3;gbkey=promoter	38
+V01146.1	EMBL	CDS	13352	13564	.	+	0	ID=cds25;Dbxref=UniProtKB/Swiss-Prot:P03784,NCBI_GP:CAA24409.1;Name=CAA24409.1;Note=gene 4.3;gbkey=CDS;product=CAA24409.1;protein_id=CAA24409.1;transl_table=11	110
+V01146.1	EMBL	CDS	13584	13853	.	+	0	ID=cds26;Dbxref=UniProtKB/Swiss-Prot:P03785,NCBI_GP:CAA24410.1;Name=CAA24410.1;Note=gene 4.5;gbkey=CDS;product=CAA24410.1;protein_id=CAA24410.1;transl_table=11	91
+V01146.1	EMBL	sequence_secondary_structure	13892	13892	.	+	.	ID=id29;Note=RNase III site R4.7;gbkey=misc_structure	1
+V01146.1	EMBL	promoter	13915	13915	.	+	.	ID=id30;Note=T7 promoter phi4.7;gbkey=promoter	1
+V01146.1	EMBL	CDS	13927	14334	.	+	0	ID=cds27;Dbxref=UniProtKB/Swiss-Prot:P03786,NCBI_GP:CAA24411.1;Name=CAA24411.1;Note=gene 4.7;gbkey=CDS;product=CAA24411.1;protein_id=CAA24411.1;transl_table=11	46
+V01146.1	EMBL	CDS	14353	16467	.	+	0	ID=cds28;Dbxref=GOA:P00581,InterPro:IPR001098,InterPro:IPR002298,InterPro:IPR012337,InterPro:IPR019760,PDB:1SKR,PDB:1SKS,PDB:1SKW,PDB:1SL0,PDB:1SL1,PDB:1SL2,PDB:1T7P,PDB:1T8E,PDB:1TK0,PDB:1TK5,PDB:1TK8,PDB:1TKD,PDB:1X9M,PDB:1X9S,PDB:1X9W,PDB:1ZYQ,PDB:2AJQ,UniProtKB/Swiss-Prot:P00581,NCBI_GP:CAA24412.1;Name=CAA24412.1;Note=gene 5%2C DNA polymerase;gbkey=CDS;product=CAA24412.1;protein_id=CAA24412.1;transl_table=11	219
 V01146.1	EMBL	CDS	16483	16839	.	+	0	ID=cds29;Dbxref=UniProtKB/Swiss-Prot:P03798,NCBI_GP:CAA24413.1;Name=CAA24413.1;Note=gene 5.3;gbkey=CDS;product=CAA24413.1;protein_id=CAA24413.1;transl_table=11	70
 V01146.1	EMBL	CDS	16851	17147	.	+	0	ID=cds30;Dbxref=InterPro:IPR022611,UniProtKB/Swiss-Prot:P03787,NCBI_GP:CAA24415.1;Name=CAA24415.1;Note=possible gene 5.5-5.7;gbkey=CDS;product=CAA24415.1;protein_id=CAA24415.1;transl_table=11	44
 V01146.1	EMBL	CDS	17147	17359	.	+	0	ID=cds30;Dbxref=InterPro:IPR022611,UniProtKB/Swiss-Prot:P03787,NCBI_GP:CAA24415.1;Name=CAA24415.1;Note=possible gene 5.5-5.7;gbkey=CDS;product=CAA24415.1;protein_id=CAA24415.1;transl_table=11	41
