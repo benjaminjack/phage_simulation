@@ -23,7 +23,7 @@ In the plot below, reads are counted towards all genes that they map to if a rea
 ```{r, echo=FALSE, fig.width = 10, fig.height = 18, fig.width = 12}
 
 import_counts <- function(file_name) {
-  labels <- read_csv("output/id_map.csv") %>% mutate(accession = trimws(accession))
+  labels <- read_csv("../output/id_map.csv") %>% mutate(accession = trimws(accession))
   read_tsv(file_name, col_names=FALSE) %>%
   filter(X3 == "CDS") %>%
   select("start" = X4, "end" = X5, "gene" = X9, "count" = X10) %>%
@@ -35,17 +35,28 @@ import_counts <- function(file_name) {
     left_join(labels, by = c("gene_number" = "gene_number"))
 } 
 
-rep1_5 <- import_counts("data/rna_seq/PA196_T7W-R1-05m_S27_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 1, time = 5)
+rep1_5 <- import_counts("../data/rna_seq/PA196_T7W-R1-05m_S27_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 1, time = 5)
+rep2_5 <- import_counts("../data/rna_seq/PA206_T7W-R2-05m_S32_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 2, time = 5)
+rep3_5 <- import_counts("../data/rna_seq/PA216_T7W-R3-05m_S37_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 3, time = 5)
 rep1_10 <- import_counts("data/rna_seq/PA198_T7W-R1-10m_S28_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 1, time = 10)
-rep1_15 <- import_counts("data/rna_seq/PA200_T7W-R1-15m_S29_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 1, time = 15)
-rep1_20 <- import_counts("data/rna_seq/PA202_T7W-R1-20m_S30_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 1, time = 20)
-rep1_25 <- import_counts("data/rna_seq/PA204_T7W-R1-25m_S31_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 1, time = 25)
+rep2_10 <- import_counts("../data/rna_seq/PA208_T7W-R2-10m_S33_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 2, time = 10)
+rep3_10 <- import_counts("../data/rna_seq/PA218_T7W-R3-10m_S38_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 3, time = 10)
+rep1_15 <- import_counts("../data/rna_seq/PA200_T7W-R1-15m_S29_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 1, time = 15)
+rep2_15 <- import_counts("../data/rna_seq/PA210_T7W-R2-15m_S34_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 2, time = 15)
+rep3_15 <- import_counts("../data/rna_seq/PA220_T7W-R3-15m_S39_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 3, time = 15)
+rep1_20 <- import_counts("../data/rna_seq/PA202_T7W-R1-20m_S30_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 1, time = 20)
+rep2_20 <- import_counts("../data/rna_seq/PA212_T7W-R2-20m_S35_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 2, time = 20)
+rep3_20 <- import_counts("../data/rna_seq/PA222_T7W-R3-20m_S40_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 3, time = 20)
+rep1_25 <- import_counts("../data/rna_seq/PA204_T7W-R1-25m_S31_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 1, time = 25)
+rep2_25 <- import_counts("../data/rna_seq/PA214_T7W-R2-25m_S36_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 2, time = 25)
+rep3_25 <- import_counts("../data/rna_seq/PA224_T7W-R3-25m_S41_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 3, time = 25)
 
 
-all_reps <- bind_rows(rep1_5, rep1_10, rep1_15, rep1_20, rep1_25) %>% mutate(strain = "wildtype")
+all_reps <- bind_rows(rep1_5, rep3_5, rep1_10, rep2_10, rep3_10, rep1_15, rep2_15, rep3_15, rep1_20, rep2_20, rep3_20, rep1_25, rep2_25, rep3_25) %>% mutate(strain = "wildtype")
 
 ggplot(all_reps, aes(x = factor(gene_number, levels=unique(mixedsort(gene_number))), y = tpm)) + 
   geom_bar(stat="summary", fun.y = "mean", aes(fill = factor(class))) +
+  geom_point(alpha=0.5) + 
   theme(axis.text.x=element_text(angle=45,hjust=1), legend.position = "none") +
   xlab("gene") +
   facet_wrap(~time, ncol = 1, scales = "free")
