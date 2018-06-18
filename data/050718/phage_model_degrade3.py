@@ -148,7 +148,7 @@ def normalize_weights(weights):
 
 
 def main():
-    sim = pt.Simulation(cell_volume=CELL_VOLUME)
+    sim = pt.Model(cell_volume=CELL_VOLUME)
 
     # Download T7 wild-type genbank records
     Entrez.email = "benjamin.r.jack@gmail.com"

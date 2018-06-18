@@ -1,6 +1,4 @@
-data/ - all post-processed experimental data
-params/ - parameter files for simulation runs; also contains README that explains which conditions the runs were run under
-runs/ - simulation run data
-figures/ - figures that appear in publication in PDF format
-rmarkdown/ - proteomics, rna-seq, and simulation analyses and plots
-scripts/ - R and python scripts for data processing and some plots
+data/ - all raw data
+analysis/ - proteomics, rna-seq, and simulation analyses and plots
+src/ - R and python scripts for data pre-processing
+output/ - Intermediate outputs such as pre-processed data that are ready for analysis in Rmarkdown

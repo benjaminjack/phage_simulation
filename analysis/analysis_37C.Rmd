@@ -1,0 +1,261 @@
+---
+title: "37C Time Course Analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(ggplot2)
+library(gtools)
+library(stringr)
+library(cowplot)
+```
+
+## Tools
+
+Reads were mapped with HISAT2 and counted with bedtools multicov. Counts were normalized and given as TPM values.
+
+## Normalized counts show full coverage of genome
+
+In the plot below, reads are counted towards all genes that they map to if a read overlaps with multiple genes.
+
+```{r, echo=FALSE, fig.width = 10, fig.height = 18, fig.width = 12}
+
+import_counts <- function(file_name) {
+  labels <- read_csv("../output/id_map.csv") %>% mutate(accession = trimws(accession))
+  read_tsv(file_name, col_names=FALSE) %>%
+  filter(X3 == "CDS") %>%
+  select("start" = X4, "end" = X5, "gene" = X9, "count" = X10) %>%
+  mutate(gene_number = str_match(gene, "Note=(possible )?gene ([0-9\\.\\-AB]*)")[,3],
+         lengthkb = (end - start)/1000,
+         rpk = count/lengthkb,
+         scale_factor = sum(rpk)/1000000,
+         tpm = rpk/scale_factor) %>%
+    left_join(labels, by = c("gene_number" = "gene_number")) %>%
+    mutate(gene_number = str_replace_all(gene_number, c("10A" = "10")))
+} 
+
+rep1 <- import_counts("../output/PA36_recounted_q10_9min_rep1.tsv") %>% mutate(b_rep = 1, time = 9)
+rep2 <- import_counts("../output/PA45_recounted_q10_9min_rep2.tsv") %>% mutate(b_rep = 2, time = 9)
+rep3 <- import_counts("../output/PA54_recounted_q10_9min_rep3.tsv") %>% mutate(b_rep = 3, time = 9)
+
+rep1_5 <- import_counts("../output/PA35_recounted_q10_5min_rep1.tsv") %>% mutate(b_rep = 1, time = 5)
+rep2_5 <- import_counts("../output/PA44_recounted_q10_5min_rep2.tsv") %>% mutate(b_rep = 2, time = 5)
+rep3_5 <- import_counts("../output/PA53_recounted_q10_5min_rep3.tsv") %>% mutate(b_rep = 3, time = 5)
+
+rep1_1 <- import_counts("../output/PA34_recounted_q10_1min_rep1.tsv") %>% mutate(b_rep = 1, time = 1)
+rep2_1 <- import_counts("../output/PA43_recounted_q10_1min_rep2.tsv") %>% mutate(b_rep = 2, time = 1)
+rep3_1 <- import_counts("../output/PA52_recounted_q10_1min_rep3.tsv") %>% mutate(b_rep = 3, time = 1)
+
+
+all_reps <- bind_rows(rep1, rep2, rep3, rep1_5, rep2_5, rep3_5, rep1_1, rep2_1, rep3_1) %>% 
+  mutate(strain = "wildtype") %>% 
+  filter(!is.na(class))
+
+rna_9_dist <- ggplot(all_reps %>% filter(time == 9, !is.na(class), gene_number != "10B"), aes(x = factor(gene_number, levels=unique(mixedsort(gene_number))), y = tpm)) + 
+  geom_bar(stat="summary", fun.y = "mean", aes(fill = factor(class))) +
+  geom_point(alpha = 0.5) + 
+  theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), legend.position = c(0.0, 0.8)) +
+  scale_fill_discrete("class") +
+  xlab("gene") + ylab("transcripts per million") + scale_y_continuous(expand = c(0,0))
+
+rna_5_dist <- ggplot(all_reps %>% filter(time == 5, !is.na(class), gene_number != "10B"), aes(x = factor(gene_number, levels=unique(mixedsort(gene_number))), y = tpm)) + 
+  geom_bar(stat="summary", fun.y = "mean", aes(fill = factor(class))) +
+  geom_point(alpha = 0.5) + 
+  theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), legend.position = c(0.0, 0.8)) +
+  scale_fill_discrete("class") +
+  xlab("gene") + ylab("transcripts per million") + scale_y_continuous(expand = c(0,0))
+
+rna_5_dist
+
+rna_5_9_exp <- plot_grid(rna_5_dist, rna_9_dist, ncol = 1, align='v')
+
+save_plot("./figures/rna_5_9_exp.pdf", rna_5_9_exp, base_width = 8, base_height = 6)
+
+```
+
+### Simulated transcript distribution in wildtype
+
+```{r}
+
+load_simulation_old <- function(path) {
+  labels <- read_csv("../output/id_map.csv") %>% mutate(accession = trimws(accession))
+  raw_counts <- read_tsv(paste0(path, "_counts.tsv"), col_names=F) 
+  colnames(raw_counts) <- c('time', 'gene', 'proteins')
+  raw_densities <- read_tsv(paste0(path, "_density.tsv"), col_names = F)
+  colnames(raw_densities) <- c('time', 'gene', 'ribosomes', 'transcripts', 'density')
+  raw_data <- full_join(raw_counts, raw_densities, by = c("time", "gene"))
+  labeled_data <- raw_data %>% group_by(time) %>% nest() %>%
+    mutate(data = purrr::map(data, ~left_join(labels, ., by = c("pysinthe" = "gene")))) %>%
+    unnest() %>%
+    mutate(time = round(time)) %>%
+    mutate(proteins = if_else(is.na(proteins), 0.0, as.numeric(proteins)),
+           transcripts = if_else(is.na(transcripts), 0.0, as.numeric(transcripts)),
+           ribosomes = if_else(is.na(ribosomes), 0.0, as.numeric(ribosomes))) %>%
+    filter(!is.na(gene_number))
+}
+
+sim_data_wt <- load_simulation_old("../data/012318/run_T7_012318_wt")
+
+bar_sim <- filter(sim_data_wt, time %in% c(300, 400, 450, 500, 1100), !is.na(gene_number))
+
+bar_sim_plot <- ggplot(bar_sim, aes(x=factor(gene_number, unique(mixedsort(gene_number))), y=transcripts)) + 
+  geom_bar(stat="identity") + 
+  facet_wrap(~time, ncol = 1, scales = "free_y")
+
+bar_sim_plot
+
+sim_plot_9 <- ggplot(bar_sim %>% filter(time == 1100, gene_number != "10B"), 
+                     aes(x=factor(gene_number, unique(mixedsort(gene_number))), y=transcripts, fill=factor(class))) + 
+  geom_bar(stat="identity") + 
+  theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), legend.position = c(0.0, 0.8)) +
+  scale_fill_discrete("class") +
+  xlab("gene") + ylab("simulated transcripts") + scale_y_continuous(expand = c(0,0)) 
+
+sim_plot_9
+
+sim_line_plot <- ggplot(sim_data_wt, aes(x = time, y = proteins, group = gene_number, color = factor(class))) + 
+  scale_color_discrete("class") + geom_line() +
+  theme(panel.grid.major.y = element_line(colour = "gray80"))
+
+sim_line_plot
+
+save_plot("./figures/T7_sim_line_plot.pdf", sim_line_plot, base_width = 7, base_height = 4)
+
+sim_data_term <- load_simulation("../data/012418/run_T7_012418_wt")
+
+sim_plot_term <- ggplot(sim_data_term %>% filter(time == 410), aes(x=factor(gene_number, unique(mixedsort(gene_number))), y=transcripts, fill=factor(class))) + 
+  geom_bar(stat="identity") + 
+  theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), legend.position = c(0.0, 0.8)) +
+  scale_fill_discrete("class") +
+  xlab("gene") + ylab("simulated transcripts") + scale_y_continuous(expand = c(0,0))
+
+```
+
+### Simulation and real transcripts side-by-side
+
+```{r}
+
+sim_exp_9_plot <- plot_grid(rna_9_dist, sim_plot_9, align = 'v', ncol = 1)
+
+save_plot("./figures/T7_rna_exp_sim_no_labels.pdf", sim_exp_9_plot, base_width = 8, base_height = 6)
+```
+
+### Simulations with degradation
+
+```{r}
+labels <- read_csv("../output/id_map.csv")
+load_sim <- function(path) {
+  read_tsv(path) %>% group_by(time) %>% nest() %>%
+    mutate(data = purrr::map(data, ~left_join(labels, ., by = c("pysinthe" = "species")))) %>%
+    unnest() %>%
+    mutate(time = round(time)) %>%
+    mutate(count = if_else(is.na(count), 0.0, as.numeric(count)),
+           transcript = if_else(is.na(transcript), 0.0, as.numeric(transcript)))
+}
+
+data <- load_sim("../data/050718/degrade_test3_counts.tsv")
+
+bar_sim <- filter(data, !gene_number %in% c("10B"), !is.na(gene_number))
+
+gene_labels <- mixedsort((bar_sim %>% filter(time == 1500))$gene_number)
+
+bar_sim_plot <- ggplot(bar_sim %>% filter(time == 1500), aes(x=factor(gene_number, unique(mixedsort(gene_number))), y=transcript, fill=factor(class))) +
+  geom_bar(stat = "identity") +
+  geom_vline(xintercept = (match(c("3.8", "4.7", "6.5", "18.5"), gene_labels)) - 0.5, linetype="dashed", color = "gray40") +
+  theme(legend.position = "none") +
+  labs(x="gene", y="simulated transcripts") +
+  theme(axis.text.x=element_blank(), axis.ticks.x=element_blank()) +
+  scale_y_continuous(expand = c(0,0)) 
+
+rna_9_dist_rnase <- rna_9_dist + 
+  geom_vline(xintercept = (match(c("3.8", "4.7", "6.5", "18.5"), gene_labels)) - 0.5, linetype="dashed", color = "gray40")
+
+sim_exp_degrad_9_plot <- plot_grid(rna_9_dist_rnase, bar_sim_plot, align = 'v', ncol = 1)
+
+save_plot("./figures/T7_rna_exp_sim_degrade_no_labels.pdf", sim_exp_degrad_9_plot, base_width = 8, base_height = 6)
+
+bar_sim_zoom <- bar_sim_plot + coord_cartesian(ylim = c(0, 400))
+
+save_plot("./figures/T7_rna_exp_sim_degrade_zoom.pdf", bar_sim_zoom, base_width = 8, base_height = 3)
+
+```
+
+### Proteomics and rna correlations
+
+```{r}
+
+load_proteomics <- function() {
+  labels <- read_csv("../output/id_map.csv") %>% mutate(accession = trimws(accession))
+  
+  proteomics <- read_csv("../output/proteomics.csv")
+
+  proteomics <- proteomics %>%
+    mutate(strain = str_replace_all(strain, c("11-44" = "atten", "11-42" = "evol", "11-46" = "wt"))) %>%
+    mutate(protein_desc = trimws(protein_desc))
+  
+  # Join in standard T7 gene labels.
+  proteomics <- filter(proteomics, org == "phage") %>% 
+    group_by(strain, time, b_rep) %>%
+    # Join by each group seperately so that missing phage proteins are filled in with NAs
+    do(full_join(., labels, by = c("protein_desc" = "accession")) %>% fill(strain, time, b_rep)) %>%
+    mutate(area_norm = ifelse(is.na(area_norm), 0, area_norm),
+           gene_number = str_replace_all(gene_number, c("10A" = "10"))) # Fill in missing proteins (NAs) with 0
+  
+  mean_exp <- proteomics %>%
+    group_by(time, strain, gene_number, class, protein_desc)
+  
+  mean_exp
+}
+
+proteomics <- load_proteomics() %>% filter(strain == "wt", area_norm != 0) %>%
+  group_by(gene_number, class, time) %>% summarize(area_norm = mean(area_norm)) %>%
+  ungroup() %>% group_by(class, time) %>% mutate(area_total = sum(area_norm)) %>% 
+  group_by(gene_number, class, time) %>% mutate(area_norm = area_norm/area_total)
+phage_rna <- all_reps %>% group_by(time, gene_number) %>% summarize(avg_tpm = mean(tpm)/1000000) %>% filter(avg_tpm != 0)
+proteomics_rna <- inner_join(proteomics, phage_rna, by = c("gene_number" = "gene_number", "time" = "time"))
+
+exp_cor <- ggplot(proteomics_rna, aes(x = log10(avg_tpm), y = log10(area_norm), color = factor(class))) + 
+  geom_point() + 
+  xlab("log10(transcript abundance)") + 
+  ylab("log10(protein abundance)") + 
+  scale_color_discrete(name = "class") + facet_wrap(~time, scales="free")
+
+simulated_cor <- ggplot(sim_final %>% filter(transcripts > 20, proteins > 20), aes(x = log10(transcripts), y = log10(proteins), color = factor(class))) + 
+  geom_point() +
+  xlab("log10(simulated transcript abundance)") + 
+  ylab("log10(simulated protein abundance)") + 
+  scale_color_discrete(name = "class")
+
+
+scatter_plots <- plot_grid(exp_cor, simulated_cor, rows = 1)
+
+save_plot("./figures/scatter_plots.pdf", scatter_plots, base_aspect_ratio = 2.5)
+
+exp_prot_final <- proteomics %>% 
+  filter(!is.na(gene_number)) %>% 
+  ungroup() %>% 
+  mutate(gene_number = str_replace(gene_number, "10", "10A"))
+
+prot_genes <- unique(exp_prot_final$gene_number)
+
+sim_plot_prot <-ggplot(sim_final %>% filter(gene_number %in% prot_genes), 
+                       aes(x=factor(gene_number, unique(mixedsort(gene_number))), y=proteins, fill= factor(class))) + 
+  geom_bar(stat="identity") + xlab("gene") + ylab("simulated protein abundance") +
+  theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), legend.position = c(0.0, 0.85)) +
+  scale_fill_discrete(name="class") + scale_y_continuous(expand = c(0, 0))
+
+exp_plot_prot <- ggplot(exp_prot_final, 
+                        aes(x = factor(gene_number, levels=unique(mixedsort(gene_number))), y = area_norm, fill = factor(class))) + 
+  geom_bar(stat="summary", fun.y = "mean") +
+  geom_point(alpha=0.5) +
+  theme(axis.text.x=element_blank(), axis.title.x=element_blank(), axis.ticks.x=element_blank(), legend.position = c(0.0, 0.85)) +
+  scale_color_discrete("replicate") +
+  ylab("relative protein abundance") +
+  scale_fill_discrete(name="class") + scale_y_continuous(expand = c(0, 0))
+
+sim_exp_plot_prot <- plot_grid(exp_plot_prot, sim_plot_prot, cols = 1, align = "v")
+
+save_plot("T7_prot_exp_sim_no_labels.pdf", sim_exp_plot_prot, base_width = 8, base_height = 6)
+```
