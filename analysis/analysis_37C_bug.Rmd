@@ -10,7 +10,7 @@ library(ggplot2)
 library(gtools)
 library(stringr)
 library(cowplot)
-SAVE_FIGS <- TRUE
+SAVE_FIGS <- FALSE
 ```
 
 ## Tools
@@ -70,7 +70,7 @@ rna_5_dist <- ggplot(all_reps %>% filter(time == 5, !is.na(class), gene_number !
 
 rna_5_dist
 
-rna_5_9_exp <- plot_grid(rna_5_dist, rna_9_dist, ncol = 1, align='v', labels="AUTO")
+rna_5_9_exp <- plot_grid(rna_5_dist, rna_9_dist, ncol = 1, align='v')
 
 if (SAVE_FIGS) {
   save_plot("./figures/rna_5_9_exp.pdf", rna_5_9_exp, base_width = 8, base_height = 6)
@@ -174,7 +174,7 @@ bar_sim_plot <- ggplot(bar_sim %>% filter(time == 1500), aes(x=factor(gene_numbe
   theme(legend.position = "none") +
   labs(x="gene", y="simulated transcripts") +
   scale_y_continuous(expand = c(0,0)) + 
-  scale_x_discrete(breaks = gene_labels[c(rep(FALSE, 5), rep(c(TRUE, FALSE, FALSE), 9), rep(FALSE, length(gene_labels)-32))])
+  scale_x_discrete(breaks = gene_labels[c(T, rep(F, 2))])
 
 rna_9_dist_rnase <- rna_9_dist + 
   geom_vline(xintercept = (match(c("3.8", "4.7", "6.5", "18.5"), gene_labels)) - 0.5, linetype="dashed", color = "gray40")
@@ -228,13 +228,11 @@ proteomics_rna <- inner_join(proteomics, phage_rna, by = c("gene_number" = "gene
 
 time_labels <- c('5' = '5 minutes', '9' = '9 minutes')
 
-exp_cor <- ggplot(proteomics_rna %>% filter(time != 1), aes(x = log10(avg_tpm), y = log10(area_norm), color = factor(class), shape = factor(class))) + 
+exp_cor <- ggplot(proteomics_rna %>% filter(time != 1), aes(x = log10(avg_tpm), y = log10(area_norm), color = factor(class))) + 
   geom_point() + 
-  xlab("log10(relative transcript abundance)") + 
-  ylab("log10(relative protein abundance)") + 
-  scale_color_discrete(name = "class") + 
-  scale_shape_discrete(name = "class") +
-  facet_wrap(~time, scales = "free", labeller = as_labeller(time_labels)) +
+  xlab("log10(transcript abundance)") + 
+  ylab("log10(protein abundance)") + 
+  scale_color_discrete(name = "class") + facet_wrap(~time, scales = "free", labeller = as_labeller(time_labels)) +
   stat_ellipse() + 
   scale_x_continuous(limits = c(-3.4, -0.8)) + 
   scale_y_continuous(limits = c(-3.7, -0.4)) + theme(legend.position = c(0.92,0.2))

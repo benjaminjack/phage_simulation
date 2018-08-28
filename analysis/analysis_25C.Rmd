@@ -32,7 +32,8 @@ import_counts <- function(file_name) {
          rpk = count/lengthkb,
          scale_factor = sum(rpk)/1000000,
          tpm = rpk/scale_factor) %>%
-    left_join(labels, by = c("gene_number" = "gene_number"))
+    left_join(labels, by = c("gene_number" = "gene_number")) %>%
+    mutate(gene_number = str_replace_all(gene_number, c("10A" = "10")))
 } 
 
 rep1_5 <- import_counts("../data/rna_seq/mapped_to_T7_ecoli/PA196_T7W-R1-05m_S27_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 1, time = 5)
@@ -52,7 +53,7 @@ rep2_25 <- import_counts("../data/rna_seq/mapped_to_T7_ecoli/PA214_T7W-R2-25m_S3
 rep3_25 <- import_counts("../data/rna_seq/mapped_to_T7_ecoli/PA224_T7W-R3-25m_S41_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 3, time = 25)
 
 
-all_reps <- bind_rows(rep1_5, rep3_5, rep1_10, rep2_10, rep3_10, rep1_15, rep2_15, rep3_15, rep1_20, rep2_20, rep3_20, rep1_25, rep2_25, rep3_25) %>% mutate(strain = "wildtype")
+all_reps_25 <- bind_rows(rep1_5, rep3_5, rep1_10, rep2_10, rep3_10, rep1_15, rep2_15, rep3_15, rep1_20, rep2_20, rep3_20, rep1_25, rep2_25, rep3_25) %>% mutate(strain = "wildtype") %>% filter(time == 25)
 
 ggplot(all_reps, aes(x = factor(gene_number, levels=unique(mixedsort(gene_number))), y = tpm)) + 
   geom_bar(stat="summary", fun.y = "mean", aes(fill = factor(class))) +
@@ -66,6 +67,58 @@ plot_5 <- ggplot(rep1 %>% filter(time == 5, !is.na(class)), aes(x = factor(gene_
   scale_fill_discrete("class") +
   xlab("gene") + ylab("transcripts per million") + scale_y_continuous(expand = c(0,0))
 # save_plot("../../figures/transcripts_5min.pdf", plot_5, base_width = 12, base_height = 5)
+
+
+import_counts_37 <- function(file_name) {
+  labels <- read_csv("../output/id_map.csv") %>% mutate(accession = trimws(accession))
+  read_tsv(file_name, col_names=FALSE) %>%
+  filter(X3 == "CDS") %>%
+  select("start" = X4, "end" = X5, "gene" = X9, "count" = X10) %>%
+  mutate(gene_number = str_match(gene, "Note=(possible )?gene ([0-9\\.\\-AB]*)")[,3],
+         lengthkb = (end - start)/1000,
+         rpk = count/lengthkb,
+         scale_factor = sum(rpk)/1000000,
+         tpm = rpk/scale_factor) %>%
+    left_join(labels, by = c("gene_number" = "gene_number")) %>%
+    mutate(gene_number = str_replace_all(gene_number, c("10A" = "10")))
+} 
+
+rep1 <- import_counts_37("../output/PA36_recounted_q10_9min_rep1.tsv") %>% mutate(b_rep = 1, time = 9)
+rep2 <- import_counts_37("../output/PA45_recounted_q10_9min_rep2.tsv") %>% mutate(b_rep = 2, time = 9)
+rep3 <- import_counts_37("../output/PA54_recounted_q10_9min_rep3.tsv") %>% mutate(b_rep = 3, time = 9)
+
+rep1_5 <- import_counts_37("../output/PA35_recounted_q10_5min_rep1.tsv") %>% mutate(b_rep = 1, time = 5)
+rep2_5 <- import_counts_37("../output/PA44_recounted_q10_5min_rep2.tsv") %>% mutate(b_rep = 2, time = 5)
+rep3_5 <- import_counts_37("../output/PA53_recounted_q10_5min_rep3.tsv") %>% mutate(b_rep = 3, time = 5)
+
+rep1_1 <- import_counts_37("../output/PA34_recounted_q10_1min_rep1.tsv") %>% mutate(b_rep = 1, time = 1)
+rep2_1 <- import_counts_37("../output/PA43_recounted_q10_1min_rep2.tsv") %>% mutate(b_rep = 2, time = 1)
+rep3_1 <- import_counts_37("../output/PA52_recounted_q10_1min_rep3.tsv") %>% mutate(b_rep = 3, time = 1)
+
+
+all_reps_37 <- bind_rows(rep1, rep2, rep3, rep1_5, rep2_5, rep3_5, rep1_1, rep2_1, rep3_1) %>% 
+  mutate(strain = "wildtype") %>% 
+  filter(!is.na(class)) %>% filter(time == 9)
+
+all_reps_25 <- all_reps_25 %>% 
+  group_by(class, gene_number) %>% 
+  summarize(avg_tpm_25 = mean(tpm)/1000000) %>% 
+  select(class, gene_number, avg_tpm_25)
+all_reps_37 <- all_reps_37 %>% 
+  group_by(class, gene_number) %>% 
+  summarize(avg_tpm_37 = mean(tpm)/1000000) %>%
+  select(class, gene_number, avg_tpm_37)
+
+all_reps <- all_reps_25 %>% full_join(all_reps_37) %>% filter(gene_number != "0.4", !is.na(class))
+
+temp_scatter <- ggplot(all_reps, aes(x=log10(avg_tpm_25), y=log10(avg_tpm_37), color=factor(class))) + 
+  geom_abline(intercept=0, slope=1, color="gray80") +
+  geom_point() + 
+  scale_color_discrete("class") +
+  xlab("log10(rel. transcript abundance), 25C") +
+  ylab("log10(rel. transcript abundance), 37C")
+
+save_plot("figures/scatter_temps.pdf", temp_scatter, base_aspect_ratio = 1.3)
 
 # write_csv(all_reps, "../../data/transcripts_remapped.csv")
 ```
