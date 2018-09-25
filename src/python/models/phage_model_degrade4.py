@@ -81,11 +81,11 @@ def get_promoter_interactions(name):
         return {'rnapol-1': PHI10_BIND * 0.01,
                 'rnapol-3.5': PHI10_BIND * 0.01 * 0.5}
     elif name in phi3_8:
-        return {'rnapol-1': PHI10_BIND * 0.01,
-                'rnapol-3.5': PHI10_BIND * 0.01 * 0.5}
+        return {'rnapol-1': PHI10_BIND * 0.005,
+                'rnapol-3.5': PHI10_BIND * 0.005 * 0.5}
     elif name in phi6_5:
-        return {'rnapol-1': PHI10_BIND * 0.05,
-                'rnapol-3.5': PHI10_BIND * 0.05}
+        return {'rnapol-1': PHI10_BIND * 0.1,
+                'rnapol-3.5': PHI10_BIND * 0.1}
     elif name in phi9:
         return {'rnapol-1': PHI10_BIND * 0.2,
                 'rnapol-3.5': PHI10_BIND * 0.2}
@@ -148,7 +148,7 @@ def normalize_weights(weights):
 
 
 def main():
-    sim = pt.Simulation(cell_volume=CELL_VOLUME)
+    sim = pt.Model(cell_volume=CELL_VOLUME)
 
     # Download T7 wild-type genbank records
     Entrez.email = "benjamin.r.jack@gmail.com"
@@ -160,7 +160,10 @@ def main():
     record = SeqIO.read(handle, "genbank")
     genome_length = len(record.seq)
     phage = pt.Genome(name="phage", length=genome_length,
-                      transcript_degradation_rate=1e-3)
+                      transcript_degradation_rate=1e-2,
+                      transcript_degradation_rate_ext=1e-5,
+                      rnase_speed=20,
+                      rnase_footprint=10)
 
     #phage = pt.Genome(name="phage", length=genome_length)
 
@@ -219,7 +222,7 @@ def main():
     sim.add_polymerase("ecolipol-2", 35, 45, 0)
     sim.add_polymerase("ecolipol-2-p", 35, 45, 0)
 
-    sim.add_polymerase("ribosome", 30, 30, 0)
+    sim.add_ribosome(30, 30, 0)
 
     sim.add_species("bound_ribosome", 10000)
 
@@ -228,10 +231,11 @@ def main():
     sim.add_species("ecoli_genome", 0)
     sim.add_species("ecoli_transcript", 0)
 
-    sim.add_reaction(1e6, ["ecoli_transcript", "ribosome"], ["bound_ribosome"])
+    sim.add_reaction(1e6, ["ecoli_transcript", "__ribosome"], [
+                     "bound_ribosome"])
 
     sim.add_reaction(0.04, ["bound_ribosome"], [
-                     "ribosome", "ecoli_transcript"])
+                     "__ribosome", "ecoli_transcript"])
 
     sim.add_reaction(0.001925, ["ecoli_transcript"], ["degraded_transcript"])
 
@@ -268,7 +272,8 @@ def main():
 
     # sim.run(stop_time=1500, time_step=5, output_prefix="test")
 
-    sim.run(stop_time=1500, time_step=5, output_prefix="degrade_test4")
+    sim.simulate(time_limit=1500, time_step=5,
+                 output="phage_rnase_cleavage_counts.tsv")
 
 
 if __name__ == "__main__":

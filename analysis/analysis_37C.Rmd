@@ -10,7 +10,7 @@ library(ggplot2)
 library(gtools)
 library(stringr)
 library(cowplot)
-SAVE_FIGS <- TRUE
+SAVE_FIGS <- FALSE
 ```
 
 ## Tools
@@ -23,54 +23,32 @@ In the plot below, reads are counted towards all genes that they map to if a rea
 
 ```{r, echo=FALSE, fig.width = 10, fig.height = 18, fig.width = 12}
 
-import_counts <- function(file_name) {
-  labels <- read_csv("../output/id_map.csv") %>% mutate(accession = trimws(accession))
-  read_tsv(file_name, col_names=FALSE) %>%
-  filter(X3 == "CDS") %>%
-  select("start" = X4, "end" = X5, "gene" = X9, "count" = X10) %>%
-  mutate(gene_number = str_match(gene, "Note=(possible )?gene ([0-9\\.\\-AB]*)")[,3],
-         lengthkb = (end - start)/1000,
-         rpk = count/lengthkb,
-         scale_factor = sum(rpk)/1000000,
-         tpm = rpk/scale_factor) %>%
-    left_join(labels, by = c("gene_number" = "gene_number")) %>%
-    mutate(gene_number = str_replace_all(gene_number, c("10A" = "10")))
-} 
+transcripts <- read_csv("../output/transcripts_37C.csv") %>% 
+  filter(!is.na(class), gene_number != "10B")
 
-rep1 <- import_counts("../output/PA36_recounted_q10_9min_rep1.tsv") %>% mutate(b_rep = 1, time = 9)
-rep2 <- import_counts("../output/PA45_recounted_q10_9min_rep2.tsv") %>% mutate(b_rep = 2, time = 9)
-rep3 <- import_counts("../output/PA54_recounted_q10_9min_rep3.tsv") %>% mutate(b_rep = 3, time = 9)
+gene_labels <- unique(mixedsort(transcripts$gene_number))
 
-rep1_5 <- import_counts("../output/PA35_recounted_q10_5min_rep1.tsv") %>% mutate(b_rep = 1, time = 5)
-rep2_5 <- import_counts("../output/PA44_recounted_q10_5min_rep2.tsv") %>% mutate(b_rep = 2, time = 5)
-rep3_5 <- import_counts("../output/PA53_recounted_q10_5min_rep3.tsv") %>% mutate(b_rep = 3, time = 5)
-
-rep1_1 <- import_counts("../output/PA34_recounted_q10_1min_rep1.tsv") %>% mutate(b_rep = 1, time = 1)
-rep2_1 <- import_counts("../output/PA43_recounted_q10_1min_rep2.tsv") %>% mutate(b_rep = 2, time = 1)
-rep3_1 <- import_counts("../output/PA52_recounted_q10_1min_rep3.tsv") %>% mutate(b_rep = 3, time = 1)
-
-
-all_reps <- bind_rows(rep1, rep2, rep3, rep1_5, rep2_5, rep3_5, rep1_1, rep2_1, rep3_1) %>% 
-  mutate(strain = "wildtype") %>% 
-  filter(!is.na(class))
-
-rna_9_dist <- ggplot(all_reps %>% filter(time == 9, !is.na(class), gene_number != "10B"), aes(x = factor(gene_number, levels=unique(mixedsort(gene_number))), y = tpm)) + 
+rna_9_dist <- ggplot(transcripts %>% filter(time == 9), aes(x = factor(gene_number, levels=gene_labels), y = tpm)) + 
   geom_bar(stat="summary", fun.y = "mean", aes(fill = factor(class))) +
   geom_point(alpha = 0.5) + 
   theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), legend.position = c(0.0, 0.8)) +
   scale_fill_discrete("class") +
+  geom_vline(xintercept = (match(c("3.8", "4.7", "6.5", "18.5"), gene_labels)) - 0.5, linetype="dashed", color = "gray40") +
+  geom_vline(xintercept = (match(c("11"), gene_labels)) - 0.5) +
   xlab("gene") + ylab("transcripts per million") + scale_y_continuous(expand = c(0,0))
 
-rna_5_dist <- ggplot(all_reps %>% filter(time == 5, !is.na(class), gene_number != "10B"), aes(x = factor(gene_number, levels=unique(mixedsort(gene_number))), y = tpm)) + 
+rna_5_dist <- ggplot(transcripts %>% filter(time == 5), aes(x = factor(gene_number, levels=gene_labels), y = tpm)) + 
   geom_bar(stat="summary", fun.y = "mean", aes(fill = factor(class))) +
   geom_point(alpha = 0.5) + 
+  geom_vline(xintercept = (match(c("3.8", "4.7", "6.5", "18.5"), gene_labels)) - 0.5, linetype="dashed", color = "gray40") +
+  geom_vline(xintercept = (match(c("11"), gene_labels)) - 0.5) +
   theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), legend.position = c(0.0, 0.8)) +
   scale_fill_discrete("class") +
   xlab("gene") + ylab("transcripts per million") + scale_y_continuous(expand = c(0,0))
-
-rna_5_dist
 
 rna_5_9_exp <- plot_grid(rna_5_dist, rna_9_dist, ncol = 1, align='v', labels="AUTO")
+
+rna_5_9_exp
 
 if (SAVE_FIGS) {
   save_plot("./figures/rna_5_9_exp.pdf", rna_5_9_exp, base_width = 8, base_height = 6)
@@ -158,37 +136,38 @@ load_sim <- function(path) {
     mutate(data = purrr::map(data, ~left_join(labels, ., by = c("pysinthe" = "species")))) %>%
     unnest() %>%
     mutate(time = round(time)) %>%
-    mutate(count = if_else(is.na(count), 0.0, as.numeric(count)),
-           transcript = if_else(is.na(transcript), 0.0, as.numeric(transcript)))
+    mutate(protein = if_else(is.na(protein), 0, protein),
+           transcript = if_else(is.na(transcript), 0, transcript))
 }
 
-data <- load_sim("../data/050718/degrade_test3_counts.tsv")
+data <- load_sim("../src/python/models/phage_rnase_cleavage_counts.tsv")
 
 bar_sim <- filter(data, !gene_number %in% c("10B"), !is.na(gene_number))
 
-gene_labels <- mixedsort((bar_sim %>% filter(time == 1500))$gene_number)
+gene_labels <- mixedsort((bar_sim %>% filter(time == 1000))$gene_number)
 
-bar_sim_plot <- ggplot(bar_sim %>% filter(time == 1500), aes(x=factor(gene_number, unique(mixedsort(gene_number))), y=transcript, fill=factor(class))) +
+bar_sim_plot <- ggplot(bar_sim %>% filter(time == 1000), aes(x=factor(gene_number, unique(mixedsort(gene_number))), y=transcript, fill=factor(class))) +
   geom_bar(stat = "identity") +
   geom_vline(xintercept = (match(c("3.8", "4.7", "6.5", "18.5"), gene_labels)) - 0.5, linetype="dashed", color = "gray40") +
+  geom_vline(xintercept = (match(c("11"), gene_labels)) - 0.5) +
   theme(legend.position = "none") +
   labs(x="gene", y="simulated transcripts") +
-  scale_y_continuous(expand = c(0,0)) + 
-  scale_x_discrete(breaks = gene_labels[c(rep(FALSE, 5), rep(c(TRUE, FALSE, FALSE), 9), rep(FALSE, length(gene_labels)-32))])
+  theme(axis.text.x=element_blank(), axis.ticks.x=element_blank()) +
+  scale_y_continuous(expand = c(0,0))
 
 rna_9_dist_rnase <- rna_9_dist + 
   geom_vline(xintercept = (match(c("3.8", "4.7", "6.5", "18.5"), gene_labels)) - 0.5, linetype="dashed", color = "gray40")
 
-sim_exp_degrad_9_plot <- plot_grid(rna_9_dist_rnase, bar_sim_plot, align = 'v', ncol = 1)
+bar_sim_zoom <- bar_sim_plot +  
+  scale_x_discrete(breaks = gene_labels[c(rep(FALSE, 5), rep(c(TRUE, FALSE, FALSE), 9), rep(FALSE, length(gene_labels)-32))]) + 
+  coord_cartesian(ylim = c(0, 400), xlim = c(5, 31.9))
+
+sim_exp_degrad_9_plot <- plot_grid(rna_9_dist_rnase, bar_sim_plot, bar_sim_zoom, align = 'v', ncol = 1, labels = "AUTO")
+
+
 
 if (SAVE_FIGS) {
-  save_plot("./figures/T7_rna_exp_sim_degrade_no_labels.pdf", sim_exp_degrad_9_plot, base_width = 8, base_height = 6)
-}
-
-bar_sim_zoom <- bar_sim_plot + coord_cartesian(ylim = c(0, 400), xlim = c(5, 31.9))
-
-if (SAVE_FIGS) {
-  save_plot("./figures/T7_rna_exp_sim_degrade_zoom.pdf", bar_sim_zoom, base_width = 6, base_height = 3)
+  save_plot("./figures/T7_rna_exp_sim_degrade_no_labels.pdf", sim_exp_degrad_9_plot, base_width = 8, base_height = 9)
 }
 ```
 
@@ -228,7 +207,15 @@ proteomics_rna <- inner_join(proteomics, phage_rna, by = c("gene_number" = "gene
 
 time_labels <- c('5' = '5 minutes', '9' = '9 minutes')
 
-exp_cor <- ggplot(proteomics_rna %>% filter(time != 1), aes(x = log10(avg_tpm), y = log10(area_norm), color = factor(class), shape = factor(class))) + 
+prot_rna_relabel <- proteomics_rna %>%
+  mutate(new_class = case_when(
+    class == 2 && gene_number %in% c(1.2, 1.3, 1.6, 1.7, 1.8, 2, 2.5, 2.8, 3, 3.5, 3.8) ~ "2A",
+    class == 3 ~ "3",
+    class == 1 ~ "1",
+    TRUE ~ "2B")
+  )
+
+exp_cor <- ggplot(prot_rna_relabel %>% filter(time != 1), aes(x = log10(avg_tpm), y = log10(area_norm), color = factor(new_class), shape = factor(new_class))) + 
   geom_point() + 
   xlab("log10(relative transcript abundance)") + 
   ylab("log10(relative protein abundance)") + 
@@ -246,7 +233,21 @@ proteomics_rna %>%
   group_by(time, class) %>%
   summarize(coeff = cor.test(log10(area_norm), log10(avg_tpm))$estimate, p.value = cor.test(log10(area_norm), log10(avg_tpm))$p.value)
 
-simulated_cor <- ggplot(sim_final %>% filter(transcripts > 20, proteins > 20), aes(x = log10(transcripts), y = log10(proteins), color = factor(class))) + 
+bar_sim_relabel <- bar_sim %>%
+  mutate(new_class = case_when(
+    class == 2 && gene_number %in% c('1.2', '1.3', '1.4', '1.5', '1.6', '1.7', '1.8', '2', '2.5', '2.8', '3', '3.5', '3.8') ~ "2A",
+    class == 3 ~ "3",
+    class == 1 ~ "1",
+    TRUE ~ "2B")
+  )
+
+simulated_cor <- ggplot(bar_sim_relabel %>% filter(transcript > 10, protein > 10, time == 500), aes(x = log10(transcript), y = log10(protein), color = factor(new_class))) + 
+  geom_point() +
+  xlab("log10(simulated transcript abundance)") + 
+  ylab("log10(simulated protein abundance)") + 
+  scale_color_discrete(name = "class")
+
+simulated_cor_1000 <- ggplot(bar_sim_relabel %>% filter(transcript > 10, protein > 10, time == 1000), aes(x = log10(transcript), y = log10(protein), color = factor(new_class))) + 
   geom_point() +
   xlab("log10(simulated transcript abundance)") + 
   ylab("log10(simulated protein abundance)") + 
