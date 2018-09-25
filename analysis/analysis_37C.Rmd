@@ -35,7 +35,8 @@ rna_9_dist <- ggplot(transcripts %>% filter(time == 9), aes(x = factor(gene_numb
   scale_fill_discrete("class") +
   geom_vline(xintercept = (match(c("3.8", "4.7", "6.5", "18.5"), gene_labels)) - 0.5, linetype="dashed", color = "gray40") +
   geom_vline(xintercept = (match(c("11"), gene_labels)) - 0.5) +
-  xlab("gene") + ylab("transcripts per million") + scale_y_continuous(expand = c(0,0))
+  xlab("gene") + ylab("transcripts per million") + scale_y_continuous(expand = c(0,0)) +
+  coord_cartesian(clip = "off")
 
 rna_5_dist <- ggplot(transcripts %>% filter(time == 5), aes(x = factor(gene_number, levels=gene_labels), y = tpm)) + 
   geom_bar(stat="summary", fun.y = "mean", aes(fill = factor(class))) +
@@ -44,7 +45,8 @@ rna_5_dist <- ggplot(transcripts %>% filter(time == 5), aes(x = factor(gene_numb
   geom_vline(xintercept = (match(c("11"), gene_labels)) - 0.5) +
   theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), legend.position = c(0.0, 0.8)) +
   scale_fill_discrete("class") +
-  xlab("gene") + ylab("transcripts per million") + scale_y_continuous(expand = c(0,0))
+  xlab("gene") + ylab("transcripts per million") + scale_y_continuous(expand = c(0,0)) +
+  coord_cartesian(clip = "off")
 
 rna_5_9_exp <- plot_grid(rna_5_dist, rna_9_dist, ncol = 1, align='v', labels="AUTO")
 
@@ -52,6 +54,44 @@ rna_5_9_exp
 
 if (SAVE_FIGS) {
   save_plot("./figures/rna_5_9_exp.pdf", rna_5_9_exp, base_width = 8, base_height = 6)
+}
+
+```
+
+### Individually-mapped read counts drop-off around RNAse cleavage sites and terminators
+
+```{r}
+
+coverage <- read_tsv("../data/rna_seq/37C/coverage/PA54_coverage_q60.tsv", col_names = c("genome", "position", "coverage"))
+full_map <- ggplot(coverage, aes(x = position, y = coverage)) + 
+  geom_bar(stat="identity", fill="grey60") + 
+  geom_vline(xintercept = 24162) + xlim(0,40000) +
+  scale_y_continuous(expand = c(0,0))
+
+# rnase_1 <- ggplot(coverage, aes(x = position, y = coverage)) + geom_bar(stat="identity") + geom_vline(xintercept = 3138) + xlim(2000,4000)
+# rnase_1_1 <- ggplot(coverage, aes(x = position, y = coverage)) + geom_bar(stat="identity") + geom_vline(xintercept = 5887) + xlim(5500,6500)
+# rnase_1_3 <- ggplot(coverage, aes(x = position, y = coverage)) + geom_bar(stat="identity") + geom_vline(xintercept = 6448) + xlim(6000,7000)
+# rnase_4_7 <- ggplot(coverage, aes(x = position, y = coverage)) + geom_bar(stat="identity") + geom_vline(xintercept = 13892) + xlim(13700,14000)
+rnase_6_5 <- ggplot(coverage, aes(x = position, y = coverage)) + 
+  geom_bar(stat="identity", fill="grey60") + 
+  geom_vline(xintercept = 18545) +
+  geom_vline(xintercept = 18563, linetype="dashed") + 
+  xlim(18400,18900) +
+  scale_y_continuous(expand = c(0,0))
+# rnase_13 <- ggplot(coverage, aes(x = position, y = coverage)) + geom_bar(stat="identity") + geom_vline(xintercept = 27281) + xlim(27000,28000)
+# rnase_18_5 <- ggplot(coverage, aes(x = position, y = coverage)) + geom_bar(stat="identity") + geom_vline(xintercept = 36856) + xlim(36000,37000)
+rnase_3_8 <- ggplot(coverage, aes(x = position, y = coverage)) + 
+  geom_bar(stat="identity", fill="grey60") +
+  geom_vline(xintercept = 11180) + 
+  geom_vline(xintercept = 11203, linetype="dashed") + 
+  xlim(11050,11550) +
+  scale_y_continuous(expand = c(0,0)) +
+
+bottom_row <- plot_grid(rnase_3_8, rnase_6_5, labels = c("B", "C"))
+cov_map <- plot_grid(full_map, bottom_row, ncol = 1, labels = c("A", ""))
+
+if(SAVE_FIGS == TRUE) {
+  save_plot("./figures/cov_map.pdf", cov_map, base_width = 8, base_height = 5)
 }
 
 ```
