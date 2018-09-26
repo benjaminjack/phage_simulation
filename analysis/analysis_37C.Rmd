@@ -10,7 +10,7 @@ library(ggplot2)
 library(gtools)
 library(stringr)
 library(cowplot)
-SAVE_FIGS <- FALSE
+SAVE_FIGS <- TRUE
 ```
 
 ## Tools
@@ -63,23 +63,20 @@ if (SAVE_FIGS) {
 ```{r}
 
 coverage <- read_tsv("../data/rna_seq/37C/coverage/PA54_coverage_q60.tsv", col_names = c("genome", "position", "coverage"))
+
+# Coverage map of full genome
 full_map <- ggplot(coverage, aes(x = position, y = coverage)) + 
   geom_bar(stat="identity", fill="grey60") + 
   geom_vline(xintercept = 24162) + xlim(0,40000) +
   scale_y_continuous(expand = c(0,0))
-
-# rnase_1 <- ggplot(coverage, aes(x = position, y = coverage)) + geom_bar(stat="identity") + geom_vline(xintercept = 3138) + xlim(2000,4000)
-# rnase_1_1 <- ggplot(coverage, aes(x = position, y = coverage)) + geom_bar(stat="identity") + geom_vline(xintercept = 5887) + xlim(5500,6500)
-# rnase_1_3 <- ggplot(coverage, aes(x = position, y = coverage)) + geom_bar(stat="identity") + geom_vline(xintercept = 6448) + xlim(6000,7000)
-# rnase_4_7 <- ggplot(coverage, aes(x = position, y = coverage)) + geom_bar(stat="identity") + geom_vline(xintercept = 13892) + xlim(13700,14000)
+# Coverage map of region around phi 6.5
 rnase_6_5 <- ggplot(coverage, aes(x = position, y = coverage)) + 
   geom_bar(stat="identity", fill="grey60") + 
   geom_vline(xintercept = 18545) +
   geom_vline(xintercept = 18563, linetype="dashed") + 
   xlim(18400,18900) +
   scale_y_continuous(expand = c(0,0))
-# rnase_13 <- ggplot(coverage, aes(x = position, y = coverage)) + geom_bar(stat="identity") + geom_vline(xintercept = 27281) + xlim(27000,28000)
-# rnase_18_5 <- ggplot(coverage, aes(x = position, y = coverage)) + geom_bar(stat="identity") + geom_vline(xintercept = 36856) + xlim(36000,37000)
+# Coverage of map of region around phi 3.8
 rnase_3_8 <- ggplot(coverage, aes(x = position, y = coverage)) + 
   geom_bar(stat="identity", fill="grey60") +
   geom_vline(xintercept = 11180) + 
