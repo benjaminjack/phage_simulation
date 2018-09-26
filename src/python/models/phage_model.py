@@ -1,5 +1,5 @@
 from Bio import Entrez, SeqIO
-import pinetree.pinetree as pt
+import pinetree as pt
 
 CELL_VOLUME = 1.1e-15
 PHI10_BIND = 1.82e7  # Binding constant for phi10
@@ -42,6 +42,7 @@ OPT_CODONS_E_COLI = {'A': ['GCT'],
                      'T': ['ACT', 'ACC'],
                      'Y': ['TAC'],
                      'V': ['GTT', 'GTA']}
+
 
 def get_promoter_interactions(name):
     '''
@@ -144,8 +145,9 @@ def normalize_weights(weights):
     norm_weights = [1 if i == 0 else i for i in norm_weights]
     return norm_weights
 
+
 def main():
-    sim = pt.Simulation(run_time=1500, time_step=5, cell_volume=CELL_VOLUME)
+    sim = pt.Model(cell_volume=CELL_VOLUME)
 
     # Download T7 wild-type genbank records
     Entrez.email = "benjamin.r.jack@gmail.com"
@@ -209,7 +211,7 @@ def main():
     sim.add_polymerase("ecolipol-2", 35, 45, 0)
     sim.add_polymerase("ecolipol-2-p", 35, 45, 0)
 
-    sim.add_polymerase("ribosome", 30, 30, 0)
+    sim.add_ribosome(30, 30, 0)
 
     sim.add_species("bound_ribosome", 10000)
 
@@ -218,10 +220,11 @@ def main():
     sim.add_species("ecoli_genome", 0)
     sim.add_species("ecoli_transcript", 0)
 
-    sim.add_reaction(1e6, ["ecoli_transcript", "ribosome"], ["bound_ribosome"])
+    sim.add_reaction(1e6, ["ecoli_transcript", "__ribosome"], [
+                     "bound_ribosome"])
 
     sim.add_reaction(0.04, ["bound_ribosome"], [
-                     "ribosome", "ecoli_transcript"])
+                     "__ribosome", "ecoli_transcript"])
 
     sim.add_reaction(0.001925, ["ecoli_transcript"], ["degraded_transcript"])
 
@@ -254,9 +257,10 @@ def main():
 
     sim.add_reaction(3.5, ["rnapol-3.5"], ["lysozyme-3.5", "rnapol-1"])
 
-    pt.seed(34)
+    sim.seed(34)
 
-    sim.run("test")
+    sim.simulate(time_limit=1200, time_step=5,
+                 output="phage_wildtype.tsv")
 
 
 if __name__ == "__main__":
