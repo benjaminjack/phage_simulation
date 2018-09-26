@@ -18,8 +18,7 @@ import_counts <- function(file_name, replicate, time_point) {
            rpk = count/lengthkb,
            scale_factor = sum(rpk)/1000000,
            tpm = rpk/scale_factor) %>%  # Compute TPM
-    left_join(labels, by = c("gene_number" = "gene_number")) %>%  # Add labels
-    mutate(gene_number = str_replace_all(gene_number, c("10A" = "10")))  # We cant distinguish between 10A and 10B, so relabeld 10A -> 10
+    left_join(labels, by = c("gene_number" = "gene_number"))
 } 
 
 # Construct dataframe of input files, replicate numbers, and time points
