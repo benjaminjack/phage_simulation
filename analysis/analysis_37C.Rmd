@@ -154,15 +154,50 @@ if (SAVE_FIGS) {
 
 ```
 
-### Simulation and real transcripts side-by-side
+### Simulated promoter knockouts and codon deoptimization
 
 ```{r}
+wildtype_sim <- load_sim("../data/simulation/phage/phage_wildtype.tsv") %>% mutate(strain = "wildtype")
+recoded_sim <- load_sim("../data/simulation/phage/phage_model_recoded.tsv") %>% mutate(strain = "recoded")
+ko_sim <- load_sim("../data/simulation/phage/phage_model_knockout.tsv") %>% mutate(strain = "knockout")
+ko_recoded_sim <- load_sim("../data/simulation/phage/phage_model_knockout_recoded.tsv") %>% mutate(strain = "knockout_recoded")
 
-sim_exp_9_plot <- plot_grid(rna_9_dist, sim_plot_9, align = 'v', ncol = 1)
+sims <- bind_rows(wildtype_sim, recoded_sim, ko_sim, ko_recoded_sim)
 
-if (SAVE_FIGS) {
-  save_plot("./figures/T7_rna_exp_sim_no_labels.pdf", sim_exp_9_plot, base_width = 8, base_height = 6)
+sims <- sims %>%
+  filter(time == 1000, gene_number %in% c("7", "8", "9", "10A", "11", "12")) %>%
+  select(gene_number, protein, strain)
+
+bar_plot <- ggplot(sims, aes(x = factor(gene_number, gene_labels), y = protein, fill = gene_number)) +
+  geom_bar(stat = "identity") +
+  facet_wrap( . ~ strain) +
+  xlab("gene") + 
+  ylab("protein abundance")
+
+sims_relative <- sims %>% 
+  filter(gene_number == "10A") 
+
+strain_labels = c("wildtype" = "wildtype", 
+                  "recoded"=expression(paste("gene ", italic("10"), " recoded")), 
+                  "knockout"= expression(paste(Delta*phi, "10")), 
+                  "knockout_recoded"=expression(paste(Delta*phi, "10, gene ", italic("10"), " recoded")))
+strain_levels = c("knockout_recoded",
+                  "knockout",
+                  "recoded", 
+                  "wildtype")
+
+rel_plots <- ggplot(sims_relative, aes(x = factor(strain, levels=strain_levels), y = protein)) + 
+  geom_bar(stat = "identity") +
+  geom_hline(aes(yintercept = 1319)) +
+  scale_y_continuous(expand = c(0,0)) +
+  xlab("strain") + ylab(expression(paste("simulated gene ", italic("10"), " protein abundance"))) +
+  scale_x_discrete(labels=strain_labels) + coord_flip()
+
+if(SAVE_FIGS == TRUE) {
+  save_plot("./figures/recoded_knockout.pdf", rel_plots, base_aspect_ratio = 2)
 }
+  
+
 ```
 
 
@@ -170,34 +205,36 @@ if (SAVE_FIGS) {
 
 ```{r}
 
-load_proteomics <- function() {
-  labels <- read_csv("../output/id_map.csv") %>% mutate(accession = trimws(accession))
-  
-  proteomics <- read_csv("../output/proteomics.csv")
+proteomics <- read_csv("../output/proteomics.csv")
 
-  proteomics <- proteomics %>%
-    mutate(strain = str_replace_all(strain, c("11-44" = "atten", "11-42" = "evol", "11-46" = "wt"))) %>%
-    mutate(protein_desc = trimws(protein_desc))
+proteomics <- proteomics %>%
+  mutate(strain = str_replace_all(strain, c("11-44" = "atten", "11-42" = "evol", "11-46" = "wt"))) %>%
+  mutate(protein_desc = trimws(protein_desc))
   
-  # Join in standard T7 gene labels.
-  proteomics <- filter(proteomics, org == "phage") %>% 
-    group_by(strain, time, b_rep) %>%
-    # Join by each group seperately so that missing phage proteins are filled in with NAs
-    do(full_join(., labels, by = c("protein_desc" = "accession")) %>% fill(strain, time, b_rep)) %>%
-    mutate(area_norm = ifelse(is.na(area_norm), 0, area_norm),
-           gene_number = str_replace_all(gene_number, c("10A" = "10"))) # Fill in missing proteins (NAs) with 0
-  
-  mean_exp <- proteomics %>%
-    group_by(time, strain, gene_number, class, protein_desc)
-  
-  mean_exp
-}
+# Join in standard T7 gene labels.
+proteomics <- filter(proteomics, org == "phage") %>% 
+  group_by(strain, time, b_rep) %>%
+  # Join by each group seperately so that missing phage proteins are filled in with NAs
+  do(full_join(., labels, by = c("protein_desc" = "accession")) %>% fill(strain, time, b_rep)) %>%
+  mutate(area_norm = ifelse(is.na(area_norm), 0, area_norm),
+         gene_number = str_replace_all(gene_number, c("10A" = "10"))) # Fill in missing proteins (NAs) with 0
 
-proteomics <- load_proteomics() %>% filter(strain == "wt", area_norm != 0) %>%
-  group_by(gene_number, class, time) %>% summarize(area_norm = mean(area_norm)) %>%
-  ungroup() %>% group_by(time) %>% mutate(area_total = sum(area_norm)) %>% 
-  group_by(gene_number, class, time) %>% mutate(area_norm = area_norm/area_total)
-phage_rna <- all_reps %>% group_by(time, gene_number) %>% summarize(avg_tpm = mean(tpm)/1000000) %>% filter(avg_tpm != 0)
+proteomics <- proteomics %>%
+  group_by(time, strain, gene_number, class, protein_desc) %>% 
+  filter(strain == "wt", area_norm != 0) %>%
+  group_by(gene_number, class, time) %>%
+  summarize(area_norm = mean(area_norm)) %>%
+  ungroup() %>% 
+  group_by(time) %>% 
+  mutate(area_total = sum(area_norm)) %>% 
+  group_by(gene_number, class, time) %>% 
+  mutate(area_norm = area_norm/area_total)
+
+phage_rna <- all_reps %>% 
+  group_by(time, gene_number) %>% 
+  summarize(avg_tpm = mean(tpm)/1000000) %>% 
+  filter(avg_tpm != 0)
+
 proteomics_rna <- inner_join(proteomics, phage_rna, by = c("gene_number" = "gene_number", "time" = "time"))
 
 time_labels <- c('5' = '5 minutes', '9' = '9 minutes')
@@ -210,7 +247,8 @@ prot_rna_relabel <- proteomics_rna %>%
     TRUE ~ "2B")
   )
 
-exp_cor <- ggplot(prot_rna_relabel %>% filter(time != 1), aes(x = log10(avg_tpm), y = log10(area_norm), color = factor(new_class), shape = factor(new_class))) + 
+exp_cor_relabel <- ggplot(prot_rna_relabel %>% filter(time != 1), 
+                  aes(x = log10(avg_tpm), y = log10(area_norm), color = factor(new_class), shape = factor(new_class))) + 
   geom_point() + 
   xlab("log10(relative transcript abundance)") + 
   ylab("log10(relative protein abundance)") + 
@@ -221,8 +259,27 @@ exp_cor <- ggplot(prot_rna_relabel %>% filter(time != 1), aes(x = log10(avg_tpm)
   scale_x_continuous(limits = c(-3.4, -0.8)) + 
   scale_y_continuous(limits = c(-3.7, -0.4)) + theme(legend.position = c(0.92,0.2))
 
-save_plot("./figures/prot_rna_scatter.pdf", exp_cor, base_width = 7, base_height = 3.5)
+exp_cor <- ggplot(proteomics_rna %>% filter(time != 1), 
+                  aes(x = log10(avg_tpm), y = log10(area_norm), color = factor(class), shape = factor(class))) + 
+  geom_point() + 
+  xlab("log10(relative transcript abundance)") + 
+  ylab("log10(relative protein abundance)") + 
+  scale_color_discrete(name = "class") + 
+  scale_shape_discrete(name = "class") +
+  facet_wrap(~time, scales = "free", labeller = as_labeller(time_labels)) +
+  stat_ellipse() + 
+  scale_x_continuous(limits = c(-3.4, -0.8)) + 
+  scale_y_continuous(limits = c(-3.7, -0.4)) + theme(legend.position = c(0.92,0.2))
 
+if(SAVE_FIGS == TRUE) {
+  save_plot("./figures/prot_rna_scatter.pdf", exp_cor, base_width = 7, base_height = 3.5)
+}
+
+```
+
+## Simulated proteomics and RNA correlations
+
+```{r}
 proteomics_rna %>%
   filter(time != 1 && class != 1 && !is.na(class)) %>%
   group_by(time, class) %>%
@@ -251,7 +308,9 @@ simulated_cor_1000 <- ggplot(bar_sim_relabel %>% filter(transcript > 10, protein
 
 scatter_plots <- plot_grid(exp_cor, simulated_cor, rows = 1)
 
-save_plot("./figures/scatter_plots.pdf", scatter_plots, base_aspect_ratio = 2.5)
+if(SAVE_FIGS == TRUE) {
+  save_plot("./figures/scatter_plots.pdf", scatter_plots, base_aspect_ratio = 2.5)
+}
 
 exp_prot_final <- proteomics %>% 
   filter(!is.na(gene_number)) %>% 

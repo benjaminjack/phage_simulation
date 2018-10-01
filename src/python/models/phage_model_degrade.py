@@ -270,8 +270,6 @@ def main():
 
     sim.seed(32)
 
-    # sim.run(stop_time=1500, time_step=5, output_prefix="test")
-
     sim.simulate(time_limit=1200, time_step=5,
                  output="phage_rnase_cleavage_counts.tsv")
 
