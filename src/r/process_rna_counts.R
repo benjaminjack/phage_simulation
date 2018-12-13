@@ -21,19 +21,9 @@ import_counts <- function(file_name, replicate, time_point) {
     left_join(labels, by = c("gene_number" = "gene_number"))
 } 
 
-# Construct dataframe of input files, replicate numbers, and time points
-# file_inputs <- bind_rows(
-#   list(file = "../../data/rna_seq/37C/recounted/PA36_recounted_q10_9min_rep1.tsv", b_rep = 1, time = 9),
-#   list(file = "../../data/rna_seq/37C/recounted/PA45_recounted_q10_9min_rep2.tsv", b_rep = 2, time = 9),
-#   list(file = "../../data/rna_seq/37C/recounted/PA54_recounted_q10_9min_rep3.tsv", b_rep = 3, time = 9),
-#   list(file = "../../data/rna_seq/37C/recounted/PA35_recounted_q10_5min_rep1.tsv", b_rep = 1, time = 5),
-#   list(file = "../../data/rna_seq/37C/recounted/PA44_recounted_q10_5min_rep2.tsv", b_rep = 2, time = 5),
-#   list(file = "../../data/rna_seq/37C/recounted/PA53_recounted_q10_5min_rep3.tsv", b_rep = 3, time = 5),
-#   list(file = "../../data/rna_seq/37C/recounted/PA34_recounted_q10_1min_rep1.tsv", b_rep = 1, time = 1),
-#   list(file = "../../data/rna_seq/37C/recounted/PA43_recounted_q10_1min_rep2.tsv", b_rep = 2, time = 1),
-#   list(file = "../../data/rna_seq/37C/recounted/PA52_recounted_q10_1min_rep3.tsv", b_rep = 3, time = 1)
-# )
-
+###
+# 37C time-course first
+###
 file_inputs <- bind_rows(
   list(file = "../../data/rna_seq/37C/mapped_to_T7_ecoli/PA36-wild10A-46-9min-rep1.counts.tsv", b_rep = 1, time = 9),
   list(file = "../../data/rna_seq/37C/mapped_to_T7_ecoli/PA45-wild10A-46-9min-rep2.counts.tsv", b_rep = 2, time = 9),
@@ -52,3 +42,32 @@ counts <- file_inputs %>%
   select(-file)
 
 write_csv(counts, "../../output/transcripts_37C.csv")
+
+###
+# 25C time-course
+###
+
+file_inputs_25 <- bind_rows(
+  list(file = "../../data/rna_seq/25C/mapped_to_T7_ecoli/PA196_T7W-R1-05m_S27_L004_R1_001_sort_counts.tsv", b_rep = 1, time = 5),
+  list(file = "../../data/rna_seq/25C/mapped_to_T7_ecoli/PA206_T7W-R2-05m_S32_L004_R1_001_sort_counts.tsv", b_rep = 2, time = 5),
+  list(file = "../../data/rna_seq/25C/mapped_to_T7_ecoli/PA216_T7W-R3-05m_S37_L004_R1_001_sort_counts.tsv", b_rep = 3, time = 5),
+  list(file = "../../data/rna_seq/25C/mapped_to_T7_ecoli/PA198_T7W-R1-10m_S28_L004_R1_001_sort_counts.tsv", b_rep = 1, time = 10),
+  list(file = "../../data/rna_seq/25C/mapped_to_T7_ecoli/PA208_T7W-R2-10m_S33_L004_R1_001_sort_counts.tsv", b_rep = 2, time = 10),
+  list(file = "../../data/rna_seq/25C/mapped_to_T7_ecoli/PA218_T7W-R3-10m_S38_L004_R1_001_sort_counts.tsv", b_rep = 3, time = 10),
+  list(file = "../../data/rna_seq/25C/mapped_to_T7_ecoli/PA200_T7W-R1-15m_S29_L004_R1_001_sort_counts.tsv", b_rep = 1, time = 15),
+  list(file = "../../data/rna_seq/25C/mapped_to_T7_ecoli/PA210_T7W-R2-15m_S34_L004_R1_001_sort_counts.tsv", b_rep = 2, time = 15),
+  list(file = "../../data/rna_seq/25C/mapped_to_T7_ecoli/PA220_T7W-R3-15m_S39_L004_R1_001_sort_counts.tsv", b_rep = 3, time = 15),
+  list(file = "../../data/rna_seq/25C/mapped_to_T7_ecoli/PA202_T7W-R1-20m_S30_L004_R1_001_sort_counts.tsv", b_rep = 1, time = 20),
+  list(file = "../../data/rna_seq/25C/mapped_to_T7_ecoli/PA212_T7W-R2-20m_S35_L004_R1_001_sort_counts.tsv", b_rep = 2, time = 20),
+  list(file = "../../data/rna_seq/25C/mapped_to_T7_ecoli/PA222_T7W-R3-20m_S40_L004_R1_001_sort_counts.tsv", b_rep = 3, time = 20),
+  list(file = "../../data/rna_seq/25C/mapped_to_T7_ecoli/PA204_T7W-R1-25m_S31_L004_R1_001_sort_counts.tsv", b_rep = 1, time = 25),
+  list(file = "../../data/rna_seq/25C/mapped_to_T7_ecoli/PA214_T7W-R2-25m_S36_L004_R1_001_sort_counts.tsv", b_rep = 2, time = 25),
+  list(file = "../../data/rna_seq/25C/mapped_to_T7_ecoli/PA224_T7W-R3-25m_S41_L004_R1_001_sort_counts.tsv", b_rep = 3, time = 25)
+)
+
+counts_25 <- file_inputs_25 %>% 
+  mutate(read_counts = map(file, ~import_counts(.))) %>% # Run our import_counts function over all files
+  unnest() %>%
+  select(-file)
+
+write_csv(counts_25, "../../output/transcripts_25C.csv")

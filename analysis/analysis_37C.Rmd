@@ -14,6 +14,20 @@ library(readxl)
 SAVE_FIGS <- TRUE
 
 cbPalette <- c("#CC79A7", "#56B4E9", "#E69F00", "#F0E442", "#0072B2", "#D55E00", "#009E73", "#999999")
+
+# These are genes that are not included in the simulation and should be removed before comparing
+# simulations with experimental data
+IGNORE_GENES <- c("gene 10B",
+                "possible gene 5.5-5.7",
+                "gene 1.5",
+                "gene 1.6",
+                "gene 4.1",
+                "gene 4B",
+                "gene 0.6A",
+                "gene 0.6B",
+                "possible gene 0.6B",
+                "gene 0.5",
+                "gene 0.4")
 ```
 
 ## Tools
@@ -26,10 +40,10 @@ In the plot below, reads are counted towards all genes that they map to if a rea
 
 ```{r, echo=FALSE, fig.width = 10, fig.height = 18, fig.width = 12}
 
-id_map <- read_csv("../output/id_map.csv") %>% filter(!is.na(gene_number), gene_number != "10B")
+id_map <- read_csv("../output/id_map.csv") %>% filter(!is.na(gene_number), !(pinetree %in% IGNORE_GENES))
 
 transcripts <- read_csv("../output/transcripts_37C.csv") %>% 
-  filter(!is.na(class), gene_number != "10B")
+  filter(!is.na(class), !(pinetree %in% IGNORE_GENES))
 
 gene_labels <- unique(mixedsort(id_map$gene_number))
 
@@ -110,7 +124,7 @@ load_sim <- function(path) {
     mutate(time = round(time)) %>%
     mutate(protein = if_else(is.na(protein), 0, protein),
            transcript = if_else(is.na(transcript), 0, transcript)) %>%
-    filter(gene_number != "10B", !is.na(gene_number))
+    filter(!(pinetree %in% IGNORE_GENES), !is.na(gene_number))
 }
 
 data <- load_sim("../data/simulation/phage/phage_wildtype.tsv")
@@ -149,13 +163,14 @@ sim_exp_degrad_9_plot <- plot_grid(rna_9_dist_rnase, bar_sim_degrade, bar_sim_pl
                                    align = 'v', ncol = 1, labels = "AUTO")
 
 lineplot <- ggplot(data_degrade, aes(x=time, y=transcript, group = gene_number, color=factor(class))) +
-  geom_line() + theme(legend.position="none") +
-  scale_y_continuous(trans = "log10") +
+  geom_line() +
+  scale_y_continuous(trans = "log10") + 
+  xlab("time (s)") +
   scale_color_manual("class", values=cbPalette) + xlim(0,1000) 
 
 
 if (SAVE_FIGS) {
-  save_plot("./figures/lineplot.pdf", lineplot, base_height = 4, base_aspect_ratio = 1.5)
+  save_plot("./figures/lineplot.pdf", lineplot, base_height = 4, base_aspect_ratio = 1.7)
   save_plot("./figures/T7_rna_exp_sim_degrade_no_labels.pdf", sim_exp_degrad_9_plot, 
             base_width = 8, base_height = 9)
 }
@@ -166,8 +181,8 @@ if (SAVE_FIGS) {
 
 ```{r}
 wildtype_sim <- load_sim("../data/simulation/phage/phage_wildtype.tsv") %>% mutate(strain = "wildtype")
-recoded_sim <- load_sim("../data/simulation/phage/phage_model_recoded.tsv") %>% mutate(strain = "recoded")
-ko_sim <- load_sim("../data/simulation/phage/phage_model_knockout_9_10.tsv") %>% mutate(strain = "knockout")
+recoded_sim <- load_sim("../data/simulation/phage/phage_model_recoded_27.tsv") %>% mutate(strain = "recoded")
+ko_sim <- load_sim("../data/simulation/phage/phage_model_knockout_9_10_27.tsv") %>% mutate(strain = "knockout")
 ko_recoded_sim <- load_sim("../data/simulation/phage/phage_model_knockout_9_10_recoded.tsv") %>% mutate(strain = "knockout_recoded")
 
 sims <- bind_rows(wildtype_sim, recoded_sim, ko_sim, ko_recoded_sim)
@@ -198,12 +213,12 @@ strain_levels = c("knockout_recoded",
 # then solving for intrinsic growth rate (r) as described by Bull, et al 2011 using wolfram alpha. 
 # Then we transform r into doublings per hour dblgs = log2(e^(r*t)), where t = 60 min (1hr).
 ## wildtype - 24
-## recoded - 18.9
+## recoded - 20.88
 ## knockout - 13.7
-## knockout/recoded - 8.6
+## knockout/recoded - 11.07
 
 sims_transformed <- data_frame(strain=c('wildtype', 'recoded', 'knockout', 'knockout_recoded'),
-                               fitness=c(24, 18.9, 13.7, 8.6),
+                               fitness=c(24, 20.88, 13.7, 11.07),
                                type=c('sim', 'sim', 'sim', 'sim'))
 
 fit <- read_xlsx("../data/fitness.xlsx")

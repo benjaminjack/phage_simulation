@@ -1,15 +1,33 @@
 ---
-title: "RNA-seq Re-analysis"
+title: "RNA-seq Analysis for 25C time course"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```{r, echo=FALSE, fig.width = 10, fig.height = 18, fig.width = 12}
+
 library(tidyverse)
 library(ggplot2)
 library(gtools)
 library(stringr)
 library(cowplot)
+library(readxl)
+SAVE_FIGS <- TRUE
+
+cbPalette <- c("#CC79A7", "#56B4E9", "#E69F00", "#F0E442", "#0072B2", "#D55E00", "#009E73", "#999999")
+
+# These are genes that are not included in the simulation and should be removed before comparing
+# simulations with experimental data
+IGNORE_GENES <- c("gene 10B",
+                "possible gene 5.5-5.7",
+                "gene 1.5",
+                "gene 1.6",
+                "gene 4.1",
+                "gene 4B",
+                "gene 0.6A",
+                "gene 0.6B",
+                "possible gene 0.6B",
+                "gene 0.5",
+                "gene 0.4")
 ```
 
 ## Tools
@@ -22,131 +40,38 @@ In the plot below, reads are counted towards all genes that they map to if a rea
 
 ```{r, echo=FALSE, fig.width = 10, fig.height = 18, fig.width = 12}
 
-import_counts <- function(file_name) {
-  labels <- read_csv("../output/id_map.csv") %>% mutate(accession = trimws(accession))
-  read_tsv(file_name, col_names=FALSE) %>%
-  filter(X3 == "CDS") %>%
-  select("start" = X4, "end" = X5, "gene" = X9, "count" = X10) %>%
-  mutate(gene_number = str_match(gene, "Note=(possible )?gene ([0-9\\.\\-AB]*)")[,3],
-         lengthkb = (end - start)/1000,
-         rpk = count/lengthkb,
-         scale_factor = sum(rpk)/1000000,
-         tpm = rpk/scale_factor) %>%
-    left_join(labels, by = c("gene_number" = "gene_number")) %>%
-    mutate(gene_number = str_replace_all(gene_number, c("10A" = "10")))
-} 
+id_map <- read_csv("../output/id_map.csv") %>% filter(!is.na(gene_number), !(pinetree %in% IGNORE_GENES))
 
-rep1_5 <- import_counts("../data/rna_seq/mapped_to_T7_ecoli/PA196_T7W-R1-05m_S27_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 1, time = 5)
-rep2_5 <- import_counts("../data/rna_seq/mapped_to_T7_ecoli/PA206_T7W-R2-05m_S32_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 2, time = 5)
-rep3_5 <- import_counts("../data/rna_seq/mapped_to_T7_ecoli/PA216_T7W-R3-05m_S37_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 3, time = 5)
-rep1_10 <- import_counts("../data/rna_seq/mapped_to_T7_ecoli/PA198_T7W-R1-10m_S28_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 1, time = 10)
-rep2_10 <- import_counts("../data/rna_seq/mapped_to_T7_ecoli/PA208_T7W-R2-10m_S33_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 2, time = 10)
-rep3_10 <- import_counts("../data/rna_seq/mapped_to_T7_ecoli/PA218_T7W-R3-10m_S38_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 3, time = 10)
-rep1_15 <- import_counts("../data/rna_seq/mapped_to_T7_ecoli/PA200_T7W-R1-15m_S29_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 1, time = 15)
-rep2_15 <- import_counts("../data/rna_seq/mapped_to_T7_ecoli/PA210_T7W-R2-15m_S34_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 2, time = 15)
-rep3_15 <- import_counts("../data/rna_seq/mapped_to_T7_ecoli/PA220_T7W-R3-15m_S39_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 3, time = 15)
-rep1_20 <- import_counts("../data/rna_seq/mapped_to_T7_ecoli/PA202_T7W-R1-20m_S30_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 1, time = 20)
-rep2_20 <- import_counts("../data/rna_seq/mapped_to_T7_ecoli/PA212_T7W-R2-20m_S35_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 2, time = 20)
-rep3_20 <- import_counts("../data/rna_seq/mapped_to_T7_ecoli/PA222_T7W-R3-20m_S40_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 3, time = 20)
-rep1_25 <- import_counts("../data/rna_seq/mapped_to_T7_ecoli/PA204_T7W-R1-25m_S31_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 1, time = 25)
-rep2_25 <- import_counts("../data/rna_seq/mapped_to_T7_ecoli/PA214_T7W-R2-25m_S36_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 2, time = 25)
-rep3_25 <- import_counts("../data/rna_seq/mapped_to_T7_ecoli/PA224_T7W-R3-25m_S41_L004_R1_001_sort_counts.tsv") %>% mutate(b_rep = 3, time = 25)
+transcripts <- read_csv("../output/transcripts_25C.csv") %>% 
+  filter(!is.na(class), !(pinetree %in% IGNORE_GENES))
 
+gene_labels <- unique(mixedsort(id_map$gene_number))
 
-all_reps_25 <- bind_rows(rep1_5, rep3_5, rep1_10, rep2_10, rep3_10, rep1_15, rep2_15, rep3_15, rep1_20, rep2_20, rep3_20, rep1_25, rep2_25, rep3_25) %>% mutate(strain = "wildtype") %>% filter(time == 25)
-
-ggplot(all_reps, aes(x = factor(gene_number, levels=unique(mixedsort(gene_number))), y = tpm)) + 
+rna_25_dist <- ggplot(transcripts %>% filter(time == 25), aes(x = factor(gene_number, levels=gene_labels), y = tpm)) + 
   geom_bar(stat="summary", fun.y = "mean", aes(fill = factor(class))) +
-  geom_point(alpha=0.5) + 
-  theme(axis.text.x=element_text(angle=45,hjust=1), legend.position = "none") +
-  xlab("gene") +
-  facet_wrap(~time, ncol = 1, scales = "free")
-plot_5 <- ggplot(rep1 %>% filter(time == 5, !is.na(class)), aes(x = factor(gene_number, levels=unique(mixedsort(gene_number))), y = tpm)) + 
+  geom_point(alpha = 0.5) + 
+  theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), legend.position = c(0.0, 0.8)) +
+  scale_fill_manual("class", values=cbPalette) +
+  geom_vline(xintercept = (match(c("3.8", "4.7", "6.5", "18.5"), gene_labels)) - 0.5, linetype="dashed", color = "gray40") +
+  geom_vline(xintercept = (match(c("11"), gene_labels)) - 0.5) +
+  xlab("gene") + ylab("transcripts per million") + scale_y_continuous(expand = c(0,0)) +
+  coord_cartesian(clip = "off")
+
+rna_10_dist <- ggplot(transcripts %>% filter(time == 10), aes(x = factor(gene_number, levels=gene_labels), y = tpm)) + 
   geom_bar(stat="summary", fun.y = "mean", aes(fill = factor(class))) +
-  theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), legend.position = c(0.0, 0.9)) +
-  scale_fill_discrete("class") +
-  xlab("gene") + ylab("transcripts per million") + scale_y_continuous(expand = c(0,0))
-# save_plot("../../figures/transcripts_5min.pdf", plot_5, base_width = 12, base_height = 5)
+  geom_point(alpha = 0.5) + 
+  geom_vline(xintercept = (match(c("3.8", "4.7", "6.5", "18.5"), gene_labels)) - 0.5, linetype="dashed", color = "gray40") +
+  geom_vline(xintercept = (match(c("11"), gene_labels)) - 0.5) +
+  theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), legend.position = c(0.0, 0.8)) +
+  scale_fill_manual("class", values=cbPalette) +
+  xlab("gene") + ylab("transcripts per million") + scale_y_continuous(expand = c(0,0)) +
+  coord_cartesian(clip = "off")
 
+rna_10_25_exp <- plot_grid(rna_10_dist, rna_25_dist, ncol = 1, align='v', labels="AUTO")
 
-import_counts_37 <- function(file_name) {
-  labels <- read_csv("../output/id_map.csv") %>% mutate(accession = trimws(accession))
-  read_tsv(file_name, col_names=FALSE) %>%
-  filter(X3 == "CDS") %>%
-  select("start" = X4, "end" = X5, "gene" = X9, "count" = X10) %>%
-  mutate(gene_number = str_match(gene, "Note=(possible )?gene ([0-9\\.\\-AB]*)")[,3],
-         lengthkb = (end - start)/1000,
-         rpk = count/lengthkb,
-         scale_factor = sum(rpk)/1000000,
-         tpm = rpk/scale_factor) %>%
-    left_join(labels, by = c("gene_number" = "gene_number")) %>%
-    mutate(gene_number = str_replace_all(gene_number, c("10A" = "10")))
-} 
+rna_10_25_exp
 
-rep1 <- import_counts_37("../output/PA36_recounted_q10_9min_rep1.tsv") %>% mutate(b_rep = 1, time = 9)
-rep2 <- import_counts_37("../output/PA45_recounted_q10_9min_rep2.tsv") %>% mutate(b_rep = 2, time = 9)
-rep3 <- import_counts_37("../output/PA54_recounted_q10_9min_rep3.tsv") %>% mutate(b_rep = 3, time = 9)
-
-rep1_5 <- import_counts_37("../output/PA35_recounted_q10_5min_rep1.tsv") %>% mutate(b_rep = 1, time = 5)
-rep2_5 <- import_counts_37("../output/PA44_recounted_q10_5min_rep2.tsv") %>% mutate(b_rep = 2, time = 5)
-rep3_5 <- import_counts_37("../output/PA53_recounted_q10_5min_rep3.tsv") %>% mutate(b_rep = 3, time = 5)
-
-rep1_1 <- import_counts_37("../output/PA34_recounted_q10_1min_rep1.tsv") %>% mutate(b_rep = 1, time = 1)
-rep2_1 <- import_counts_37("../output/PA43_recounted_q10_1min_rep2.tsv") %>% mutate(b_rep = 2, time = 1)
-rep3_1 <- import_counts_37("../output/PA52_recounted_q10_1min_rep3.tsv") %>% mutate(b_rep = 3, time = 1)
-
-
-all_reps_37 <- bind_rows(rep1, rep2, rep3, rep1_5, rep2_5, rep3_5, rep1_1, rep2_1, rep3_1) %>% 
-  mutate(strain = "wildtype") %>% 
-  filter(!is.na(class)) %>% filter(time == 9)
-
-all_reps_25 <- all_reps_25 %>% 
-  group_by(class, gene_number) %>% 
-  summarize(avg_tpm_25 = mean(tpm)/1000000) %>% 
-  select(class, gene_number, avg_tpm_25)
-all_reps_37 <- all_reps_37 %>% 
-  group_by(class, gene_number) %>% 
-  summarize(avg_tpm_37 = mean(tpm)/1000000) %>%
-  select(class, gene_number, avg_tpm_37)
-
-all_reps <- all_reps_25 %>% full_join(all_reps_37) %>% filter(gene_number != "0.4", !is.na(class))
-
-temp_scatter <- ggplot(all_reps, aes(x=log10(avg_tpm_25), y=log10(avg_tpm_37), color=factor(class))) + 
-  geom_abline(intercept=0, slope=1, color="gray80") +
-  geom_point() + 
-  scale_color_discrete("class") +
-  xlab("log10(rel. transcript abundance), 25C") +
-  ylab("log10(rel. transcript abundance), 37C")
-
-save_plot("figures/scatter_temps.pdf", temp_scatter, base_aspect_ratio = 1.3)
-
-# write_csv(all_reps, "../../data/transcripts_remapped.csv")
-```
-
-
-### Looking at individual mapped reads
-
-```{r, fig.width=12, }
-
-coverage <- read_tsv("../../data/PA54_coverage_q60.tsv", col_names = c("genome", "position", "coverage"))
-full_map <- ggplot(coverage, aes(x = position, y = coverage)) + geom_bar(stat="identity") + geom_vline(xintercept = 24162) + xlim(0,40000)
-save_plot("../../figures/cov_map.pdf", full_map, base_width = 10, base_height = 5)
-plot1 <- ggplot(coverage, aes(x = position, y = coverage)) + geom_bar(stat="identity") + geom_vline(xintercept = 24210) + geom_vline(xintercept = 24162) + xlim(24090,24300)
-plot2 <- ggplot(coverage, aes(x = position, y = coverage)) + geom_bar(stat="identity") + geom_vline(xintercept = 11161) + geom_vline(xintercept = 11203) + xlim(11000,11300)
-zoomed_cov_map <- plot_grid(plot1, plot2)
-save_plot("../../figures/zoomed_cov_map.pdf", zoomed_cov_map, base_width = 9, base_height = 4)
-
-rnase_1 <- ggplot(coverage, aes(x = position, y = coverage)) + geom_bar(stat="identity") + geom_vline(xintercept = 3138) + xlim(2000,4000)
-rnase_1_1 <- ggplot(coverage, aes(x = position, y = coverage)) + geom_bar(stat="identity") + geom_vline(xintercept = 5887) + xlim(5500,6500)
-rnase_1_3 <- ggplot(coverage, aes(x = position, y = coverage)) + geom_bar(stat="identity") + geom_vline(xintercept = 6448) + xlim(6000,7000)
-rnase_4_7 <- ggplot(coverage, aes(x = position, y = coverage)) + geom_bar(stat="identity") + geom_vline(xintercept = 13892) + xlim(13700,14000)
-rnase_6_5 <- ggplot(coverage, aes(x = position, y = coverage)) + geom_bar(stat="identity") + geom_vline(xintercept = 18563) + xlim(18300,18700)
-rnase_13 <- ggplot(coverage, aes(x = position, y = coverage)) + geom_bar(stat="identity") + geom_vline(xintercept = 27281) + xlim(27000,28000)
-rnase_18_5 <- ggplot(coverage, aes(x = position, y = coverage)) + geom_bar(stat="identity") + geom_vline(xintercept = 36856) + xlim(36000,37000)
-plot2 <- ggplot(coverage, aes(x = position, y = coverage)) + geom_bar(stat="identity") + geom_vline(xintercept = 11161) + geom_vline(xintercept = 11203) + xlim(11000,11300)
-zoomed_cov_map <- plot_grid(plot1, plot2)
-
-zoomed_cov_map_rnase <- plot_grid(rnase_4_7, rnase_6_5)
-save_plot("../../figures/zoomed_cov_map_rnase.pdf", zoomed_cov_map_rnase, base_width = 9, base_height = 4)
-
+if (SAVE_FIGS) {
+  save_plot("./figures/rna_10_25_exp.pdf", rna_10_25_exp, base_width = 8, base_height = 6)
+}
 ```
