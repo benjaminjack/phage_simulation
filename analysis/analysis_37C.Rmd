@@ -50,8 +50,8 @@ gene_labels <- unique(mixedsort(id_map$gene_number))
 rna_9_dist <- ggplot(transcripts %>% filter(time == 9), aes(x = factor(gene_number, levels=gene_labels), y = tpm)) + 
   geom_bar(stat="summary", fun.y = "mean", aes(fill = factor(class))) +
   geom_point(alpha = 0.5) + 
-  theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), legend.position = c(0.0, 0.8)) +
-  scale_fill_manual("class", values=cbPalette) +
+  theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), legend.position = c(0.0, 0.8), legend.title = element_blank(), legend.spacing.x = unit(2, 'pt')) +
+  scale_fill_manual(values=cbPalette, breaks=c("1","2","3"), labels=c("class I", "class II", "class III")) +
   geom_vline(xintercept = (match(c("3.8", "4.7", "6.5", "18.5"), gene_labels)) - 0.5, linetype="dashed", color = "gray40") +
   geom_vline(xintercept = (match(c("11"), gene_labels)) - 0.5) +
   xlab("gene") + ylab("transcripts per million") + scale_y_continuous(expand = c(0,0)) +
@@ -62,8 +62,8 @@ rna_5_dist <- ggplot(transcripts %>% filter(time == 5), aes(x = factor(gene_numb
   geom_point(alpha = 0.5) + 
   geom_vline(xintercept = (match(c("3.8", "4.7", "6.5", "18.5"), gene_labels)) - 0.5, linetype="dashed", color = "gray40") +
   geom_vline(xintercept = (match(c("11"), gene_labels)) - 0.5) +
-  theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), legend.position = c(0.0, 0.8)) +
-  scale_fill_manual("class", values=cbPalette) +
+  theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), legend.position = c(0.0, 0.8), legend.title = element_blank(), legend.spacing.x = unit(2, 'pt')) +
+  scale_fill_manual(values=cbPalette, breaks=c("1","2","3"), labels=c("class I", "class II", "class III")) +
   xlab("gene") + ylab("transcripts per million") + scale_y_continuous(expand = c(0,0)) +
   coord_cartesian(clip = "off")
 
@@ -159,14 +159,15 @@ rna_9_dist_rnase <- rna_9_dist +
   geom_vline(xintercept = (match(c("3.8", "4.7", "6.5", "18.5"), gene_labels)) - 0.5, 
              linetype="dashed", color = "gray40")
 
-sim_exp_degrad_9_plot <- plot_grid(rna_9_dist_rnase, bar_sim_degrade, bar_sim_plot,
+sim_exp_degrad_9_plot <- plot_grid(rna_9_dist_rnase, bar_sim_plot, bar_sim_degrade,
                                    align = 'v', ncol = 1, labels = "AUTO")
 
 lineplot <- ggplot(data_degrade, aes(x=time, y=transcript, group = gene_number, color=factor(class))) +
   geom_line() +
   scale_y_continuous(trans = "log10") + 
   xlab("time (s)") +
-  scale_color_manual("class", values=cbPalette) + xlim(0,1000) 
+  theme(legend.title = element_blank(), legend.spacing.x = unit(2, 'pt')) + 
+  scale_color_manual(values=cbPalette, breaks=c("1","2","3"), labels=c("class I", "class II", "class III")) + xlim(0,1000) 
 
 
 if (SAVE_FIGS) {
@@ -216,9 +217,15 @@ strain_levels = c("knockout_recoded",
 ## recoded - 20.88
 ## knockout - 13.7
 ## knockout/recoded - 11.07
+## 
+## For the simulations with degradation:
+## wildtype - 27.7
+## recoded - 26.21
+## knockout - 21.98
+## knockout/recoded -
 
 sims_transformed <- data_frame(strain=c('wildtype', 'recoded', 'knockout', 'knockout_recoded'),
-                               fitness=c(24, 20.88, 13.7, 11.07),
+                               fitness=c(27.7, 26.21, 21.98, 0),
                                type=c('sim', 'sim', 'sim', 'sim'))
 
 fit <- read_xlsx("../data/fitness.xlsx")
@@ -310,8 +317,9 @@ exp_cor_relabel <- ggplot(prot_rna_relabel %>% filter(time != 1),
   geom_point() + 
   xlab("log10(relative transcript abundance)") + 
   ylab("log10(relative protein abundance)") + 
-  scale_color_manual(name = "class", values=cbPalette) + 
-  scale_shape_discrete(name = "class") +
+  scale_color_manual(values=cbPalette,  breaks=c("1","2","3"), labels=c("class I", "class II", "class III")) + 
+  theme(legend.title = element_blank()) + 
+  scale_shape_discrete() +
   facet_wrap(~time, scales = "free", labeller = as_labeller(time_labels)) +
   stat_ellipse() + 
   scale_x_continuous(limits = c(-3.4, -0.8)) + 
@@ -322,12 +330,12 @@ exp_cor <- ggplot(proteomics_rna %>% filter(time != 1),
   geom_point() + 
   xlab("log10(relative transcript abundance)") + 
   ylab("log10(relative protein abundance)") + 
-  scale_color_manual(name = "class", values=cbPalette) + 
-  scale_shape_discrete(name = "class") +
+  scale_color_manual(values=cbPalette, breaks=c("1","2","3"), labels=c("class I", "class II", "class III")) + 
+  scale_shape_discrete(breaks=c("1","2","3"), labels=c("class I", "class II", "class III")) +
   facet_wrap(~time, scales = "free", labeller = as_labeller(time_labels)) +
   stat_ellipse() + 
   scale_x_continuous(limits = c(-3.4, -0.8)) + 
-  scale_y_continuous(limits = c(-3.7, -0.4)) + theme(legend.position = c(0.92,0.2))
+  scale_y_continuous(limits = c(-3.7, -0.4)) + theme(legend.position = c(0.0,0.15), legend.title = element_blank())
 
 if(SAVE_FIGS == TRUE) {
   save_plot("./figures/prot_rna_scatter.pdf", exp_cor, base_width = 7, base_height = 3.5)
@@ -363,13 +371,13 @@ simulated_cor <- ggplot(data_degrade_renorm %>% filter(time == 500 | time == 100
   geom_point() +
   xlab("log10(simulated transcript abundance)") + 
   ylab("log10(simulated protein abundance)") + 
-  scale_color_manual(name = "class", values=cbPalette) +
-  scale_shape_discrete(name = "class") +
+  scale_color_manual(values=cbPalette, breaks=c("1","2","3"), labels=c("class I", "class II", "class III")) +
+  scale_shape_discrete(breaks=c("1","2","3"), labels=c("class I", "class II", "class III")) +
   facet_wrap(~time, scales="free") +
   stat_ellipse() + 
- theme(legend.position = c(0.92,0.2))
+ theme(legend.position = c(0.86,0.15), legend.title=element_blank())
 
-scatter_plots <- plot_grid(exp_cor, simulated_cor, rows = 2, labels="AUTO")
+scatter_plots <- plot_grid(exp_cor, simulated_cor, nrow = 2, labels="AUTO", align='V')
 
 if(SAVE_FIGS == TRUE) {
   save_plot("./figures/sim_scatter_plots.pdf", scatter_plots, base_width = 8, base_height = 8)

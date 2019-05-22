@@ -50,8 +50,8 @@ gene_labels <- unique(mixedsort(id_map$gene_number))
 rna_25_dist <- ggplot(transcripts %>% filter(time == 25), aes(x = factor(gene_number, levels=gene_labels), y = tpm)) + 
   geom_bar(stat="summary", fun.y = "mean", aes(fill = factor(class))) +
   geom_point(alpha = 0.5) + 
-  theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), legend.position = c(0.0, 0.8)) +
-  scale_fill_manual("class", values=cbPalette) +
+  theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), legend.position = c(0.0, 0.8), legend.title=element_blank(), legend.spacing.x = unit(2, 'pt')) +
+  scale_fill_manual(values=cbPalette, breaks=c("1","2","3"), labels=c("class I", "class II", "class III")) +
   geom_vline(xintercept = (match(c("3.8", "4.7", "6.5", "18.5"), gene_labels)) - 0.5, linetype="dashed", color = "gray40") +
   geom_vline(xintercept = (match(c("11"), gene_labels)) - 0.5) +
   xlab("gene") + ylab("transcripts per million") + scale_y_continuous(expand = c(0,0)) +
@@ -62,8 +62,8 @@ rna_10_dist <- ggplot(transcripts %>% filter(time == 10), aes(x = factor(gene_nu
   geom_point(alpha = 0.5) + 
   geom_vline(xintercept = (match(c("3.8", "4.7", "6.5", "18.5"), gene_labels)) - 0.5, linetype="dashed", color = "gray40") +
   geom_vline(xintercept = (match(c("11"), gene_labels)) - 0.5) +
-  theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), legend.position = c(0.0, 0.8)) +
-  scale_fill_manual("class", values=cbPalette) +
+  theme(axis.text.x=element_blank(), axis.ticks.x=element_blank(), legend.position = c(0.0, 0.8), legend.title=element_blank(), legend.spacing.x = unit(2, 'pt')) +
+  scale_fill_manual(values=cbPalette, breaks=c("1","2","3"), labels=c("class I", "class II", "class III")) +
   xlab("gene") + ylab("transcripts per million") + scale_y_continuous(expand = c(0,0)) +
   coord_cartesian(clip = "off")
 

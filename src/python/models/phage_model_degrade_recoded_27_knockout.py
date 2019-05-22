@@ -88,11 +88,11 @@ def get_promoter_interactions(name):
         return {'rnapol-1': PHI10_BIND * 0.2,
                 'rnapol-3.5': PHI10_BIND * 0.2}
     elif name in phi9:
-        return {'rnapol-1': PHI10_BIND * 0.2,
-                'rnapol-3.5': PHI10_BIND * 0.2}
+        return {'rnapol-1': 0,
+                'rnapol-3.5': 0}
     elif name in phi10:
-        return {'rnapol-1': PHI10_BIND,
-                'rnapol-3.5': PHI10_BIND}
+        return {'rnapol-1': 0,
+                'rnapol-3.5': 0}
     elif name in phi13:
         return {'rnapol-1': PHI10_BIND * 0.05,
                 'rnapol-3.5': PHI10_BIND * 0.05}
@@ -166,7 +166,7 @@ def main():
                       rnase_speed=20,
                       rnase_footprint=10)
 
-    #phage = pt.Genome(name="phage", length=genome_length)
+    # phage = pt.Genome(name="phage", length=genome_length)
 
     for feature in record.features:
         weights = [0.0] * len(record.seq)
@@ -200,12 +200,18 @@ def main():
             # Construct CDS parameters for this gene
             phage.add_gene(name=name, start=start, stop=stop,
                            rbs_start=start - 30, rbs_stop=start, rbs_strength=1e7)
+            # Recode gene 10A
+            if name == "gene 10A":
+                gene10_start = start
+                gene10_stop = stop
         if feature.type == "CDS":
             weights = compute_cds_weights(record, feature, 1.0, weights)
         if feature.type == "misc_structure":
             print(feature.qualifiers)
             phage.add_rnase_site(start=start, stop=start + 10)
         print(start, stop, name)
+
+    weights[gene10_start:gene10_stop] = [0.27] * (gene10_stop - gene10_start)
 
     mask_interactions = ["rnapol-1", "rnapol-3.5",
                          "ecolipol", "ecolipol-p", "ecolipol-2", "ecolipol-2-p"]
@@ -272,7 +278,7 @@ def main():
     sim.seed(32)
 
     sim.simulate(time_limit=1200, time_step=5,
-                 output="phage_rnase_cleavage_counts_test.tsv")
+                 output="phage_degrade_recoded_27_knockout_counts.tsv")
 
 
 if __name__ == "__main__":
