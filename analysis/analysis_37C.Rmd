@@ -201,7 +201,7 @@ bar_plot <- ggplot(sims, aes(x = factor(gene_number, gene_labels), y = protein, 
 sims_relative <- sims %>% 
   filter(gene_number == "10A")
 
-strain_labels = c("wildtype" = "wildtype", 
+strain_labels = c("wildtype" = "T7.61", 
                   "recoded"=expression(paste("gene ", italic("10"), " recoded")), 
                   "knockout"= expression(paste(Delta*phi, "9/10")), 
                   "knockout_recoded"=expression(paste(Delta*phi, "9/10, gene ", italic("10"), " recoded")))
@@ -225,7 +225,7 @@ strain_levels = c("knockout_recoded",
 ## knockout/recoded -
 
 sims_transformed <- data_frame(strain=c('wildtype', 'recoded', 'knockout', 'knockout_recoded'),
-                               fitness=c(27.7, 26.21, 21.98, 0),
+                               fitness=c(27.7, 26.21, 21.98, 20.68),
                                type=c('sim', 'sim', 'sim', 'sim'))
 
 fit <- read_xlsx("../data/fitness.xlsx")
@@ -253,7 +253,7 @@ exp_sim_fit <- bind_rows(exp_fit, sims_transformed) %>%
 exp_sim_fit_plot <- ggplot(exp_sim_fit, aes(x = factor(strain, levels=strain_levels), y = fitness, fill=factor(type, levels=c('sim', 'exp')))) + 
   geom_bar(stat = "identity", alpha=0.7, position = "dodge") +
   scale_y_continuous(expand = c(0,0)) +
-  xlab("strain") + ylab(expression(paste("fitness relative to wildtype"))) +
+  xlab("strain") + ylab(expression(paste("fitness relative to T7.61"))) +
   scale_x_discrete(labels=strain_labels) + 
   scale_fill_manual(name="type", values=cbPalette[c(6,7)], labels=c("exp"="experimental", "sim"="simulated"), breaks=c('exp', 'sim')) + coord_flip()
 
